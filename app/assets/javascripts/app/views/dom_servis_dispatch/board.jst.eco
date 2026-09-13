@@ -1,0 +1,762 @@
+<div class="dom-servis-dispatch-board__shell<%= ' is-mobile' if @mobileView %>">
+  <% if @mobileView: %>
+    <section class="dom-servis-dispatch-board__mobile-shell">
+      <div class="dom-servis-dispatch-board__mobile-topbar">
+        <div class="dom-servis-dispatch-board__mobile-brand">
+          <div class="dom-servis-dispatch-board__eyebrow">Дом-Сервис</div>
+          <strong>Dispatch</strong>
+          <span class="dom-servis-dispatch-board__brand-note">Выездная доска мастера</span>
+        </div>
+        <div class="dom-servis-dispatch-board__mobile-topbar-actions">
+          <div class="dom-servis-dispatch-board__mobile-role">
+            <span class="dom-servis-dispatch-board__presence-dot"></span>
+            <%= @roleLabel %>
+          </div>
+          <% if @showEnablePush: %>
+            <button type="button" class="dom-servis-dispatch-board__mobile-push-action js-enable-push"><%= if @pushSubscribing then '...' else 'Пуш' %></button>
+          <% end %>
+          <% if @showTestPush: %>
+            <button type="button" class="dom-servis-dispatch-board__mobile-push-action js-test-push"><%= if @pushTesting then '...' else 'Тест' %></button>
+          <% end %>
+          <button type="button" class="dom-servis-dispatch-board__mobile-menu-toggle js-open-mobile-account-menu" aria-label="<%= @mobileLabels.accountMenuTitle %>">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-board__mobile-stage">
+        <div class="dom-servis-dispatch-board__mobile-stage-copy">
+          <div class="dom-servis-dispatch-board__mobile-stage-eyebrow">Рабочий режим</div>
+          <h1><%= @mobileShell.title %></h1>
+          <p><%= @mobileBoardSummary %></p>
+        </div>
+        <div class="dom-servis-dispatch-board__mobile-workspace-filters">
+          <% for item in @mobileShell.workspaceFilters: %>
+            <button class="btn btn--text js-status-filter<%= ' is-active' if item.active %>" data-filter="<%= item.id %>">
+              <span><%= item.label %></span>
+              <strong><%= item.count %></strong>
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <section class="dom-servis-dispatch-board__mobile-week-panel">
+        <div class="dom-servis-dispatch-board__week-head">
+          <div>
+            <div class="dom-servis-dispatch-board__mobile-queue-label">Неделя</div>
+            <strong><%= @weekControls.startShortLabel %> - <%= @weekControls.endShortLabel %></strong>
+          </div>
+          <div class="dom-servis-dispatch-board__week-actions">
+            <button class="dom-servis-dispatch-board__week-button js-week-shift" data-offset="-1" aria-label="Предыдущая неделя">‹</button>
+            <button class="dom-servis-dispatch-board__week-button dom-servis-dispatch-board__week-button--wide js-week-reset<%= ' is-active' if @weekControls.isCurrent %>">Текущая</button>
+            <button class="dom-servis-dispatch-board__week-button js-week-shift" data-offset="1" aria-label="Следующая неделя">›</button>
+          </div>
+        </div>
+
+        <div class="dom-servis-dispatch-board__mobile-day-grid">
+          <button class="dom-servis-dispatch-board__mobile-day-card js-day-filter<%= ' is-active' if @dayFilter is 'all' %>" data-filter="all">
+            <span class="dom-servis-dispatch-board__mobile-day-label">Все</span>
+            <strong class="dom-servis-dispatch-board__mobile-day-count"><%= @dayFilters[0].count %></strong>
+          </button>
+          <% for item in @mobileWeekDays: %>
+            <button class="dom-servis-dispatch-board__mobile-day-card js-day-filter<%= ' is-active' if item.active %><%= ' is-today' if item.isToday %><%= ' has-load' if item.hasLoad %>" data-filter="<%= item.id %>">
+              <span class="dom-servis-dispatch-board__mobile-day-label"><%= item.shortLabel %></span>
+              <strong class="dom-servis-dispatch-board__mobile-day-count"><%= item.count %></strong>
+              <em class="dom-servis-dispatch-board__mobile-day-date"><%= item.dateNumber %></em>
+            </button>
+          <% end %>
+        </div>
+
+        <details class="dom-servis-dispatch-board__mobile-filters"<%= ' open' if @mobileShell.controlsOpen %>>
+          <summary>
+            <span class="dom-servis-dispatch-chip dom-servis-dispatch-chip--primary">Фильтры</span>
+            <% if @tagFilters.length > 0: %>
+              <span class="dom-servis-dispatch-chip dom-servis-dispatch-chip--quiet"><%= @mobileTagSummary %></span>
+            <% end %>
+          </summary>
+          <div class="dom-servis-dispatch-board__mobile-filters-body">
+            <div class="dom-servis-dispatch-board__control-block">
+              <div class="dom-servis-dispatch-board__control-label">Навигация недели</div>
+              <div class="dom-servis-dispatch-board__week-bar">
+                <div class="dom-servis-dispatch-board__week-actions">
+                  <button class="btn btn--text js-week-shift" data-offset="-1">← Прошлая</button>
+                  <button class="btn btn--text js-week-reset<%= ' is-active' if @weekControls.isCurrent %>">Текущая</button>
+                  <button class="btn btn--text js-week-shift" data-offset="1">Следующая →</button>
+                </div>
+                <div class="dom-servis-dispatch-board__week-summary">
+                  <strong><%= @weekControls.startLabel %> - <%= @weekControls.endLabel %></strong>
+                  <input class="form-control js-week-picker" type="date" value="<%= @weekControls.pickerValue %>">
+                </div>
+              </div>
+            </div>
+            <% if @tagFilters.length > 0: %>
+              <div class="dom-servis-dispatch-board__control-block">
+                <div class="dom-servis-dispatch-board__control-label">Теги</div>
+                <div class="dom-servis-dispatch-board__filters dom-servis-dispatch-board__filters--tags">
+                  <% for item in @tagFilters: %>
+                    <button class="btn btn--text js-tag-filter-toggle<%= ' is-active' if item.active %>" data-tag="<%= item.id %>">
+                      <span><%= item.label %></span>
+                      <strong><%= item.count %></strong>
+                    </button>
+                  <% end %>
+                  <% if _.some(@tagFilters, (item) -> item.active): %>
+                    <button class="btn btn--text js-clear-tag-filters">Сбросить</button>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </details>
+      </section>
+    </section>
+  <% end %>
+  <div class="dom-servis-dispatch-board__hero">
+    <div class="dom-servis-dispatch-board__hero-copy">
+      <div class="dom-servis-dispatch-board__eyebrow">Дом-Сервис</div>
+      <h1>Диспетчеризация заявок</h1>
+      <p>Главное рабочее поле для публикации заявок в общий пул, захвата мастерами и ежедневного контроля по дням недели.</p>
+      <% if @mobileView: %>
+        <div class="dom-servis-dispatch-board__mobile-summary">
+          <div class="dom-servis-dispatch-board__mobile-summary-card">
+            <span><%= @mobileLabels.week %></span>
+            <strong><%= @weekControls.startLabel %> - <%= @weekControls.endLabel %></strong>
+          </div>
+          <% if @activeFilterSummary.length > 0: %>
+            <div class="dom-servis-dispatch-board__mobile-summary-card">
+              <span><%= @mobileLabels.filters %></span>
+              <strong><%= @activeFilterSummary.join(' / ') %></strong>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <div class="dom-servis-dispatch-board__hero-side">
+      <% if @currentUserCard: %>
+        <% if @mobileView: %>
+          <button type="button" class="dom-servis-dispatch-board__user-card dom-servis-dispatch-board__user-card--action js-open-mobile-account-menu">
+            <div class="dom-servis-dispatch-board__user-avatar"><%= @currentUserCard.initials %></div>
+            <div class="dom-servis-dispatch-board__user-body">
+              <div class="dom-servis-dispatch-board__user-name"><%= @currentUserCard.name %></div>
+              <div class="dom-servis-dispatch-board__user-meta"><%= @currentUserCard.email %></div>
+              <div class="dom-servis-dispatch-board__user-meta"><%= @currentUserCard.phone %></div>
+              <div class="dom-servis-dispatch-board__user-meta"><%= @currentUserCard.organization %></div>
+              <div class="dom-servis-dispatch-board__user-shortcut">
+                <span><%= @mobileLabels.accountActionsHint %></span>
+                <strong><%= @mobileLabels.accountActionsArrow %></strong>
+              </div>
+            </div>
+          </button>
+        <% else: %>
+          <div class="dom-servis-dispatch-board__user-card">
+            <div class="dom-servis-dispatch-board__user-avatar"><%= @currentUserCard.initials %></div>
+            <div class="dom-servis-dispatch-board__user-body">
+              <div class="dom-servis-dispatch-board__user-name"><%= @currentUserCard.name %></div>
+              <div class="dom-servis-dispatch-board__user-meta"><%= @currentUserCard.email %></div>
+              <div class="dom-servis-dispatch-board__user-meta"><%= @currentUserCard.phone %></div>
+              <div class="dom-servis-dispatch-board__user-meta"><%= @currentUserCard.organization %></div>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+      <div class="dom-servis-dispatch-board__role"><span>Роль</span><strong><%= @roleLabel %></strong></div>
+      <div class="dom-servis-dispatch-board__header-actions">
+        <% if @showEnablePush: %>
+          <button class="btn js-enable-push"><%= if @pushSubscribing then 'Включение…' else 'Уведомления' %></button>
+        <% end %>
+        <% if @showTestPush: %>
+          <button class="btn btn--text js-test-push"><%= if @pushTesting then 'Отправка…' else 'Тест пуша' %></button>
+        <% end %>
+        <button class="btn js-refresh-jobs">Обновить</button>
+        <% if @canCreateJob: %>
+          <button class="btn btn--success js-open-create">Новая заявка</button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <% if @error: %>
+    <div class="alert alert-danger dom-servis-dispatch-board__alert"><%= @error %></div>
+  <% end %>
+
+  <div class="dom-servis-dispatch-board__stats">
+    <div class="dom-servis-dispatch-stat">
+      <span class="dom-servis-dispatch-stat__label">Всего</span>
+      <strong class="dom-servis-dispatch-stat__value"><%= @stats.total %></strong>
+    </div>
+    <div class="dom-servis-dispatch-stat">
+      <span class="dom-servis-dispatch-stat__label">В пуле</span>
+      <strong class="dom-servis-dispatch-stat__value"><%= @stats.pool %></strong>
+    </div>
+    <div class="dom-servis-dispatch-stat">
+      <span class="dom-servis-dispatch-stat__label">В работе</span>
+      <strong class="dom-servis-dispatch-stat__value"><%= @stats.active %></strong>
+    </div>
+    <div class="dom-servis-dispatch-stat">
+      <span class="dom-servis-dispatch-stat__label">Мои</span>
+      <strong class="dom-servis-dispatch-stat__value"><%= @stats.mine %></strong>
+    </div>
+    <div class="dom-servis-dispatch-stat">
+      <span class="dom-servis-dispatch-stat__label">Готово</span>
+      <strong class="dom-servis-dispatch-stat__value"><%= @stats.done %></strong>
+    </div>
+    <div class="dom-servis-dispatch-stat">
+      <span class="dom-servis-dispatch-stat__label">На сегодня</span>
+      <strong class="dom-servis-dispatch-stat__value"><%= @stats.today %></strong>
+    </div>
+  </div>
+
+  <div class="dom-servis-dispatch-board__controls">
+    <div class="dom-servis-dispatch-board__control-block">
+    <div class="dom-servis-dispatch-board__control-label">Срез по состоянию</div>
+    <div class="dom-servis-dispatch-board__filters">
+      <% for item in @statusFilters: %>
+        <button class="btn btn--text js-status-filter<%= ' is-active' if item.active %>" data-filter="<%= item.id %>">
+          <span><%= item.label %></span>
+          <strong><%= item.count %></strong>
+        </button>
+      <% end %>
+    </div>
+    </div>
+
+    <div class="dom-servis-dispatch-board__control-block">
+    <div class="dom-servis-dispatch-board__control-label">Дни недели</div>
+    <div class="dom-servis-dispatch-board__week-bar">
+      <div class="dom-servis-dispatch-board__week-actions">
+        <button class="btn btn--text js-week-shift" data-offset="-1">← Прошлая</button>
+        <button class="btn btn--text js-week-reset<%= ' is-active' if @weekControls.isCurrent %>">Текущая</button>
+        <button class="btn btn--text js-week-shift" data-offset="1">Следующая →</button>
+      </div>
+      <div class="dom-servis-dispatch-board__week-summary">
+        <strong><%= @weekControls.startLabel %> - <%= @weekControls.endLabel %></strong>
+        <input class="form-control js-week-picker" type="date" value="<%= @weekControls.pickerValue %>">
+      </div>
+    </div>
+    <div class="dom-servis-dispatch-board__day-filters">
+      <% for item in @dayFilters: %>
+        <button class="btn btn--text js-day-filter<%= ' is-active' if item.active %>" data-filter="<%= item.id %>">
+          <span><%= item.shortLabel || item.label %></span>
+          <strong><%= item.count %></strong>
+        </button>
+      <% end %>
+    </div>
+    </div>
+
+  <% if @tagFilters.length > 0: %>
+      <div class="dom-servis-dispatch-board__control-block">
+      <div class="dom-servis-dispatch-board__control-label">Теги</div>
+      <div class="dom-servis-dispatch-board__filters dom-servis-dispatch-board__filters--tags">
+        <% for item in @tagFilters: %>
+          <button class="btn btn--text js-tag-filter-toggle<%= ' is-active' if item.active %>" data-tag="<%= item.id %>">
+            <span><%= item.label %></span>
+            <strong><%= item.count %></strong>
+          </button>
+        <% end %>
+        <% if _.some(@tagFilters, (item) -> item.active): %>
+          <button class="btn btn--text js-clear-tag-filters">Сбросить</button>
+        <% end %>
+      </div>
+      </div>
+  <% end %>
+  </div>
+
+  <% if @loading: %>
+    <div class="dom-servis-dispatch-board__empty">
+      <div class="spinner spinner--small"></div>
+      <span>Загрузка заявок...</span>
+    </div>
+  <% else if @jobCards.length is 0: %>
+    <div class="dom-servis-dispatch-board__empty">
+      <strong><%= @emptyState.title %></strong>
+      <span><%= @emptyState.body %></span>
+    </div>
+  <% else: %>
+    <div class="dom-servis-dispatch-board__grid">
+      <% for job in @jobCards: %>
+        <article class="dom-servis-dispatch-card dom-servis-dispatch-card--<%= job.status %> dom-servis-dispatch-card--<%= job.priority %><%= ' dom-servis-dispatch-card--deadline-warning' if job.deadlineState is 'warning' %><%= ' dom-servis-dispatch-card--deadline-overdue' if job.deadlineState is 'overdue' %> js-job-card" data-id="<%= job.id %>">
+          <% if @mobileView: %>
+            <div class="dom-servis-dispatch-card__row dom-servis-dispatch-card__row--top">
+              <div class="dom-servis-dispatch-card__schedule"><%= job.scheduleLabel %></div>
+              <span class="dom-servis-dispatch-card__status dom-servis-dispatch-card__status--<%= job.status %>"><%= job.statusLabel %></span>
+            </div>
+            <div class="dom-servis-dispatch-card__address dom-servis-dispatch-card__address--primary"><%= job.address %></div>
+            <div class="dom-servis-dispatch-card__title dom-servis-dispatch-card__title--secondary"><%= job.serviceType %></div>
+            <div class="dom-servis-dispatch-card__meta dom-servis-dispatch-card__meta--mobile">
+              <span><%= job.clientName %></span>
+              <% if job.clientPhone: %>
+                <span><%= job.clientPhone %></span>
+              <% end %>
+            </div>
+          <% else: %>
+            <div class="dom-servis-dispatch-card__topline">
+              <div class="dom-servis-dispatch-card__identity">
+                <span class="dom-servis-dispatch-card__code"><%= job.jobCode %></span>
+                <span class="dom-servis-dispatch-card__day"><%= job.visitDayLabel %></span>
+              </div>
+              <span class="dom-servis-dispatch-card__status dom-servis-dispatch-card__status--<%= job.status %>"><%= job.statusLabel %></span>
+            </div>
+
+            <div class="dom-servis-dispatch-card__title"><%= job.serviceType %></div>
+            <div class="dom-servis-dispatch-card__address"><%= job.address %></div>
+
+            <div class="dom-servis-dispatch-card__meta">
+              <span><%= job.scheduleLabel %></span>
+              <span><%= job.assigneeName %></span>
+            </div>
+
+            <div class="dom-servis-dispatch-card__contact">
+              <span><%= job.clientName %></span>
+              <% if job.clientPhone: %>
+                <span><%= job.clientPhone %></span>
+              <% end %>
+            </div>
+          <% end %>
+
+          <div class="dom-servis-dispatch-card__badge-row">
+            <span class="dom-servis-dispatch-card__priority dom-servis-dispatch-card__priority--<%= job.priority %>"><%= job.priorityLabel %></span>
+            <% if job.deadlineLabel: %>
+              <span class="dom-servis-dispatch-card__tag dom-servis-dispatch-card__tag--deadline dom-servis-dispatch-card__tag--<%= job.deadlineState %>"><%= job.deadlineLabel %></span>
+            <% end %>
+            <% for tag in job.visibleTags: %>
+              <button class="dom-servis-dispatch-card__tag js-no-detail js-tag-filter-toggle<%= ' is-active' if tag.active %>" data-tag="<%= tag.name %>"><%= tag.name %></button>
+            <% end %>
+            <% if job.moreTagsCount > 0: %>
+              <span class="dom-servis-dispatch-card__tag">+<%= job.moreTagsCount %></span>
+            <% end %>
+          </div>
+
+          <% if job.summaryText: %>
+            <div class="dom-servis-dispatch-card__summary"><%= job.summaryText %></div>
+          <% end %>
+
+          <% if @mobileView && job.primaryAction: %>
+            <div class="dom-servis-dispatch-card__actions dom-servis-dispatch-card__actions--mobile">
+              <button
+                class="btn <%= job.primaryAction.buttonClass %> <%= job.primaryAction.handlerClass %> js-no-detail"
+                data-id="<%= job.id %>"
+                <%= "data-status=\"#{job.primaryAction.status}\"" if job.primaryAction.status %>>
+                <%= job.primaryAction.label %>
+              </button>
+              <div class="dom-servis-dispatch-card__tap-hint"><%= @mobileLabels.openDetailsHint %></div>
+            </div>
+          <% end %>
+
+        </article>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @detailOpen && @detailJob: %>
+    <div class="dom-servis-dispatch-drawer">
+      <div class="dom-servis-dispatch-drawer__backdrop js-close-detail"></div>
+      <aside class="dom-servis-dispatch-drawer__panel">
+        <div class="dom-servis-dispatch-drawer__header">
+          <div class="dom-servis-dispatch-drawer__headline">
+            <div class="dom-servis-dispatch-drawer__code"><%= @detailJob.jobCode %></div>
+            <% if @mobileView: %>
+              <div class="dom-servis-dispatch-drawer__service-line"><%= @detailJob.serviceType %></div>
+              <h2><%= @detailJob.address %></h2>
+              <div class="dom-servis-dispatch-drawer__schedule"><%= @detailJob.scheduleLabel %></div>
+              <div class="dom-servis-dispatch-drawer__quick-meta">
+                <span><%= @detailJob.clientName %></span>
+                <% if @detailJob.clientPhone: %>
+                  <span><%= @detailJob.clientPhone %></span>
+                <% end %>
+                <span><%= @detailJob.assigneeName %></span>
+              </div>
+            <% else: %>
+              <h2><%= @detailJob.title %></h2>
+              <div class="dom-servis-dispatch-drawer__schedule"><%= @detailJob.scheduleLabel %></div>
+            <% end %>
+            <div class="dom-servis-dispatch-drawer__status-row">
+              <span class="dom-servis-dispatch-card__status dom-servis-dispatch-card__status--<%= @detailJob.statusClass %>"><%= @detailJob.statusLabel %></span>
+              <span class="dom-servis-dispatch-card__priority dom-servis-dispatch-card__priority--<%= @detailJob.priority %>"><%= @detailJob.priorityLabel %></span>
+            </div>
+          </div>
+          <button class="btn btn--text js-close-detail">Закрыть</button>
+        </div>
+
+        <% if @detailJob.visibleTags.length > 0 || @detailJob.hiddenTagsCount > 0: %>
+          <div class="dom-servis-dispatch-drawer__tags">
+            <% for tag in @detailJob.visibleTags: %>
+              <button class="dom-servis-dispatch-card__tag js-tag-filter-toggle<%= ' is-active' if tag.active %>" data-tag="<%= tag.name %>"><%= tag.name %></button>
+            <% end %>
+            <% if @detailJob.hiddenTagsCount > 0: %>
+              <span class="dom-servis-dispatch-card__tag">+<%= @detailJob.hiddenTagsCount %></span>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="dom-servis-dispatch-drawer__body">
+          <% if @detailEditing: %>
+            <div class="dom-servis-dispatch-drawer__edit-summary">
+              <div class="dom-servis-dispatch-drawer__edit-summary-item">
+                <span>Статус</span>
+                <strong><%= @detailJob.statusLabel %></strong>
+              </div>
+              <div class="dom-servis-dispatch-drawer__edit-summary-item">
+                <span>Приоритет</span>
+                <strong><%= @detailJob.priorityLabel %></strong>
+              </div>
+              <div class="dom-servis-dispatch-drawer__edit-summary-item dom-servis-dispatch-drawer__edit-summary-item--wide">
+                <span>Исполнитель</span>
+                <strong><%= @detailJob.assigneeName %></strong>
+              </div>
+            </div>
+
+            <% for group in @detailEditGroups: %>
+              <section class="dom-servis-dispatch-drawer__section">
+                <div class="dom-servis-dispatch-drawer__section-title"><%= group.label %></div>
+                <div class="dom-servis-dispatch-drawer__form-grid">
+                  <% for field in group.items: %>
+                    <div class="form-group dom-servis-dispatch-drawer__field<%= ' dom-servis-dispatch-drawer__field--wide' if field.wide %>">
+                      <label><%= field.label %></label>
+
+                      <% if field.type is 'textarea': %>
+                        <textarea class="form-control js-edit-field" data-field="<%= field.key %>" rows="4"><%= field.value %></textarea>
+                      <% else if field.type is 'tag_selector': %>
+                        <div class="dom-servis-dispatch-tag-selector">
+                          <input class="js-edit-field" data-field="<%= field.key %>" type="hidden" value="<%= field.value %>">
+                          <% if field.options.length > 0: %>
+                            <div class="dom-servis-dispatch-tag-selector__chips">
+                              <% for option in field.options: %>
+                                <button class="dom-servis-dispatch-tag-selector__chip js-tag-toggle-chip js-edit-tag-toggle<%= ' is-active' if option.selected %>" data-tag="<%= option.id %>"><%= option.label %></button>
+                              <% end %>
+                            </div>
+                          <% else: %>
+                            <div class="dom-servis-dispatch-tag-selector__empty">Теги пока не созданы. Новые имена добавляются через Manage &gt; Tags.</div>
+                          <% end %>
+                        </div>
+                      <% else if field.type in ['select', 'user_select', 'organization_select']: %>
+                        <select class="form-control js-edit-field" data-field="<%= field.key %>">
+                          <% for option in field.options: %>
+                            <option value="<%= option.id %>"<%= ' selected' if "#{field.value}" is "#{option.id}" %>><%= option.label %></option>
+                          <% end %>
+                        </select>
+                      <% else if field.type is 'date': %>
+                        <input class="form-control js-edit-field" data-field="<%= field.key %>" type="date" value="<%= field.value %>">
+                      <% else if field.type is 'time': %>
+                        <input class="form-control js-edit-field" data-field="<%= field.key %>" type="time" value="<%= field.value %>">
+                      <% else: %>
+                        <input class="form-control js-edit-field" data-field="<%= field.key %>" type="text" value="<%= field.value %>">
+                      <% end %>
+
+                      <% if field.hint: %>
+                        <div class="dom-servis-dispatch-drawer__field-hint"><%= field.hint %></div>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+              </section>
+            <% end %>
+          <% else: %>
+            <% if @detailJob.canAssign || @detailJob.canTransfer: %>
+              <section class="dom-servis-dispatch-drawer__section">
+                <div class="dom-servis-dispatch-drawer__section-title">Операционные действия</div>
+                <div class="dom-servis-dispatch-drawer__assignment-panel">
+                  <% if @detailJob.canAssign: %>
+                    <div class="form-group dom-servis-dispatch-drawer__assignment-control">
+                      <label>Назначить мастера</label>
+                      <select class="form-control js-assign-assignee">
+                        <option value="">Выберите мастера</option>
+                        <% for option in @detailJob.assigneeOptions: %>
+                          <option value="<%= option.id %>"<%= ' selected' if "#{@detailJob.assignAssigneeId}" is "#{option.id}" %>><%= option.label %></option>
+                        <% end %>
+                      </select>
+                    </div>
+                    <div class="dom-servis-dispatch-drawer__assignment-actions">
+                      <button class="btn btn--primary js-assign-job js-no-detail" data-id="<%= @detailJob.id %>">Назначить</button>
+                    </div>
+                  <% end %>
+                  <% if @detailJob.canTransfer: %>
+                    <div class="dom-servis-dispatch-drawer__assignment-actions">
+                      <button class="btn btn--danger js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="transferred_to_partner">Передать партнёру</button>
+                    </div>
+                  <% end %>
+                </div>
+              </section>
+            <% end %>
+
+            <% for group in @detailGroups: %>
+              <section class="dom-servis-dispatch-drawer__section">
+                <div class="dom-servis-dispatch-drawer__section-title"><%= group.label %></div>
+                <div class="dom-servis-dispatch-drawer__grid">
+                  <% for item, itemIndex in group.items: %>
+                    <% displayLabel = item.label %>
+                    <% if group.id is 'job': %>
+                      <% displayLabel = ['Адрес', 'Дата визита', 'Время визита', 'День недели', 'Статус', 'Приоритет', 'Исполнитель'][itemIndex] || displayLabel %>
+                    <% else if group.id is 'client': %>
+                      <% displayLabel = ['Имя', 'Телефон', 'Заказчик'][itemIndex] || displayLabel %>
+                    <% else if group.id is 'content': %>
+                      <% displayLabel = ['Тип работ', 'Теги', 'Описание', 'Комментарий диспетчера'][itemIndex] || displayLabel %>
+                    <% else if group.id is 'meta': %>
+                      <% displayLabel = ['Код заявки', 'Источник', 'Backing Ticket'][itemIndex] || displayLabel %>
+                    <% end %>
+                    <div class="dom-servis-dispatch-drawer__item<%= ' dom-servis-dispatch-drawer__item--wide' if item.wide %>">
+                      <div class="dom-servis-dispatch-drawer__item-label"><%= displayLabel %></div>
+                      <div class="dom-servis-dispatch-drawer__item-value"><%= item.value %></div>
+                    </div>
+                  <% end %>
+                </div>
+              </section>
+            <% end %>
+          <% end %>
+
+          <section class="dom-servis-dispatch-drawer__section">
+            <div class="dom-servis-dispatch-drawer__section-title">Вложения</div>
+
+            <% if @detailCanAddAttachment: %>
+              <div class="dom-servis-dispatch-drawer__attachment-toolbar">
+                <select class="form-control js-attachment-kind" data-id="<%= @detailJob.id %>">
+                  <% for kind in @detailAttachmentKinds: %>
+                    <option value="<%= kind.id %>"><%= kind.label %></option>
+                  <% end %>
+                </select>
+                <input class="js-upload-attachment-input" data-id="<%= @detailJob.id %>" type="file" hidden>
+                <button class="btn btn--text js-trigger-attachment-upload" data-id="<%= @detailJob.id %>"<%= ' disabled' if @detailAttachmentUploading %>>
+                  <%= 'Загрузка…' if @detailAttachmentUploading %>
+                  <%= 'Добавить вложение' if !@detailAttachmentUploading %>
+                </button>
+              </div>
+            <% end %>
+
+            <% if @detailAttachmentLoading: %>
+              <div class="dom-servis-dispatch-drawer__attachment-empty">Загрузка вложений…</div>
+            <% else if @detailAttachments.length < 1: %>
+              <div class="dom-servis-dispatch-drawer__attachment-empty">Вложений пока нет.</div>
+            <% else: %>
+              <div class="dom-servis-dispatch-drawer__attachment-list">
+                <% for attachment in @detailAttachments: %>
+                  <div class="dom-servis-dispatch-drawer__attachment-item">
+                    <div class="dom-servis-dispatch-drawer__attachment-main">
+                      <div class="dom-servis-dispatch-drawer__attachment-name"><%= attachment.filename %></div>
+                      <div class="dom-servis-dispatch-drawer__attachment-meta">
+                        <span><%= attachment.kind_label %></span>
+                        <span><%= attachment.created_by_name || 'Неизвестный пользователь' %></span>
+                        <span><%= attachment.size %> B</span>
+                      </div>
+                    </div>
+                    <div class="dom-servis-dispatch-drawer__attachment-actions">
+                      <% if attachment.preview_url: %>
+                        <a class="btn btn--text" href="<%= attachment.preview_url %>" target="_blank" rel="noopener">Просмотр</a>
+                      <% end %>
+                      <a class="btn btn--text" href="<%= attachment.download_url %>" target="_blank" rel="noopener">Скачать</a>
+                      <% if attachment.can_delete && @detailCanDeleteAttachments: %>
+                        <button class="btn btn--danger js-remove-attachment" data-job-id="<%= @detailJob.id %>" data-attachment-id="<%= attachment.id %>">Удалить</button>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </section>
+        </div>
+
+        <div class="dom-servis-dispatch-drawer__footer<%= ' dom-servis-dispatch-drawer__footer--mobile' if @mobileView %>">
+          <div class="dom-servis-dispatch-card__actions">
+            <% if @detailEditing: %>
+              <button class="btn js-close-edit">Отмена</button>
+              <button class="btn btn--success js-save-edit"<%= ' disabled' if @editSaving %>>Сохранить</button>
+            <% else if @detailJob.canEdit || @detailJob.canTake || @detailJob.canStart || @detailJob.canFinish || @detailJob.canRelease || @detailJob.canCancel: %>
+              <% if @detailJob.canEdit: %>
+                <button class="btn btn--text js-open-edit js-no-detail" data-id="<%= @detailJob.id %>">Редактировать</button>
+              <% end %>
+              <% if @detailJob.canTake: %>
+                <button class="btn btn--success js-take-job js-no-detail" data-id="<%= @detailJob.id %>">Взять</button>
+              <% end %>
+              <% if @detailJob.canStart: %>
+                <button class="btn btn--primary js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="in_progress">В работу</button>
+              <% end %>
+              <% if @detailJob.canFinish: %>
+                <button class="btn btn--success js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="done">Готово</button>
+              <% end %>
+              <% if @detailJob.canRelease: %>
+                <button class="btn js-release-job js-no-detail" data-id="<%= @detailJob.id %>">В пул</button>
+              <% end %>
+              <% if @detailJob.canCancel: %>
+                <button class="btn btn--danger js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="cancelled">Отмена</button>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      </aside>
+    </div>
+  <% end %>
+
+  <% if @createOpen: %>
+    <div class="dom-servis-dispatch-modal">
+      <div class="dom-servis-dispatch-modal__backdrop js-close-create"></div>
+      <div class="dom-servis-dispatch-modal__dialog">
+        <div class="dom-servis-dispatch-modal__header">
+          <div>
+            <h2>Новая заявка</h2>
+            <p>После сохранения заявка сразу попадёт в общий пул мастеров.</p>
+          </div>
+          <button class="btn btn--text js-close-create">Закрыть</button>
+        </div>
+
+        <div class="dom-servis-dispatch-modal__body">
+        <div class="form-group">
+          <label>Тип работ *</label>
+          <input class="form-control js-create-service-type js-create-draft-field" type="text" placeholder="Например: Замена смесителя" value="<%= @createDraft.service_type %>">
+        </div>
+
+        <div class="form-group">
+          <label>Адрес *</label>
+          <input class="form-control js-create-address js-create-draft-field" type="text" placeholder="Улица, дом, квартира" value="<%= @createDraft.address %>">
+        </div>
+
+          <div class="dom-servis-dispatch-modal__columns">
+          <div class="form-group">
+            <label>Имя клиента</label>
+            <input class="form-control js-create-client-name js-create-draft-field" type="text" placeholder="Мария" value="<%= @createDraft.client_name %>">
+          </div>
+
+          <div class="form-group">
+            <label>Телефон *</label>
+            <input class="form-control js-create-client-phone js-create-draft-field" type="text" placeholder="+7 900 000 00 00" value="<%= @createDraft.client_phone %>">
+          </div>
+        </div>
+
+          <div class="dom-servis-dispatch-modal__columns">
+          <div class="form-group">
+            <label>День недели *</label>
+            <select class="form-control js-create-visit-day js-create-draft-field">
+              <% for day in [{ id: 'mon', label: 'Пн' }, { id: 'tue', label: 'Вт' }, { id: 'wed', label: 'Ср' }, { id: 'thu', label: 'Чт' }, { id: 'fri', label: 'Пт' }, { id: 'sat', label: 'Сб' }, { id: 'sun', label: 'Вс' }]: %>
+                <option value="<%= day.id %>"<%= ' selected' if @createDraft.visit_day is day.id %>><%= day.label %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Дата визита</label>
+            <input class="form-control js-create-visit-date js-create-draft-field" type="date" value="<%= @createDraft.visit_date %>">
+          </div>
+        </div>
+
+          <div class="dom-servis-dispatch-modal__columns">
+          <div class="form-group">
+            <label>Время визита</label>
+            <input class="form-control js-create-visit-time js-create-draft-field" type="time" value="<%= @createDraft.visit_time %>">
+          </div>
+
+          <div class="form-group">
+            <label>Приоритет</label>
+            <select class="form-control js-create-priority js-create-draft-field">
+              <option value="low"<%= ' selected' if @createDraft.priority is 'low' %>>Низкий</option>
+              <option value="medium"<%= ' selected' if @createDraft.priority is 'medium' %>>Средний</option>
+              <option value="high"<%= ' selected' if @createDraft.priority is 'high' %>>Высокий</option>
+              <option value="critical"<%= ' selected' if @createDraft.priority is 'critical' %>>Критичный</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Заказчик</label>
+          <select class="form-control js-create-organization-id js-create-draft-field">
+            <% for organization in @organizationOptions: %>
+              <option value="<%= organization.id %>"<%= ' selected' if "#{@createDraft.organization_id}" is "#{organization.id}" %>><%= organization.label %></option>
+            <% end %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Теги работ</label>
+          <div class="dom-servis-dispatch-tag-selector">
+            <input class="js-create-work-tags js-create-draft-field" type="hidden" value="<%= @createDraft.work_tags %>">
+            <% if @createTagOptions.length > 0: %>
+              <div class="dom-servis-dispatch-tag-selector__chips">
+                <% for option in @createTagOptions: %>
+                  <button class="dom-servis-dispatch-tag-selector__chip js-tag-toggle-chip js-create-tag-toggle<%= ' is-active' if option.selected %>" data-tag="<%= option.id %>"><%= option.label %></button>
+                <% end %>
+              </div>
+            <% else: %>
+              <div class="dom-servis-dispatch-tag-selector__empty">Теги пока не созданы. Новые имена добавляются через Manage &gt; Tags.</div>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Описание задачи</label>
+          <textarea class="form-control js-create-description js-create-draft-field" rows="4" placeholder="Что именно нужно сделать"><%= @createDraft.description %></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Комментарий диспетчера</label>
+          <textarea class="form-control js-create-comment js-create-draft-field" rows="3" placeholder="Внутренний комментарий по заявке"><%= @createDraft.comment %></textarea>
+        </div>
+        </div>
+
+          <div class="form-group">
+            <label>Вложения при оформлении</label>
+            <div class="dom-servis-dispatch-modal__attachment-toolbar">
+              <select class="form-control js-create-attachment-kind">
+                <% for kind in @createAttachmentKinds: %>
+                  <option value="<%= kind.id %>"<%= ' selected' if "#{@createAttachmentKind}" is "#{kind.id}" %>><%= kind.label %></option>
+                <% end %>
+              </select>
+              <input class="js-create-attachment-input" type="file" style="display:none" multiple>
+              <button class="btn js-trigger-create-attachment-upload"<%= ' disabled' if @createAttachmentUploading %>>
+                <%= 'Загрузка…' if @createAttachmentUploading %>
+                <%= 'Выбрать файлы' if !@createAttachmentUploading %>
+              </button>
+            </div>
+            <div class="dom-servis-dispatch-modal__attachment-caption">Приложи входные материалы сразу при оформлении: схему доступа, фото или документы.</div>
+            <% if @createAttachmentFiles.length > 0: %>
+              <div class="dom-servis-dispatch-modal__attachment-draft">
+                <% for file in @createAttachmentFiles: %>
+                  <div class="dom-servis-dispatch-modal__attachment-draft-item">
+                    <div class="dom-servis-dispatch-modal__attachment-draft-main">
+                      <div class="dom-servis-dispatch-modal__attachment-draft-name"><%= file.name %></div>
+                      <div class="dom-servis-dispatch-modal__attachment-draft-meta"><%= file.size %> B</div>
+                    </div>
+                    <button class="btn btn--danger js-remove-create-attachment" data-index="<%= file.index %>"<%= ' disabled' if @createAttachmentUploading %>>Убрать</button>
+                  </div>
+                <% end %>
+              </div>
+            <% else: %>
+              <div class="dom-servis-dispatch-modal__attachment-empty">Вложения пока не добавлены.</div>
+            <% end %>
+          </div>
+        <div class="dom-servis-dispatch-modal__footer">
+          <div class="dom-servis-dispatch-modal__hint">Если дату не менять, заявка будет поставлена в выбранный день открытой недели.</div>
+          <div class="dom-servis-dispatch-modal__footer-actions">
+            <button class="btn js-close-create">Отмена</button>
+            <button class="btn btn--success js-create-job">Опубликовать в пул</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @mobileView && @mobileWorkspaceMenuOpen && @currentUserCard: %>
+    <div class="dom-servis-dispatch-mobile-menu">
+      <button type="button" class="dom-servis-dispatch-mobile-menu__backdrop js-close-mobile-account-menu"></button>
+      <aside class="dom-servis-dispatch-mobile-menu__sheet" role="dialog" aria-modal="true" aria-label="<%= @mobileLabels.accountMenuTitle %>">
+        <div class="dom-servis-dispatch-mobile-menu__header">
+          <div>
+            <div class="dom-servis-dispatch-mobile-menu__eyebrow"><%= @mobileLabels.accountMenuEyebrow %></div>
+            <h2><%= @mobileLabels.accountMenuTitle %></h2>
+          </div>
+          <button class="btn btn--text js-close-mobile-account-menu"><%= @mobileLabels.closeAction %></button>
+        </div>
+
+        <div class="dom-servis-dispatch-mobile-menu__summary">
+          <div class="dom-servis-dispatch-board__user-avatar"><%= @currentUserCard.initials %></div>
+          <div class="dom-servis-dispatch-mobile-menu__summary-body">
+            <strong><%= @currentUserCard.name %></strong>
+            <span><%= @roleLabel %></span>
+            <span><%= @currentUserCard.email %></span>
+          </div>
+        </div>
+
+        <div class="dom-servis-dispatch-mobile-menu__actions">
+          <button class="btn btn--text js-mobile-workspace-nav" data-target="#profile"><%= @mobileLabels.profileAction %></button>
+          <button class="btn btn--text js-mobile-workspace-nav" data-target="#dashboard"><%= @mobileLabels.dashboardAction %></button>
+          <button class="btn btn--danger js-mobile-workspace-nav" data-target="#logout"><%= @mobileLabels.logoutAction %></button>
+        </div>
+      </aside>
+    </div>
+  <% end %>
+</div>

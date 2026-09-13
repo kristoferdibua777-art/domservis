@@ -1,0 +1,66 @@
+<div class="page-header-title">
+  <h1><%- @T( 'Package' ) %> <small><%- @T('Management') %></small></h1>
+</div>
+
+<div class="page-content">
+  <p>
+    <%- @T('The installation of packages comes with security implications, because arbitrary code will be executed in the context of the Zammad application.') %>
+    <br>
+    <%- @T('Only packages from known, trusted, and verified sources should be installed.') %>
+  </p>
+  <p>
+    <%- @T('After installing, updating, or uninstalling packages the following commands need to be executed on the server:') %>
+    <ul>
+    <% if @package_installation: %>
+    <% if @local_gemfiles: %>
+      <li><code>root> zammad config:set BUNDLE_DEPLOYMENT=0</code></li>
+      <li><code>root> zammad run bundle config set --local deployment 'false'</code></li>
+      <li><code>root> zammad run bundle install</code></li>
+    <% end %>
+      <li><code>root> zammad run rake zammad:package:post_install</code></li>
+    <% else: %>
+      <% if @local_gemfiles: %>
+      <li><code>zammad> bundle install</code></li>
+      <% end %>
+      <li><code>zammad> rake zammad:package:post_install</code></li>
+    <% end %>
+      <li><code>root> systemctl restart zammad</code></li>
+    </ul>
+  </p>
+  <!--
+  <ul class="nav nav-tabs nav-stacked">
+    <li class=""><a data-type="" ><%- @T('Installed') %></a></li>
+    <li class=""><a data-type="" ><%- @T('Store') %></a></li>
+  </ul>
+  -->
+  <p>
+    <form action="<%= App.Config.get('api_path') %>/packages" method="post" enctype="multipart/form-data" class="horizontal center">
+      <input type="hidden" name="authenticity_token" value="<%= App.Ajax.token() %>"/>
+      <input type="file" name="file_upload" class="js-fileUpload" />
+      <button class="align-right btn btn--primary js-submit" type="submit" disabled="disabled"><%- @T('Install Package') %></button>
+    </form>
+  </p>
+
+  <table class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th><%- @T('Name') %></th>
+        <th><%- @T('Version') %></th>
+        <th><%- @T('Vendor') %></th>
+        <th><%- @T('State') %></th>
+        <th><%- @T('Action') %></th>
+      </tr>
+    </thead>
+    <tbody>
+    <% for item in @packages: %>
+      <tr data-id="<%= item.id %>">
+        <td><%= item.name %></td>
+        <td><%= item.version %></td>
+        <td><% if item.url: %><a href="<%= item.url %>" target="_blank"><% end %><%= item.vendor %><% if item.url: %></a><% end %></td>
+        <td><%- @T(item.state) %></td>
+        <td><% for action in item.action: %><a href="#" class="package-action btn btn--action<%= ' btn--danger' if action == 'uninstall' %>" data-type="<%= action %>"><%- @T(action) %></a><br/><% end %></td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+</div>

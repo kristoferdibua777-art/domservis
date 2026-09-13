@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#71747b">
+  <title>Дом-Сервис | Заявка партнёра</title>
+  <style>
+    :root {
+      --page-text: #f4f4f6;
+      --muted: rgba(255, 255, 255, 0.78);
+      --muted-strong: rgba(255, 255, 255, 0.88);
+      --card-border: rgba(255, 255, 255, 0.18);
+      --card-shadow: rgba(20, 22, 28, 0.32);
+      --field-bg: rgba(252, 252, 253, 0.98);
+      --field-border: rgba(27, 30, 37, 0.08);
+      --field-text: #181a20;
+      --field-placeholder: #a7a9b2;
+      --danger: #d84a4a;
+      --danger-soft: rgba(216, 74, 74, 0.14);
+      --accent: #e2382b;
+      --accent-strong: #f14536;
+      --radius: 30px;
+      --radius-sm: 18px;
+      --shadow: 0 28px 80px var(--card-shadow);
+      --font-head: "Segoe UI Variable Display", "Segoe UI", "Inter", sans-serif;
+      --font-body: "Segoe UI Variable Text", "Segoe UI", "Inter", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: transparent;
+      color: var(--page-text);
+      font-family: var(--font-body);
+      line-height: 1.45;
+    }
+
+    body {
+      padding: clamp(12px, 1.3vw, 24px);
+      overflow-x: hidden;
+    }
+
+    .page {
+      width: min(920px, 100%);
+      margin: 0 auto;
+    }
+
+    .shell {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      padding: clamp(28px, 4vw, 46px);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(142deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02) 24%),
+        linear-gradient(180deg, #858891 0%, #767981 44%, #666972 100%);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow);
+      isolation: isolate;
+    }
+
+    .shell::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: calc(var(--radius) - 1px);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 24%),
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.14), transparent 34%),
+        radial-gradient(circle at bottom left, rgba(33, 35, 41, 0.18), transparent 36%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .shell > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: rgba(255, 255, 255, 0.76);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--font-head);
+      font-size: 58px;
+      line-height: 0.95;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .banner {
+      display: none;
+      margin-top: 22px;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .banner--error {
+      display: block;
+      color: #ffffff;
+      background: rgba(151, 34, 34, 0.26);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .loading {
+      display: grid;
+      place-items: center;
+      min-height: 240px;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.84);
+    }
+
+    .loading__spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.18);
+      border-top-color: rgba(255, 255, 255, 0.94);
+      animation: spin 0.8s linear infinite;
+    }
+
+    .form {
+      margin-top: 28px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      color: var(--muted-strong);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .field input[type="text"],
+    .field input[type="tel"] {
+      width: 100%;
+      min-height: 72px;
+      border-radius: 16px;
+      border: 1px solid var(--field-border);
+      background: var(--field-bg);
+      color: var(--field-text);
+      padding: 0 22px;
+      font: inherit;
+      font-size: 28px;
+      line-height: 1;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    }
+
+    .field input::placeholder {
+      color: var(--field-placeholder);
+    }
+
+    .field input:hover {
+      transform: translateY(-1px);
+    }
+
+    .field input:focus {
+      border-color: rgba(226, 56, 43, 0.4);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.64),
+        0 0 0 4px rgba(226, 56, 43, 0.1);
+    }
+
+    .field input[aria-invalid="true"] {
+      border-color: rgba(216, 74, 74, 0.84);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.64),
+        0 0 0 4px rgba(216, 74, 74, 0.1);
+    }
+
+    .phone-field {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: stretch;
+      min-height: 72px;
+      border-radius: 16px;
+      border: 1px solid var(--field-border);
+      background: var(--field-bg);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+      overflow: hidden;
+    }
+
+    .phone-field:hover {
+      transform: translateY(-1px);
+    }
+
+    .phone-field:focus-within {
+      border-color: rgba(226, 56, 43, 0.4);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.64),
+        0 0 0 4px rgba(226, 56, 43, 0.1);
+    }
+
+    .phone-field.is-invalid {
+      border-color: rgba(216, 74, 74, 0.84);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.64),
+        0 0 0 4px rgba(216, 74, 74, 0.1);
+    }
+
+    .phone-field__prefix {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px 0 18px;
+      color: #3a3d47;
+      font-size: 17px;
+      font-weight: 700;
+      white-space: nowrap;
+      border-right: 1px solid rgba(27, 30, 37, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.56));
+      pointer-events: none;
+    }
+
+    .phone-field__flag {
+      display: inline-flex;
+      width: 30px;
+      height: 20px;
+      border-radius: 6px;
+      border: 1px solid rgba(33, 37, 43, 0.1);
+      background:
+        linear-gradient(180deg, #ffffff 0 33.33%, #3552d8 33.33% 66.66%, #d33434 66.66% 100%);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .phone-field input {
+      min-height: 70px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      padding: 0 22px 0 18px;
+    }
+
+    .phone-field input:hover,
+    .phone-field input:focus,
+    .phone-field input[aria-invalid="true"] {
+      transform: none;
+      border: 0;
+      box-shadow: none;
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 6px;
+      color: var(--muted-strong);
+      font-size: 15px;
+    }
+
+    .checkbox input {
+      width: 24px;
+      height: 24px;
+      margin: 1px 0 0;
+      accent-color: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    .checkbox__copy {
+      line-height: 1.35;
+    }
+
+    .checkbox__copy a {
+      color: #ffffff;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    .field-error {
+      min-height: 18px;
+      color: #fff4f4;
+      font-size: 13px;
+    }
+
+    .submit {
+      appearance: none;
+      width: 100%;
+      min-height: 72px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--accent-strong), var(--accent));
+      color: #ffffff;
+      font: inherit;
+      font-size: 22px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 20px 34px rgba(226, 56, 43, 0.26);
+      transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+    }
+
+    .submit:hover:not(:disabled) {
+      transform: translateY(-1px);
+      filter: brightness(1.03);
+    }
+
+    .submit:disabled {
+      cursor: not-allowed;
+      opacity: 0.68;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .fineprint {
+      margin-top: 2px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .success {
+      display: grid;
+      gap: 12px;
+      padding: 12px 0 4px;
+    }
+
+    .success__eyebrow {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.72);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .success h2 {
+      margin: 0;
+      font-family: var(--font-head);
+      font-size: 38px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .success p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.84);
+      font-size: 16px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        width: 100%;
+      }
+
+      .shell {
+        padding: 24px 20px;
+      }
+
+      h1 {
+        font-size: 52px;
+      }
+
+      .success h2 {
+        font-size: 32px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+      }
+
+      .shell {
+        padding: 16px 14px;
+        border-radius: 24px;
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+
+      .lead {
+        margin-top: 10px;
+        font-size: 15px;
+      }
+
+      .form {
+        margin-top: 18px;
+        gap: 14px;
+      }
+
+      .field {
+        gap: 6px;
+      }
+
+      .field input[type="text"],
+      .field input[type="tel"] {
+        min-height: 60px;
+        font-size: 18px;
+      }
+
+      .phone-field {
+        grid-template-columns: 86px minmax(0, 1fr);
+        min-height: 60px;
+      }
+
+      .phone-field__prefix {
+        gap: 8px;
+        padding: 0 12px 0 14px;
+        font-size: 14px;
+      }
+
+      .phone-field__flag {
+        width: 24px;
+        height: 16px;
+      }
+
+      .phone-field input {
+        min-height: 60px;
+        padding: 0 18px 0 14px;
+      }
+
+      .submit {
+        min-height: 58px;
+        font-size: 18px;
+      }
+
+      .fineprint,
+      .field-error,
+      .checkbox {
+        font-size: 12px;
+      }
+
+      .checkbox {
+        gap: 10px;
+      }
+
+      .checkbox input {
+        width: 22px;
+        height: 22px;
+      }
+
+      .checkbox__copy {
+        line-height: 1.25;
+      }
+
+      .success h2 {
+        font-size: 28px;
+      }
+
+      .fineprint {
+        display: none;
+      }
+    }
+
+    @media (min-width: 1400px) {
+      .shell {
+        padding: 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="shell" aria-live="polite">
+      <p class="eyebrow">Заявка</p>
+      <h1>Оставьте заявку</h1>
+      <p class="lead">Мастер свяжется с вами и уточнит детали.</p>
+
+      <div id="banner" class="banner" role="alert" aria-live="assertive"></div>
+
+      <div id="loading" class="loading">
+        <div>
+          <div class="loading__spinner" aria-hidden="true"></div>
+          <div>Загружаем форму...</div>
+        </div>
+      </div>
+
+      <div id="formHost" class="hidden"></div>
+      <div id="successHost" class="hidden"></div>
+    </section>
+  </main>
+
+  <script>
+    (function() {
+      const state = {
+        fingerprint: ensureFingerprint(),
+        requestSourceToken: new URLSearchParams(window.location.search).get('request_source_token') || '',
+        requestSourceOrigin: inferRequestSourceOrigin(),
+        privacyPolicyUrl: new URLSearchParams(window.location.search).get('privacy_policy_url') || '',
+        config: null,
+        submitting: false,
+      };
+
+      const API_ORIGIN = /^https?:$/i.test(window.location.protocol)
+        ? window.location.origin
+        : 'https://master.svib-dom-service.ru';
+
+      const refs = {
+        page: document.querySelector('.page'),
+        banner: document.getElementById('banner'),
+        loading: document.getElementById('loading'),
+        formHost: document.getElementById('formHost'),
+        successHost: document.getElementById('successHost'),
+      };
+
+      const RESIZE_MESSAGE_TYPE = 'dom-servis:resize';
+      const RESIZE_MIN_HEIGHT = 480;
+      const RESIZE_FALLBACK_HEIGHT = 640;
+      let resizeFrameId = null;
+      let lastPostedHeight = 0;
+      const resizeObserver = 'ResizeObserver' in window ? new ResizeObserver(() => scheduleResize()) : null;
+
+      function ensureFingerprint() {
+        const storageKey = 'dom-servis-partner-fingerprint';
+        const existing = window.localStorage.getItem(storageKey);
+        if (existing && existing.length > 30) return existing;
+
+        const bytes = new Uint8Array(32);
+        window.crypto.getRandomValues(bytes);
+        const value = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('') + Date.now().toString(16);
+        window.localStorage.setItem(storageKey, value);
+        return value;
+      }
+
+      function inferRequestSourceOrigin() {
+        const candidates = [];
+        if (document.referrer) candidates.push(document.referrer);
+        if (window.location.ancestorOrigins && window.location.ancestorOrigins.length) {
+          candidates.push(window.location.ancestorOrigins[0]);
+        }
+
+        for (const candidate of candidates) {
+          try {
+            return new URL(candidate).origin;
+          } catch (error) {
+            continue;
+          }
+        }
+
+        return window.location.origin;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      function currentDispatchDate() {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function weekdayKey(dateValue) {
+        const date = new Date(`${dateValue}T00:00:00`);
+        if (Number.isNaN(date.getTime())) return 'mon';
+
+        switch (date.getDay()) {
+          case 1: return 'mon';
+          case 2: return 'tue';
+          case 3: return 'wed';
+          case 4: return 'thu';
+          case 5: return 'fri';
+          case 6: return 'sat';
+          default: return 'sun';
+        }
+      }
+
+      function generatedEmail() {
+        return `dom-servis-${state.fingerprint.slice(0, 24)}@zammad.com`;
+      }
+
+      function normalizePhone(rawValue) {
+        let digits = String(rawValue || '').replace(/\D/g, '');
+        if (digits.startsWith('8')) digits = digits.slice(1);
+        if (digits.startsWith('7')) digits = digits.slice(1);
+        return digits.slice(0, 10);
+      }
+
+      function formatPhoneValue(rawValue) {
+        const digits = normalizePhone(rawValue);
+        const part1 = digits.slice(0, 3);
+        const part2 = digits.slice(3, 6);
+        const part3 = digits.slice(6, 8);
+        const part4 = digits.slice(8, 10);
+
+        if (!digits.length) return '';
+        if (digits.length <= 3) return `(${part1}`;
+        if (digits.length <= 6) return `(${part1}) ${part2}`;
+        if (digits.length <= 8) return `(${part1}) ${part2}-${part3}`;
+        return `(${part1}) ${part2}-${part3}-${part4}`;
+      }
+
+      function displayPhoneValue(rawValue) {
+        const formatted = formatPhoneValue(rawValue);
+        return formatted || '';
+      }
+
+      function submitPhoneValue(rawValue) {
+        const digits = normalizePhone(rawValue);
+        if (!digits) return '';
+        return `+7 ${displayPhoneValue(digits)}`.trim();
+      }
+
+      function setBanner(message) {
+        refs.banner.className = 'banner banner--error';
+        refs.banner.textContent = message;
+        scheduleResize();
+      }
+
+      function hideBanner() {
+        refs.banner.className = 'banner';
+        refs.banner.textContent = '';
+        scheduleResize();
+      }
+
+      function setLoading(isLoading) {
+        refs.loading.classList.toggle('hidden', !isLoading);
+        scheduleResize();
+      }
+
+      function measureHeight() {
+        const elements = [
+          document.body,
+          document.documentElement,
+          refs.page,
+          refs.loading,
+          refs.formHost,
+          refs.successHost,
+        ].filter(Boolean);
+
+        const height = elements.reduce((max, element) => {
+          return Math.max(max, element.scrollHeight || 0, element.offsetHeight || 0, element.clientHeight || 0);
+        }, 0);
+
+        return Math.max(RESIZE_MIN_HEIGHT, Math.ceil(height + 2));
+      }
+
+      function postHeight(height) {
+        if (!window.parent || window.parent === window) return;
+        window.parent.postMessage({ type: RESIZE_MESSAGE_TYPE, height }, '*');
+      }
+
+      function scheduleResize() {
+        if (resizeFrameId) return;
+
+        resizeFrameId = window.requestAnimationFrame(() => {
+          resizeFrameId = null;
+          const nextHeight = measureHeight();
+          if (nextHeight === lastPostedHeight) return;
+
+          lastPostedHeight = nextHeight;
+          postHeight(nextHeight);
+        });
+      }
+
+      function setFieldError(field, message) {
+        const error = document.querySelector(`[data-error-for="${field}"]`);
+        const input = document.querySelector(`[name="${field}"]`);
+        if (error) error.textContent = message || '';
+        if (input) {
+          input.setAttribute('aria-invalid', message ? 'true' : 'false');
+          if (field === 'dom_servis_client_phone') {
+            const wrapper = input.closest('.phone-field');
+            if (wrapper) wrapper.classList.toggle('is-invalid', Boolean(message));
+          }
+        }
+        scheduleResize();
+      }
+
+      function clearFieldErrors() {
+        document.querySelectorAll('[data-error-for]').forEach((element) => {
+          element.textContent = '';
+        });
+        document.querySelectorAll('[aria-invalid="true"]').forEach((element) => {
+          element.setAttribute('aria-invalid', 'false');
+        });
+        document.querySelectorAll('.phone-field.is-invalid').forEach((element) => {
+          element.classList.remove('is-invalid');
+        });
+        scheduleResize();
+      }
+
+      function humanizeServerError(field, message) {
+        const value = String(message || '').toLowerCase();
+        if (field === 'name' || value.includes('name')) return 'Введите имя';
+        if (field === 'dom_servis_client_phone') return 'Введите телефон';
+        if (field === 'privacy') return 'Подтвердите согласие с политикой';
+        if (value.includes('forbidden') || value.includes('paused')) return 'Форма временно недоступна';
+        return 'Не удалось отправить заявку';
+      }
+
+      function validate(values) {
+        const errors = {};
+        if (!values.name || !values.name.trim()) errors.name = 'Введите имя';
+        if (normalizePhone(values.dom_servis_client_phone).length < 10) errors.dom_servis_client_phone = 'Введите телефон полностью';
+        if (!values.privacy_accepted) errors.privacy = 'Подтвердите согласие с политикой';
+        return errors;
+      }
+
+      function renderErrors(errors) {
+        Object.entries(errors).forEach(([field, message]) => {
+          setFieldError(field, message);
+        });
+
+        const firstField = Object.keys(errors)[0];
+        if (firstField) {
+          const target = document.querySelector(`[name="${firstField}"]`);
+          if (target && target.focus) target.focus({ preventScroll: false });
+        }
+
+        scheduleResize();
+      }
+
+      function submitDescription(name, phone) {
+        return [
+          'Клиент оставил заявку на обратный звонок через сайт партнёра.',
+          `Имя клиента: ${name}.`,
+          `Телефон клиента: ${phone}.`,
+          'Нужно уточнить услугу, адрес, дату и время визита.'
+        ].join(' ');
+      }
+
+      function consentMarkup() {
+        const policyUrl = state.config?.request_source?.privacy_policy_url || state.privacyPolicyUrl;
+        if (policyUrl) {
+          return `Нажимая на кнопку, вы соглашаетесь с <a href="${escapeHtml(policyUrl)}" target="_blank" rel="noopener noreferrer">политикой конфиденциальности</a>`;
+        }
+
+        return 'Нажимая на кнопку, вы соглашаетесь с обработкой персональных данных';
+      }
+
+      function buildForm() {
+        const form = document.createElement('form');
+        form.className = 'form';
+        form.noValidate = true;
+        form.innerHTML = `
+          <div class="contact-grid">
+            <div class="field">
+              <label for="name">Имя</label>
+              <input id="name" name="name" type="text" autocomplete="name" placeholder="Имя">
+              <div class="field-error" data-error-for="name"></div>
+            </div>
+
+            <div class="field">
+              <label for="dom_servis_client_phone">Телефон</label>
+              <div class="phone-field">
+                <div class="phone-field__prefix" aria-hidden="true">
+                  <span class="phone-field__flag"></span>
+                  <span>+7</span>
+                </div>
+                <input id="dom_servis_client_phone" name="dom_servis_client_phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(900) 000-00-00">
+              </div>
+              <div class="field-error" data-error-for="dom_servis_client_phone"></div>
+            </div>
+          </div>
+
+          <div class="checkbox">
+            <input id="privacy_accepted" name="privacy_accepted" type="checkbox" value="1">
+            <label class="checkbox__copy" for="privacy_accepted">${consentMarkup()}</label>
+          </div>
+          <div class="field-error" data-error-for="privacy"></div>
+
+          <button type="submit" class="submit" disabled>Отправить</button>
+          <div class="fineprint">После отправки мастер перезвонит и уточнит детали заявки.</div>
+        `;
+
+        const submitButton = form.querySelector('.submit');
+        const checkbox = form.querySelector('#privacy_accepted');
+        const phoneInput = form.querySelector('[name="dom_servis_client_phone"]');
+
+        const updateSubmitState = () => {
+          submitButton.disabled = !checkbox.checked || state.submitting;
+        };
+
+        checkbox.addEventListener('change', () => {
+          setFieldError('privacy', '');
+          updateSubmitState();
+        });
+
+        phoneInput.addEventListener('input', () => {
+          const cursor = phoneInput.selectionStart || 0;
+          const beforeLength = phoneInput.value.length;
+          const nextValue = displayPhoneValue(phoneInput.value);
+          phoneInput.value = nextValue;
+          const afterLength = nextValue.length;
+          const nextCursor = Math.max(0, cursor + (afterLength - beforeLength));
+          window.requestAnimationFrame(() => {
+            phoneInput.setSelectionRange(nextCursor, nextCursor);
+          });
+          setFieldError('dom_servis_client_phone', '');
+        });
+
+        form.addEventListener('input', () => {
+          hideBanner();
+        });
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (state.submitting) return;
+
+          hideBanner();
+          clearFieldErrors();
+
+          const values = Object.fromEntries(new FormData(form).entries());
+          const errors = validate(values);
+
+          if (Object.keys(errors).length) {
+            renderErrors(errors);
+            updateSubmitState();
+            return;
+          }
+
+          const dispatchDate = currentDispatchDate();
+          const name = form.querySelector('[name="name"]').value.trim();
+          const phone = submitPhoneValue(form.querySelector('[name="dom_servis_client_phone"]').value);
+          const description = submitDescription(name, phone);
+
+          const payload = new FormData();
+          payload.set('fingerprint', state.fingerprint);
+          payload.set('token', state.config.token || '');
+          payload.set('request_source_token', state.requestSourceToken);
+          payload.set('request_source_origin', state.requestSourceOrigin);
+          payload.set('name', name);
+          payload.set('email', generatedEmail());
+          payload.set('title', 'Заявка на обратный звонок');
+          payload.set('body', description);
+          payload.set('dom_servis_client_name', name);
+          payload.set('dom_servis_client_phone', phone);
+          payload.set('dom_servis_service_type', 'Уточнить у клиента');
+          payload.set('dom_servis_address', 'Уточнить у клиента');
+          payload.set('dom_servis_visit_date', dispatchDate);
+          payload.set('dom_servis_visit_day', weekdayKey(dispatchDate));
+          payload.set('dom_servis_visit_time', 'Уточнить у клиента');
+          payload.set('dom_servis_dispatch_priority', 'medium');
+          payload.set('dom_servis_description', description);
+          payload.set('dom_servis_comment', 'Детали услуги, адрес и время нужно уточнить у клиента.');
+
+          state.submitting = true;
+          updateSubmitState();
+          submitButton.textContent = 'Отправляем...';
+
+          try {
+            const response = await fetch(state.config.endpoint || `${API_ORIGIN}/api/v1/form_submit`, {
+              method: 'POST',
+              body: payload,
+              credentials: 'same-origin',
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || data.errors) {
+              const mapped = {};
+              Object.entries(data.errors || { base: 'Не удалось отправить заявку' }).forEach(([field, message]) => {
+                if (field === 'base') {
+                  setBanner(humanizeServerError(field, message));
+                } else {
+                  mapped[field] = humanizeServerError(field, message);
+                }
+              });
+
+              if (Object.keys(mapped).length) {
+                renderErrors(mapped);
+              } else if (!refs.banner.textContent) {
+                setBanner('Не удалось отправить заявку');
+              }
+              return;
+            }
+
+            showSuccess(data.ticket && data.ticket.number ? data.ticket.number : '');
+          } catch (error) {
+            setBanner('Не удалось отправить заявку. Проверьте соединение и попробуйте ещё раз.');
+          } finally {
+            state.submitting = false;
+            submitButton.textContent = 'Отправить';
+            updateSubmitState();
+          }
+        });
+
+        updateSubmitState();
+        return form;
+      }
+
+      function showForm(form) {
+        refs.formHost.innerHTML = '';
+        refs.formHost.appendChild(form);
+        refs.formHost.classList.remove('hidden');
+        scheduleResize();
+      }
+
+      function showSuccess(ticketNumber) {
+        refs.formHost.classList.add('hidden');
+        refs.successHost.innerHTML = `
+          <div class="success">
+            <p class="success__eyebrow">Готово</p>
+            <h2>Заявка отправлена</h2>
+            <p>Мастер свяжется с вами в ближайшее время${ticketNumber ? `. Номер обращения: #${escapeHtml(ticketNumber)}` : ''}.</p>
+          </div>
+        `;
+        refs.successHost.classList.remove('hidden');
+        scheduleResize();
+      }
+
+      async function bootstrap() {
+        try {
+          const configPayload = new URLSearchParams();
+          configPayload.set('fingerprint', state.fingerprint);
+          if (state.requestSourceToken) configPayload.set('request_source_token', state.requestSourceToken);
+          if (state.requestSourceOrigin) configPayload.set('request_source_origin', state.requestSourceOrigin);
+
+          const response = await fetch(`${API_ORIGIN}/api/v1/form_config`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+              'Accept': 'application/json',
+            },
+            body: configPayload.toString(),
+            credentials: 'same-origin',
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Форма временно недоступна.');
+          }
+
+          if (!data.enabled) {
+            setBanner('Форма временно недоступна. Попробуйте позже или свяжитесь с менеджером.');
+            setLoading(false);
+            return;
+          }
+
+          state.config = data;
+          if (data.request_source && data.request_source.privacy_policy_url) {
+            state.privacyPolicyUrl = data.request_source.privacy_policy_url;
+          }
+
+          const form = buildForm();
+          showForm(form);
+          setLoading(false);
+          hideBanner();
+          scheduleResize();
+        } catch (error) {
+          setBanner(error.message || 'Не удалось загрузить форму.');
+          setLoading(false);
+        }
+      }
+
+      if (resizeObserver) {
+        [document.body, refs.page, refs.loading, refs.formHost, refs.successHost, refs.banner].forEach((element) => {
+          if (element) resizeObserver.observe(element);
+        });
+      }
+
+      window.addEventListener('resize', scheduleResize);
+      window.addEventListener('orientationchange', scheduleResize);
+      window.addEventListener('load', scheduleResize);
+      scheduleResize();
+
+      bootstrap();
+    })();
+  </script>
+</body>
+</html>

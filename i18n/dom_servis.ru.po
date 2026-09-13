@@ -1,0 +1,368 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Dom-Servis\n"
+"POT-Creation-Date: 2026-03-19 00:00+0000\n"
+"PO-Revision-Date: 2026-03-19 00:00+0000\n"
+"Last-Translator: Codex\n"
+"Language-Team: Dom-Servis\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Dispatch admin"
+msgstr "Администрирование диспетчеризации"
+
+msgid "Dispatch Admin"
+msgstr "Администрирование диспетчеризации"
+
+msgid "Board behavior matrix for the Dom-Servis dispatch workspace. Assign people to roles in Manage > Roles; configure how those roles act on jobs here."
+msgstr "Матрица поведения доски для рабочего пространства диспетчеризации Дом-Сервис. Назначайте пользователей на роли в Управление > Роли, а здесь настраивайте, как эти роли работают с заявками."
+
+msgid "Refresh"
+msgstr "Обновить"
+
+msgid "Reset defaults"
+msgstr "Сбросить к значениям по умолчанию"
+
+msgid "Save policy"
+msgstr "Сохранить политику"
+
+msgid "Open Dispatch Board"
+msgstr "Открыть диспетчерскую доску"
+
+msgid "Total jobs"
+msgstr "Всего заявок"
+
+msgid "Pool"
+msgstr "Пул"
+
+msgid "Active"
+msgstr "Активные"
+
+msgid "Done"
+msgstr "Завершённые"
+
+msgid "Loading dispatch registry and current policy..."
+msgstr "Загрузка реестра диспетчеризации и текущей политики..."
+
+msgid "This screen is the workflow policy layer of Dom-Servis. It does not replace Zammad role assignment."
+msgstr "Этот экран управляет правилами работы диспетчеризации Дом-Сервис. Он не заменяет назначение ролей в Zammad."
+
+msgid "Use it to define which role may press which button, set which status and edit which field on the dispatch board."
+msgstr "Используйте этот экран, чтобы определить, какая роль может нажимать какие кнопки, устанавливать какие статусы и редактировать какие поля на диспетчерской доске."
+
+msgid "Unsaved changes:"
+msgstr "Несохранённые изменения:"
+
+msgid "the matrix below has been edited and is not saved yet."
+msgstr "матрица ниже была изменена и пока не сохранена."
+
+msgid "Role Profiles"
+msgstr "Профили ролей"
+
+msgid "Stable role stack. Membership is assigned in Zammad roles; behavior is configured by the matrices below."
+msgstr "Стабильный стек ролей. Принадлежность назначается в ролях Zammad, а поведение настраивается матрицами ниже."
+
+msgid "Base role"
+msgstr "Базовая роль"
+
+msgid "Overlay role"
+msgstr "Надстроечная роль"
+
+msgid "Permission"
+msgstr "Разрешение"
+
+msgid "Master"
+msgstr "Мастер"
+
+msgid "Dispatcher"
+msgstr "Диспетчер"
+
+msgid "Admin"
+msgstr "Администратор"
+
+msgid "Takes jobs from the shared pool and moves owned jobs through the master workflow."
+msgstr "Берёт заявки из общего пула и проводит свои заявки по рабочему процессу мастера."
+
+msgid "Creates, edits, reschedules and coordinates jobs across the board."
+msgstr "Создаёт, редактирует, перепланирует и координирует заявки по всей доске."
+
+msgid "Owner / Admin"
+msgstr "Владелец / администратор"
+
+msgid "Owns the dispatch policy, dashboards and administrative control of the module."
+msgstr "Управляет политикой диспетчеризации, дашбордами и административным контролем модуля."
+
+msgid "Actions Matrix"
+msgstr "Матрица действий"
+
+msgid "Every current and planned board action gets an explicit per-role toggle."
+msgstr "Для каждого текущего и запланированного действия на доске задаётся явный переключатель по ролям."
+
+msgid "Job lifecycle actions"
+msgstr "Действия жизненного цикла заявки"
+
+msgid "Action"
+msgstr "Действие"
+
+msgid "Create job"
+msgstr "Создать заявку"
+
+msgid "Open and submit a new dispatch job into the board."
+msgstr "Открыть и отправить новую заявку диспетчеризации на доску."
+
+msgid "Publish to pool"
+msgstr "Опубликовать в пул"
+
+msgid "Expose a newly created job to the shared master pool."
+msgstr "Сделать новую заявку доступной в общем пуле мастеров."
+
+msgid "Take job"
+msgstr "Взять заявку"
+
+msgid "Claim a shared pool job."
+msgstr "Забрать заявку из общего пула."
+
+msgid "Release to pool"
+msgstr "Вернуть в пул"
+
+msgid "Return an owned job back into the pool."
+msgstr "Вернуть взятую заявку обратно в пул."
+
+msgid "Set in progress"
+msgstr "Перевести в работу"
+
+msgid "Move a job into active execution."
+msgstr "Перевести заявку в активное выполнение."
+
+msgid "Set done"
+msgstr "Отметить выполненной"
+
+msgid "Mark a job as completed."
+msgstr "Пометить заявку как выполненную."
+
+msgid "Cancel job"
+msgstr "Отменить заявку"
+
+msgid "Cancel an active or pending job."
+msgstr "Отменить активную или ожидающую заявку."
+
+msgid "Reopen job"
+msgstr "Переоткрыть заявку"
+
+msgid "Reopen a completed or cancelled job."
+msgstr "Переоткрыть завершённую или отменённую заявку."
+
+msgid "Coordination actions"
+msgstr "Координационные действия"
+
+msgid "Move job day"
+msgstr "Перенести день заявки"
+
+msgid "Move a job to another weekday inside the dispatch board."
+msgstr "Перенести заявку на другой день недели внутри диспетчерской доски."
+
+msgid "Move job week"
+msgstr "Перенести неделю заявки"
+
+msgid "Move a job across weeks."
+msgstr "Перенести заявку на другую неделю."
+
+msgid "Change priority"
+msgstr "Изменить приоритет"
+
+msgid "Change the visual and operational priority of a job."
+msgstr "Изменить визуальный и операционный приоритет заявки."
+
+msgid "Change assignee"
+msgstr "Изменить исполнителя"
+
+msgid "Assign or reassign a job directly to another worker."
+msgstr "Назначить или переназначить заявку другому исполнителю."
+
+msgid "Edit all fields"
+msgstr "Редактировать все поля"
+
+msgid "Open full payload editing for job data."
+msgstr "Открыть полное редактирование данных заявки."
+
+msgid "Delete job"
+msgstr "Удалить заявку"
+
+msgid "Delete a dispatch job from the board."
+msgstr "Удалить заявку диспетчеризации с доски."
+
+msgid "Content and evidence"
+msgstr "Содержимое и подтверждения"
+
+msgid "Add comment"
+msgstr "Добавить комментарий"
+
+msgid "Add or update an operational comment on the job."
+msgstr "Добавить или обновить рабочий комментарий по заявке."
+
+msgid "Add attachment"
+msgstr "Добавить вложение"
+
+msgid "Attach files, photos or evidence to the job."
+msgstr "Прикрепить к заявке файлы, фотографии или подтверждения."
+
+msgid "Remove attachment"
+msgstr "Удалить вложение"
+
+msgid "Remove files from the job payload."
+msgstr "Удалить файлы из данных заявки."
+
+msgid "Status Matrix"
+msgstr "Матрица статусов"
+
+msgid "Target statuses that each role may set directly on the job workflow."
+msgstr "Целевые статусы, которые каждая роль может устанавливать напрямую в рабочем процессе заявки."
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Shared pool state before a master claims the job."
+msgstr "Состояние общего пула до того, как мастер заберёт заявку."
+
+msgid "Taken"
+msgstr "Взята"
+
+msgid "Claimed by a worker but not yet started."
+msgstr "Заявка забрана исполнителем, но работа ещё не началась."
+
+msgid "In progress"
+msgstr "В работе"
+
+msgid "Actively being worked on."
+msgstr "Заявка находится в активной работе."
+
+msgid "Completed and closed for the operational workflow."
+msgstr "Заявка завершена и закрыта в операционном процессе."
+
+msgid "Cancelled"
+msgstr "Отменена"
+
+msgid "Cancelled before completion."
+msgstr "Заявка отменена до завершения."
+
+msgid "Field Matrix"
+msgstr "Матрица полей"
+
+msgid "Field registry is generated from dispatch job columns plus Dom-Servis virtual fields. New fields can be added without redesigning this screen."
+msgstr "Реестр полей формируется из колонок заявки диспетчеризации и виртуальных полей Дом-Сервис. Новые поля можно добавлять без переработки этого экрана."
+
+msgid "Identity"
+msgstr "Идентификация"
+
+msgid "Customer"
+msgstr "Клиент"
+
+msgid "Scheduling"
+msgstr "Планирование"
+
+msgid "Job content"
+msgstr "Содержимое заявки"
+
+msgid "Assignment"
+msgstr "Назначение"
+
+msgid "Lifecycle"
+msgstr "Жизненный цикл"
+
+msgid "Attachments"
+msgstr "Вложения"
+
+msgid "Other"
+msgstr "Прочее"
+
+msgid "Field"
+msgstr "Поле"
+
+msgid "Visible"
+msgstr "Видимо"
+
+msgid "Editable"
+msgstr "Редактируемо"
+
+msgid "Job code"
+msgstr "Код заявки"
+
+msgid "Source"
+msgstr "Источник"
+
+msgid "Priority"
+msgstr "Приоритет"
+
+msgid "Visit day"
+msgstr "День визита"
+
+msgid "Visit date"
+msgstr "Дата визита"
+
+msgid "Visit time"
+msgstr "Время визита"
+
+msgid "Address"
+msgstr "Адрес"
+
+msgid "Client name"
+msgstr "Имя клиента"
+
+msgid "Client phone"
+msgstr "Телефон клиента"
+
+msgid "Service type"
+msgstr "Тип услуги"
+
+msgid "Description"
+msgstr "Описание"
+
+msgid "Comment"
+msgstr "Комментарий"
+
+msgid "Work tags"
+msgstr "Теги работ"
+
+msgid "Assignee"
+msgstr "Исполнитель"
+
+msgid "Linked ticket"
+msgstr "Связанная заявка"
+
+msgid "Published at"
+msgstr "Опубликовано"
+
+msgid "Taken at"
+msgstr "Взята"
+
+msgid "Completed at"
+msgstr "Завершена"
+
+msgid "Cancelled at"
+msgstr "Отменена"
+
+msgid "Organization"
+msgstr "Организация"
+
+msgid "db"
+msgstr "БД"
+
+msgid "virtual"
+msgstr "виртуальное"
+
+msgid "Dispatch policy saved."
+msgstr "Политика диспетчеризации сохранена."
+
+msgid "Dispatch policy reset to defaults."
+msgstr "Политика диспетчеризации сброшена к значениям по умолчанию."
+
+msgid "Could not load dispatch policy."
+msgstr "Не удалось загрузить политику диспетчеризации."
+
+msgid "Could not save dispatch policy."
+msgstr "Не удалось сохранить политику диспетчеризации."
+
+msgid "Could not reset dispatch policy."
+msgstr "Не удалось сбросить политику диспетчеризации."

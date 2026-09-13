@@ -1,0 +1,28 @@
+<div data-attribute-name="<%= @attribute.name %>" class="<%= @attribute.tag %> form-group<%= " form-group--block" if @attribute.style == 'block' %><%= " #{ @attribute.item_class }" if @attribute.item_class %><%= " is-required" if !@attribute.null %><%= " is-hidden is-removed hide" if @attribute.shown == false %>"<%= " data-width=#{ @attribute.grid_width }" if @attribute.grid_width %>>
+  <div class="formGroup-label">
+    <label for="<%= @attribute.id %>"<% if @attribute.label_class: %> class="<%= @attribute.label_class %>"<% end %>>
+      <%- @Ti(@attribute.display) %>
+      <span><% if !@attribute.null: %>*<% end %></span>
+    </label>
+    <% if @attribute.note: %>
+    <div class="help-message js-helpMessage" title="<%- @Ti(@attribute.note) %>">
+      <%- @Icon('help') %>
+    </div>
+    <% end %>
+  </div>
+  <div class="controls controls--button ignore-readonly">
+    <% if @attribute.multiline: %>
+    <textarea readonly id="<%= @attribute.id %>" name="<%= @attribute.name %>" class="form-control js-select js-permanentReadonly <%= @attribute.class %>" rows="<%= @attribute.rows || 8 %>"><%= @attribute.value || '' %></textarea>
+    <% else: %>
+    <input readonly id="<%= @attribute.id %>" type="text" name="<%= @attribute.name %>" value="<%= @attribute.value || '' %>" class="form-control js-select js-permanentReadonly <%= @attribute.class %>">
+    <% end %>
+    <div class="controls-button u-clickable js-copy" role="button" data-target-field="<%- @attribute.name %>" aria-label="<%- @T('Copy to clipboard') %>">
+      <span class="controls-button-inner">
+        <%- @Icon('clipboard') %>
+      </span>
+    </div>
+  </div>
+  <div class="controls">
+    <span class="help-block"><% if @attribute.help: %><%- @T(@attribute.help) %><% end %><%- @attribute.helpLink %></span>
+  </div>
+</div>

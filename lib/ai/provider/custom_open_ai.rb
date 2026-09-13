@@ -1,0 +1,92 @@
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+class AI::Provider::CustomOpenAI < AI::Provider
+  include AI::Provider::Concerns::HandlesOpenAIMessages
+  include AI::Provider::Concerns::HasConfigurableModel
+
+  DEFAULT_OPTIONS = {
+    temperature: 0.1,
+  }.freeze
+
+  def chat(prompt_system:, prompt_user:, prompt_image:)
+    request_body = {
+      model:    model_for(prompt_image:),
+      messages: messages_for(prompt_system:, prompt_user:, prompt_image:),
+      stream:   false,
+    }
+
+    request_body[:temperature] = options[:temperature]
+
+    request_options = {
+      open_timeout:  4,
+      read_timeout:  60,
+      verify_ssl:    true,
+      total_timeout: 60,
+      json:          true,
+      log:           {
+        facility: 'AI::Provider',
+      },
+    }
+
+    # Token is optional since target host might not require authentication
+    request_options[:bearer_token] = config[:token] if config[:token].present?
+
+    response = UserAgent.post(
+      "#{config[:url]}/chat/completions",
+      request_body,
+      request_options,
+    )
+
+    data = validate_response!(response)
+    extract_response_metadata(data)
+
+    data['choices'].first['message']['content']
+  end
+
+  def embeddings(input:)
+    raise NotImplementedError, 'not supported for custom OpenAI Compatible providers'
+  end
+
+  def self.ping!(config)
+    request_options = {
+      open_timeout:  4,
+      read_timeout:  60,
+      verify_ssl:    true,
+      total_timeout: 60,
+      json:          true,
+      log:           {
+        facility:          'AI::Provider',
+        log_only_on_error: true,
+      },
+    }
+
+    # Token is optional since target host might not require authentication
+    request_options[:bearer_token] = config[:token] if config[:token].present?
+
+    response = UserAgent.get(
+      "#{config[:url]}/models",
+      {},
+      request_options,
+    )
+
+    validate_response!(response)
+
+    nil
+  end
+
+  private
+
+  def specific_metadata
+    {
+      model: options[:model],
+    }
+  end
+
+  def extract_response_metadata(data)
+    @response_metadata = {
+      prompt_tokens:     data.dig('usage', 'prompt_tokens'),
+      completion_tokens: data.dig('usage', 'completion_tokens'),
+      total_tokens:      data.dig('usage', 'total_tokens'),
+    }
+  end
+end

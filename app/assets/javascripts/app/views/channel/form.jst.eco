@@ -1,0 +1,204 @@
+<div class="page-header">
+  <div class="page-header-title">
+    <div class="zammad-switch zammad-switch--small js-formSetting">
+       <input name="form_ticket_create" type="checkbox" id="setting-form" <% if @formSetting: %>checked<% end %>>
+       <label for="setting-form"></label>
+    </div>
+    <h1><%- @T('Форма') %> <small></small></h1>
+  </div>
+</div>
+<div class="page-content">
+  <p><%- @T('С помощью формы можно добавить форму на сайт, которая напрямую создаёт заявку.') %></p>
+
+  <h2><%- @T('Настройки') %></h2>
+  <form class="js-paramsSetting">
+    <fieldset>
+      <div class="input form-group formGroup--halfSize">
+        <div class="formGroup-label">
+          <label for="form-group"><%- @T('Выбор группы для создания заявки') %></label>
+        </div>
+        <div class="controls js-groupSelector" id="from-group"></div>
+      </div>
+    </fieldset>
+  </form>
+
+  <h2><%- @T('Приём заявок Дом-Сервис') %></h2>
+  <form class="js-domServisIntakeSettings">
+    <fieldset>
+      <p class="text-muted">
+        <%- @T('Этот раздел оставляет старый приём заявок через форму доступным на время перехода. Новых партнёров нужно заводить в разделе «Источники заявок партнёров», где partner_key и токены встраивания управляются централизованно.') %>
+        <a href="#manage/dom_servis_request_sources"><%- @T('Открыть источники заявок партнёров') %></a>
+      </p>
+      <div class="input form-group formGroup--halfSize js-domServisIntakeSetting">
+        <div class="formGroup-label">
+          <label for="dom-servis-intake-enabled"><%- @T('Преобразовывать заявки формы в диспетчерские заявки') %></label>
+        </div>
+        <div class="controls">
+          <div class="zammad-switch zammad-switch--small">
+             <input name="dom_servis_form_intake_enabled" type="checkbox" id="dom-servis-intake-enabled" <% if @domServisIntakeSetting: %>checked<% end %>>
+             <label for="dom-servis-intake-enabled"></label>
+          </div>
+        </div>
+      </div>
+      <div class="input form-group formGroup--halfSize hide js-domServisIntakeOrganizationGroup">
+        <div class="formGroup-label">
+          <label for="dom-servis-intake-organization"><%- @T('Организация партнёра') %></label>
+        </div>
+        <div class="controls js-domServisIntakeOrganizationSelector" id="dom-servis-intake-organization"></div>
+      </div>
+    </fieldset>
+  </form>
+
+  <h2><%- @T('Конструктор') %></h2>
+  <form class="js-paramsDesigner">
+
+    <fieldset>
+      <div class="input form-group formGroup--halfSize">
+        <div class="formGroup-label">
+          <label for="form-message-title"><%- @T('Заголовок формы') %></label>
+        </div>
+        <div class="controls">
+          <input type="text" id="form-message-title" name="messageTitle" value="<%- @Ti('Форма обратной связи') %>">
+        </div>
+      </div>
+      <div class="input form-group formGroup--halfSize">
+        <div class="formGroup-label">
+          <label for="form-message-submit"><%- @T('Текст кнопки отправки') %></label>
+        </div>
+        <div class="controls">
+          <input type="text" id="form-message-submit" name="messageSubmit" value="<%- @Ti('Отправить') %>">
+        </div>
+      </div>
+      <div class="input form-group">
+        <div class="formGroup-label">
+          <label for="form-message-thank-you"><%- @T('Сообщение после отправки формы') %></label>
+        </div>
+        <div class="controls">
+          <textarea type="text" id="form-message-thank-you" name="messageThankYou" rows="3"><%- @Ti('Спасибо за вашу заявку (#%s)! Мы свяжемся с вами как можно скорее.') %></textarea>
+        </div>
+      </div>
+    </fieldset>
+
+    <br>
+
+    <table class="settings-list">
+      <thead>
+        <tr>
+          <th style="white-space: nowrap;"><%- @T('Параметры') %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <label class="inline-label">
+              <span class="checkbox-replacement checkbox-replacement--inline">
+                <input type="checkbox" name="debug" value="true">
+                <%- @Icon('checkbox', 'icon-unchecked') %>
+                <%- @Icon('checkbox-checked', 'icon-checked') %>
+              </span>
+              <%- @T('Включить отладку для встраивания.') %>
+            </label>
+        <tr>
+          <td>
+            <label class="inline-label">
+              <span class="checkbox-replacement checkbox-replacement--inline">
+                <input type="checkbox" name="showTitle" value="true">
+                <%- @Icon('checkbox', 'icon-unchecked') %>
+                <%- @Icon('checkbox-checked', 'icon-checked') %>
+              </span>
+              <%- @T('Показывать заголовок в форме.') %>
+            </label>
+        <tr>
+          <td>
+            <label class="inline-label">
+              <span class="checkbox-replacement checkbox-replacement--inline">
+                <input type="checkbox" name="modal" value="true" checked>
+                <%- @Icon('checkbox', 'icon-unchecked') %>
+                <%- @Icon('checkbox-checked', 'icon-checked') %>
+              </span>
+              <%- @T('Открывать форму в модальном окне.') %>
+            </label>
+        <tr>
+          <td>
+            <label class="inline-label">
+              <span class="checkbox-replacement checkbox-replacement--inline">
+                <input type="checkbox" name="noCSS" value="true">
+                <%- @Icon('checkbox', 'icon-unchecked') %>
+                <%- @Icon('checkbox-checked', 'icon-checked') %>
+              </span>
+              <%- @T('Не загружать CSS формы. В этом случае вам нужно подготовить собственные стили для формы.') %>
+            </label>
+        <tr>
+          <td>
+            <label class="inline-label">
+              <span class="checkbox-replacement checkbox-replacement--inline">
+                <input type="checkbox" name="attachmentSupport" value="true">
+                <%- @Icon('checkbox', 'icon-unchecked') %>
+                <%- @Icon('checkbox-checked', 'icon-checked') %>
+              </span>
+              <%- @T('Добавить возможность прикрепления файлов.') %>
+            </label>
+        <tr>
+          <td>
+            <div class="form-group">
+              <label class="inline-label">
+                <span class="checkbox-replacement checkbox-replacement--inline">
+                  <input type="checkbox" id="agreementSupport" value="true">
+                  <%- @Icon('checkbox', 'icon-unchecked') %>
+                  <%- @Icon('checkbox-checked', 'icon-checked') %>
+                </span>
+                <%- @T('Добавить текст согласия перед отправкой.') %>
+              </label>
+              <div class="controls">
+                <div class="hide agreement-support-text richtext form-group">
+                  <textarea type="text" id="form-message-agreement" name="agreementMessage" rows="3"><%- @Ti('Принимаю политику конфиденциальности и правила использования') %></textarea>
+                </div>
+              </div>
+            </div>
+      </tbody>
+    </table>
+  </form>
+
+  <label class="formGroup-label"><%- @T('Предпросмотр') %></label>
+
+  <div class="browser js-browser">
+    <div class="browser-ratio">
+      <div class="browser-body js-browserBody">
+        <div class="browser-website centered vertical fit">
+          <div class="btn js-formBtn"><%- @T('Заявка') %></div>
+          <div class="js-formInline browser-inline-form"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <h3><%- @T('Требования') %></h3>
+  <p><%- @T('Формам Zammad требуется jQuery. Если на вашем сайте он ещё не подключён, добавьте его так:') %></p>
+  <pre><code class="language-html js-code">&lt;script src="https://code.jquery.com/jquery-3.6.0.min.js"&gt;&lt;/script&gt;</code></pre>
+
+  <p><%- @T('Нужно добавить следующий фрагмент JavaScript на ваш сайт:') %></p>
+
+  <pre class="js-modal"><code class="language-html js-code js-paramsBlock">&lt;button id="zammad-feedback-form"&gt;Заявка&lt;/button&gt;
+
+&lt;script id="zammad_form_script" src="<%= @baseurl %>/assets/form/form.js"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+$(function() {
+  $('#zammad-feedback-form').ZammadForm({
+<span class="js-modal-params"></span>
+  });
+});
+&lt;/script&gt;</code></pre>
+</div>
+
+  <pre class="js-inlineForm"><code class="language-html js-code js-paramsBlock">&lt;div id="zammad-feedback-form"&gt;форма будет размещена здесь&lt;/div&gt;
+
+&lt;script id="zammad_form_script" src="<%= @baseurl %>/assets/form/form.js"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+$(function() {
+  $('#zammad-feedback-form').ZammadForm({
+<span class="js-modal-params"></span>
+  });
+});
+&lt;/script&gt;</code></pre>
+</div>

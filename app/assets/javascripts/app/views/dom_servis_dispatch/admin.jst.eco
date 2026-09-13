@@ -1,0 +1,294 @@
+<div class="dom-servis-dispatch-admin">
+  <div class="dom-servis-dispatch-admin__header">
+    <div>
+      <h1><%- @T('Dispatch Admin') %></h1>
+      <p><%- @T('Board behavior matrix for the Dom-Servis dispatch workspace. Assign people to roles in Manage > Roles; configure how those roles act on jobs here.') %></p>
+    </div>
+    <div class="dom-servis-dispatch-admin__actions">
+      <button class="btn js-refresh-dispatch-admin"><%- @T('Refresh') %></button>
+      <button class="btn js-reset-dispatch-policy"><%- @T('Reset defaults') %></button>
+      <button class="btn btn--primary js-save-dispatch-policy"<%= ' disabled' if !@dirty || @saving %>><%- @T('Save policy') %></button>
+      <button class="btn btn--success js-open-dispatch-board"><%- @T('Open Dispatch Board') %></button>
+    </div>
+  </div>
+
+  <% if @error: %>
+    <div class="alert alert-danger"><%= @error %></div>
+  <% end %>
+
+  <div class="dom-servis-dispatch-admin__cards">
+    <div class="dom-servis-dispatch-admin-card">
+      <span><%- @T('Total jobs') %></span>
+      <strong><%= @stats.total %></strong>
+    </div>
+    <div class="dom-servis-dispatch-admin-card">
+      <span><%- @T('Pool') %></span>
+      <strong><%= @stats.pool %></strong>
+    </div>
+    <div class="dom-servis-dispatch-admin-card">
+      <span><%- @T('Active') %></span>
+      <strong><%= @stats.active %></strong>
+    </div>
+    <div class="dom-servis-dispatch-admin-card">
+      <span><%- @T('Done') %></span>
+      <strong><%= @stats.done %></strong>
+    </div>
+  </div>
+
+  <div class="dom-servis-dispatch-admin__note">
+    <% if @loading: %>
+      <div class="spinner spinner--small"></div>
+      <span><%- @T('Loading dispatch registry and current policy...') %></span>
+    <% else: %>
+      <p><%- @T('This screen is the workflow policy layer of Dom-Servis. It does not replace Zammad role assignment.') %></p>
+      <p><%- @T('Use it to define which role may press which button, set which status and edit which field on the dispatch board.') %></p>
+      <% if @dirty: %>
+        <p><strong><%- @T('Unsaved changes:') %></strong> <%- @T('the matrix below has been edited and is not saved yet.') %></p>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if !@loading: %>
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
+          <h2><%- @T('Deadline warning') %></h2>
+          <p><%- @T('Set how many minutes before the visit deadline a pool job should turn red on the board.') %></p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__settings-card">
+        <div class="form-group dom-servis-dispatch-admin__setting">
+          <label><%- @T('Minutes before deadline') %></label>
+          <input
+            class="form-control js-policy-setting"
+            type="number"
+            min="1"
+            step="5"
+            data-setting="deadline_warning_minutes"
+            value="<%= @policy.settings.deadline_warning_minutes %>">
+          <p class="dom-servis-dispatch-admin__setting-hint"><%- @T('Recommended default: 120 minutes. Used only for the board highlight, not for status transitions.') %></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
+          <h2><%- @T('Dispatch Tags') %></h2>
+          <p><%- @T('Dispatch job tags reuse the global Zammad tag namespace. Create new tag names only in Manage > Tags, then dispatchers can assign them on jobs and the same tags will be mirrored into backing tickets.') %></p>
+        </div>
+      </div>
+
+      <% if @tags.length > 0: %>
+        <div class="dom-servis-dispatch-admin__tag-list">
+          <% for tag in @tags: %>
+            <div class="dom-servis-dispatch-admin__tag-card">
+              <strong><%= tag.name %></strong>
+              <span><%- @T('Dispatch jobs') %>: <%= tag.dispatch_count %></span>
+              <span><%- @T('All Zammad references') %>: <%= tag.ticket_count %></span>
+            </div>
+          <% end %>
+        </div>
+      <% else: %>
+        <div class="dom-servis-dispatch-admin__tag-empty"><%- @T('No dispatch tags created yet.') %></div>
+      <% end %>
+
+      <div class="dom-servis-dispatch-admin__note">
+        <p><%- @T('Dispatch Admin is read-only for the tag dictionary. Use Manage > Tags to create or rename tags, and use the dispatch board to assign them on jobs.') %></p>
+      </div>
+    </section>
+
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
+          <h2><%- @T('Role Profiles') %></h2>
+          <p><%- @T('Stable role stack. Membership is assigned in Zammad roles; behavior is configured by the matrices below.') %></p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__role-grid">
+        <% for role in @registry.roles: %>
+          <article class="dom-servis-dispatch-admin__role-card">
+            <div class="dom-servis-dispatch-admin__role-title"><%- @T(role.label) %></div>
+            <div class="dom-servis-dispatch-admin__role-line"><span><%- @T('Base role') %></span><strong><%= role.base_role %></strong></div>
+            <div class="dom-servis-dispatch-admin__role-line"><span><%- @T('Overlay role') %></span><strong><%= role.overlay_role %></strong></div>
+            <div class="dom-servis-dispatch-admin__role-line"><span><%- @T('Permission') %></span><strong><%= role.permission %></strong></div>
+            <p><%- @T(role.description) %></p>
+          </article>
+        <% end %>
+      </div>
+    </section>
+
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
+          <h2><%- @T('Actions Matrix') %></h2>
+          <p><%- @T('Every current and planned board action gets an explicit per-role toggle.') %></p>
+        </div>
+      </div>
+
+      <% for group in @registry.action_groups: %>
+        <div class="dom-servis-dispatch-admin__matrix-block">
+          <div class="dom-servis-dispatch-admin__matrix-title"><%- @T(group.label) %></div>
+          <table class="dom-servis-dispatch-admin__matrix-table">
+            <thead>
+              <tr>
+                <th><%- @T('Action') %></th>
+                <th><%- @T('Master') %></th>
+                <th><%- @T('Dispatcher') %></th>
+                <th><%- @T('Admin') %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% for item in group.items: %>
+                <tr>
+                  <td>
+                    <div class="dom-servis-dispatch-admin__cell-title"><%- @T(item.label) %></div>
+                    <div class="dom-servis-dispatch-admin__cell-hint"><%- @T(item.description) %></div>
+                  </td>
+                  <% for role in @registry.roles: %>
+                    <td class="dom-servis-dispatch-admin__toggle-cell">
+                      <label class="dom-servis-dispatch-admin__toggle">
+                        <input
+                          class="js-policy-toggle"
+                          type="checkbox"
+                          data-section="actions"
+                          data-item="<%= item.key %>"
+                          data-role="<%= role.key %>"
+                          <%= 'checked' if @policy.actions[item.key]?[role.key] %>
+                        >
+                        <span></span>
+                      </label>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </section>
+
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
+          <h2><%- @T('Status Matrix') %></h2>
+          <p><%- @T('Target statuses that each role may set directly on the job workflow.') %></p>
+        </div>
+      </div>
+
+      <table class="dom-servis-dispatch-admin__matrix-table">
+        <thead>
+          <tr>
+            <th><%- @T('Status') %></th>
+            <th><%- @T('Master') %></th>
+            <th><%- @T('Dispatcher') %></th>
+            <th><%- @T('Admin') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for status in @registry.statuses: %>
+            <tr>
+              <td>
+                <div class="dom-servis-dispatch-admin__cell-title"><%- @T(status.label) %></div>
+                <div class="dom-servis-dispatch-admin__cell-hint"><%- @T(status.description) %></div>
+              </td>
+              <% for role in @registry.roles: %>
+                <td class="dom-servis-dispatch-admin__toggle-cell">
+                  <label class="dom-servis-dispatch-admin__toggle">
+                    <input
+                      class="js-policy-toggle"
+                      type="checkbox"
+                      data-section="statuses"
+                      data-item="<%= status.key %>"
+                      data-role="<%= role.key %>"
+                      <%= 'checked' if @policy.statuses[status.key]?[role.key] %>
+                    >
+                    <span></span>
+                  </label>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
+          <h2><%- @T('Field Matrix') %></h2>
+          <p><%- @T('Field registry is generated from dispatch job columns plus Dom-Servis virtual fields. New fields can be added without redesigning this screen.') %></p>
+        </div>
+      </div>
+
+      <% for group in @registry.field_groups: %>
+        <div class="dom-servis-dispatch-admin__matrix-block">
+          <div class="dom-servis-dispatch-admin__matrix-title"><%- @T(group.label) %></div>
+          <table class="dom-servis-dispatch-admin__matrix-table dom-servis-dispatch-admin__matrix-table--fields">
+            <thead>
+              <tr>
+                <th rowspan="2"><%- @T('Field') %></th>
+                <th colspan="2"><%- @T('Master') %></th>
+                <th colspan="2"><%- @T('Dispatcher') %></th>
+                <th colspan="2"><%- @T('Admin') %></th>
+              </tr>
+              <tr>
+                <th><%- @T('Visible') %></th>
+                <th><%- @T('Editable') %></th>
+                <th><%- @T('Visible') %></th>
+                <th><%- @T('Editable') %></th>
+                <th><%- @T('Visible') %></th>
+                <th><%- @T('Editable') %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% for field in group.items: %>
+                <tr>
+                  <td>
+                    <div class="dom-servis-dispatch-admin__cell-title">
+                      <%- @T(field.label) %>
+                      <span class="dom-servis-dispatch-admin__badge"><%- @T(field.source) %></span>
+                    </div>
+                    <div class="dom-servis-dispatch-admin__cell-hint"><code><%= field.key %></code></div>
+                  </td>
+                  <% for role in @registry.roles: %>
+                    <td class="dom-servis-dispatch-admin__toggle-cell">
+                      <label class="dom-servis-dispatch-admin__toggle">
+                        <input
+                          class="js-policy-toggle"
+                          type="checkbox"
+                          data-section="fields"
+                          data-item="<%= field.key %>"
+                          data-role="<%= role.key %>"
+                          data-mode="visible"
+                          <%= 'checked' if @policy.fields[field.key]?[role.key]?.visible %>
+                        >
+                        <span></span>
+                      </label>
+                    </td>
+                    <td class="dom-servis-dispatch-admin__toggle-cell">
+                      <label class="dom-servis-dispatch-admin__toggle">
+                        <input
+                          class="js-policy-toggle"
+                          type="checkbox"
+                          data-section="fields"
+                          data-item="<%= field.key %>"
+                          data-role="<%= role.key %>"
+                          data-mode="editable"
+                          <%= 'checked' if @policy.fields[field.key]?[role.key]?.editable %>
+                        >
+                        <span></span>
+                      </label>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+</div>

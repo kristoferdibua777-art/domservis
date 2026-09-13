@@ -1,0 +1,54 @@
+# syntax=docker/dockerfile:1
+
+ARG RUBY_VERSION=3.4.9
+ARG NODE_VERSION=22
+
+FROM node:${NODE_VERSION}-trixie-slim AS node
+RUN corepack enable pnpm && \
+    rm -f /usr/local/bin/yarn /usr/local/bin/yarnpkg
+
+FROM ruby:${RUBY_VERSION}-slim-trixie
+
+WORKDIR /opt/zammad
+
+ENV RAILS_ENV="development" \
+    BUNDLE_PATH="/usr/local/bundle" \
+    BUNDLE_WITHOUT="test" \
+    RAILS_LOG_TO_STDOUT="true"
+
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+      build-essential \
+      ca-certificates \
+      curl \
+      git \
+      libimlib2 \
+      libimlib2-dev \
+      libpq-dev \
+      libpq5 \
+      libyaml-dev \
+      postgresql-client && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=node /usr/local/bin /usr/local/bin
+
+COPY Gemfile Gemfile.lock ./
+COPY vendor ./vendor
+RUN bundle install
+
+COPY package.json pnpm-lock.yaml ./
+COPY .eslint-plugin-zammad/package.json .eslint-plugin-zammad/pnpm-lock.yaml .eslint-plugin-zammad/
+COPY .eslint-plugin-zammad/lib ./.eslint-plugin-zammad/lib
+RUN CI=true pnpm install --frozen-lockfile
+
+RUN groupadd --system --gid 1000 zammad && \
+    useradd --create-home --home /opt/zammad --shell /bin/bash --uid 1000 --gid 1000 zammad && \
+    mkdir -p /opt/zammad /usr/local/bundle && \
+    chown -R 1000:1000 /opt/zammad /usr/local/bundle
+
+COPY docker/front-dev-entrypoint.sh /usr/local/bin/front-dev-entrypoint
+RUN chmod +x /usr/local/bin/front-dev-entrypoint
+
+USER 1000:1000
+ENTRYPOINT ["/usr/local/bin/front-dev-entrypoint"]

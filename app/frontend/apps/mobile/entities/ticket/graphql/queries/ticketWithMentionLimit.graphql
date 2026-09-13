@@ -1,0 +1,18 @@
+query ticketWithMentionLimit($ticketId: ID!, $mentionsCount: Int = null) {
+  ticket(ticketId: $ticketId) {
+    ...ticketAttributes
+    createArticleType {
+      id
+      name
+    }
+    mentions(first: $mentionsCount) {
+      totalCount
+      edges {
+        node {
+          ...ticketMention
+        }
+        cursor
+      }
+    }
+  }
+}

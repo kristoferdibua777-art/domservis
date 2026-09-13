@@ -1,0 +1,18 @@
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+module Gql::Queries
+  class Ticket::Articles < BaseQuery
+
+    description 'Fetch ticket articles by ticket ID'
+
+    argument :ticket_id, ID, loads: Gql::Types::TicketType, description: 'Ticket ID'
+
+    type Gql::Types::Ticket::ArticleType.connection_type, null: false
+
+    def resolve(ticket:)
+      Service::Ticket::Article::List
+        .new(current_user: context.current_user)
+        .execute(ticket:)
+    end
+  end
+end

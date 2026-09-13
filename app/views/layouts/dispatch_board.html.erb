@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="<%= local_assigns[:locale] || 'en-us' %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <base href="/">
+  <title><%= Setting.get('product_name') %></title>
+
+  <%# PWA shell ----------------------------------------------------------- %>
+  <meta name="theme-color" content="#20242d">
+  <meta name="description" content="Dom-Servis dispatch board for masters and dispatchers.">
+  <link rel="manifest" href="/dispatch/manifest.webmanifest" />
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <%# iOS standalone mode + status bar styling (required for Web Push on iOS) %>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Dom-Servis">
+
+  <%# Expose the VAPID public key to the legacy CoffeeScript board so it can
+      subscribe the dispatch service worker to the push service. %>
+  <meta name="dom-servis-vapid-public-key" content="<%= Setting.get('dom_servis_webpush_vapid_public_key') %>">
+
+  <%# Legacy Sprockets assets (CoffeeScript dispatch board + addons CSS) %>
+  <%= stylesheet_link_tag "application", :media => 'all', nonce: true %>
+  <%= stylesheet_link_tag "application-print", :media => 'print', nonce: true %>
+
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <%= action_cable_meta_tag %>
+
+  <%# Activate the dispatch board as soon as the HTML is parsed, but before
+      the deferred application.js boots App.Run. Spine.Route.setup() will
+      then pick up the hash and route straight into the board controller. %>
+  <%= javascript_tag nonce: true do -%>
+    if (window.location.hash.indexOf('#dom_servis/dispatch') === -1) {
+      window.location.replace('/dispatch/#dom_servis/dispatch');
+    }
+    try {
+      window.__ = (str) => str;
+    } catch (e) {}
+  <% end -%>
+
+  <script src="/assets/application-11ea6e232be6f2d056effccb8fbc351ebedff9b811ee1d93237fcdd1433bc500.js?v=push2" defer="defer" nonce="<%= content_security_policy_nonce %>"></script>
+
+  <%# Register the dispatch service worker inline.
+      The SW is built by Vite (vite-plugin-pwa, second VitePWA block in
+      vite.config.mjs) and served at /dispatch/sw.js by DispatchBoardController.
+      We register it directly via navigator.serviceWorker rather than pulling
+      in the full Vite bootstrap just for one call. %>
+  <%= javascript_tag nonce: true do -%>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker
+          .register('/dispatch/sw.js', { scope: '/dispatch/' })
+          .catch(function (error) {
+            if (window.console) console.warn('Dispatch SW registration failed:', error);
+          });
+      });
+    }
+  <% end -%>
+</head>
+<body class="dom-servis-dispatch-mobile-shell">
+
+  <%# svgstore fallback (copied from init/index.html.erb) ---------------- %>
+  <%= javascript_tag nonce: true do -%>
+    window.svgPolyfill = /\bEdge\/12\b|\bTrident\/[567]\b|\bVersion\/7.0 Safari\b/.test(navigator.userAgent) || (navigator.userAgent.match(/AppleWebKit\/(\d+)/) || [])[1] < 537;
+
+    (function (doc) {
+      if(!window.svgPolyfill) return;
+
+      var scripts = doc.getElementsByTagName('script');
+      var script = scripts[scripts.length - 1];
+      var xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        var div = doc.createElement('div');
+        div.innerHTML = this.responseText;
+        div.style.cssText = 'position: absolute; clip: rect(0, 0, 0, 0); z-index: -1;';
+        script.parentNode.insertBefore(div, script);
+      };
+      xhr.open('get', '<%= icons_url %>', true);
+      xhr.send();
+    })(document);
+  <% end -%>
+
+  <div id="app"></div>
+  <div class="splash">
+    <svg class="icon icon-logo"><use xlink:href="<%= icons_url %>#icon-logo" /></svg>
+    <div class="splash-title">Loading…</div>
+    <noscript>
+      <style>
+        .splash { flex-direction: column; }
+        .splash-title { display: none; }
+      </style>
+      <div style="margin-top: 16px;">
+        <%= Translation.translate(local_assigns[:locale], 'Turn on JavaScript to use Zammad.') %>
+      </div>
+    </noscript>
+  </div>
+
+
+  <style nonce="<%= content_security_policy_nonce %>">
+    #dom-servis-push-onboarding {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: rgba(0,0,0,.58);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #dom-servis-push-onboarding-card {
+      width: 100%;
+      max-width: 420px;
+      box-sizing: border-box;
+      background: #fff;
+      color: #222;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.28);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #dom-servis-push-onboarding-card h2 {
+      margin: 0 0 10px;
+      font-size: 22px;
+    }
+    #dom-servis-push-onboarding-card p {
+      margin: 0 0 18px;
+      line-height: 1.45;
+    }
+    #dom-servis-push-onboarding-enable {
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #dom-servis-push-onboarding-later {
+      width: 100%;
+      margin-top: 8px;
+      border: 0;
+      background: transparent;
+      padding: 10px;
+      cursor: pointer;
+    }
+  </style>
+
+  <div id="dom-servis-push-onboarding">
+    <div id="dom-servis-push-onboarding-card">
+      <h2>Включите уведомления</h2>
+      <p>Получайте новые заявки сразу, даже когда диспетчеризация не открыта.</p>
+      <button type="button" id="dom-servis-push-onboarding-enable">Включить уведомления</button>
+      <button type="button" id="dom-servis-push-onboarding-later">Позже</button>
+    </div>
+  </div>
+
+  <%= javascript_tag nonce: true do -%>
+    (function () {
+      var overlay = document.getElementById('dom-servis-push-onboarding');
+      var enableButton = document.getElementById('dom-servis-push-onboarding-enable');
+      var laterButton = document.getElementById('dom-servis-push-onboarding-later');
+
+      function vapidKey() {
+        var meta = document.querySelector('meta[name="dom-servis-vapid-public-key"]');
+        return meta ? meta.content : '';
+      }
+
+      function urlBase64ToUint8Array(base64String) {
+        var padding = '='.repeat((4 - base64String.length % 4) % 4);
+        var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        var rawData = window.atob(base64);
+        var output = new Uint8Array(rawData.length);
+
+        for (var i = 0; i < rawData.length; ++i) {
+          output[i] = rawData.charCodeAt(i);
+        }
+
+        return output;
+      }
+
+      function persist(subscription) {
+        return new Promise(function (resolve, reject) {
+          var xhr = new XMLHttpRequest();
+          xhr.open('POST', '/api/v1/dom_servis/dispatch/push_subscriptions', true);
+          xhr.setRequestHeader('Content-Type', 'application/json');
+
+          var csrf = document.querySelector('meta[name="csrf-token"]');
+          if (csrf) xhr.setRequestHeader('X-CSRF-Token', csrf.content);
+
+          xhr.withCredentials = true;
+
+          xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve();
+            } else {
+              reject(new Error('HTTP ' + xhr.status));
+            }
+          };
+
+          xhr.onerror = function () {
+            reject(new Error('Network error'));
+          };
+
+          xhr.send(JSON.stringify(subscription.toJSON()));
+        });
+      }
+
+      function subscribe(registration) {
+        return registration.pushManager.getSubscription()
+          .then(function (subscription) {
+            if (subscription) return subscription;
+
+            return registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(vapidKey())
+            });
+          })
+          .then(function (subscription) {
+            return persist(subscription);
+          })
+          .then(function () {
+            overlay.style.display = 'none';
+          });
+      }
+
+      function initialisePush() {
+        if (!('serviceWorker' in navigator) ||
+            !('PushManager' in window) ||
+            !('Notification' in window) ||
+            !vapidKey()) {
+          return;
+        }
+
+        overlay.style.display = 'flex';
+
+        if (Notification.permission === 'denied') {
+          enableButton.textContent = 'Уведомления запрещены в настройках';
+          enableButton.disabled = true;
+          return;
+        }
+
+        navigator.serviceWorker.ready
+          .then(function (registration) {
+            return registration.pushManager.getSubscription()
+              .then(function (subscription) {
+                if (subscription) {
+                  return persist(subscription).then(function () {
+                    overlay.style.display = 'none';
+                  });
+                }
+
+                if (Notification.permission === 'granted') {
+                  return subscribe(registration);
+                }
+              });
+          })
+          .catch(function (error) {
+            if (window.console) console.warn('Push onboarding:', error);
+          });
+      }
+
+      enableButton.addEventListener('click', function () {
+        enableButton.disabled = true;
+        enableButton.textContent = 'Включение...';
+
+        Notification.requestPermission()
+          .then(function (permission) {
+            if (permission !== 'granted') {
+              throw new Error('Permission denied');
+            }
+
+            return navigator.serviceWorker.ready;
+          })
+          .then(subscribe)
+          .catch(function () {
+            enableButton.disabled = false;
+            enableButton.textContent = 'Включить уведомления';
+          });
+      });
+
+      laterButton.addEventListener('click', function () {
+        overlay.style.display = 'none';
+      });
+
+      window.addEventListener('load', function () {
+        setTimeout(initialisePush, 700);
+      });
+    })();
+  <% end -%>
+
+</body>
+</html>

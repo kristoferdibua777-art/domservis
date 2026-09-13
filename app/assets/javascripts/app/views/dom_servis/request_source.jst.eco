@@ -1,0 +1,142 @@
+<div class="dom-servis-request-source-card">
+  <div class="alert alert--info" role="alert">
+    <%- @T('Это экран подключения партнёра. Менеджер заполняет паспорт, добавляет домены сайта партнёра и копирует готовый код встраивания без ручной правки.') %>
+  </div>
+
+  <% if @isNew: %>
+  <div class="alert alert--warning" role="alert">
+    <%- @T('Сначала сохраните источник. После сохранения станут доступны URL встраивания и готовые коды для отправки партнёру.') %>
+  </div>
+  <% end %>
+
+  <section class="dom-servis-request-source-card__section">
+    <h2><%- @T('Паспорт партнёра') %></h2>
+    <p class="help-text">
+      <%- @T('Проверьте название партнёра, его внутренний ключ, организацию и статус источника. Это поле задаёт, откуда будут приходить заявки и как они попадут на доску.') %>
+    </p>
+    <% if !@isNew: %>
+    <div class="form-group form-group--block is-required">
+      <div class="formGroup-label">
+        <label for="dom-servis-partner-key">
+          <%- @T('Ключ партнёра') %>
+          <span>*</span>
+        </label>
+        <div class="help-message js-helpMessage" title="<%- @T('Стабильный внутренний идентификатор источника. Партнёру он не нужен для вставки кода, менеджер использует его только для поддержки и сверки.') %>">
+          <%- @Icon('help') %>
+        </div>
+      </div>
+      <div class="controls controls--button ignore-readonly">
+        <input readonly disabled id="dom-servis-partner-key" type="text" name="partner_key" value="<%= @item.partner_key || '' %>" class="form-control js-select js-permanentReadonly">
+        <div class="controls-button u-clickable js-copy" role="button" data-target-field="partner_key" aria-label="<%- @T('Copy to clipboard') %>">
+          <span class="controls-button-inner">
+            <%- @Icon('clipboard') %>
+          </span>
+        </div>
+      </div>
+      <div class="controls">
+        <span class="help-block"><%- @T('Этот ключ не передаётся партнёру как секрет. Его можно копировать в переписку и внутренние заметки.') %></span>
+      </div>
+    </div>
+    <% end %>
+    <div class="js-passport-fields"></div>
+  </section>
+
+  <section class="dom-servis-request-source-card__section">
+    <h2><%- @T('Код для сайта партнёра') %></h2>
+    <p class="help-text">
+      <%- @T('Скопируйте готовый код и отправьте партнёру. Если партнёр хочет самый простой вариант, используйте iframe. Если у него свой сайт и разработчик, можно передать JS-вариант.') %>
+    </p>
+    <% if @isNew: %>
+    <div class="js-code-fields">
+      <div class="alert alert--warning" role="alert">
+        <%- @T('Здесь появятся URL и коды после первого сохранения источника.') %>
+      </div>
+    </div>
+    <% else: %>
+    <div class="js-code-fields">
+      <div class="form-group form-group--block">
+        <div class="formGroup-label">
+          <label for="dom-servis-embed-url">
+            <%- @T('URL встраивания') %>
+          </label>
+          <div class="help-message js-helpMessage" title="<%- @T('Скопируйте URL и отправьте партнёру, если он будет встраивать готовую страницу через iframe.') %>">
+            <%- @Icon('help') %>
+          </div>
+        </div>
+        <div class="controls controls--button ignore-readonly">
+          <input readonly id="dom-servis-embed-url" type="text" name="embed_url" value="<%= @item.embed_url || '' %>" class="form-control js-select js-permanentReadonly">
+          <div class="controls-button u-clickable js-copy" role="button" data-target-field="embed_url" aria-label="<%- @T('Copy to clipboard') %>">
+            <span class="controls-button-inner">
+              <%- @Icon('clipboard') %>
+            </span>
+          </div>
+        </div>
+        <div class="controls">
+          <span class="help-block"><%- @T('Этот URL открывает готовую форму партнёра на нашем домене.') %></span>
+        </div>
+      </div>
+
+      <div class="form-group form-group--block">
+        <div class="formGroup-label">
+          <label for="dom-servis-embed-snippet">
+            <%- @T('Iframe-код') %>
+          </label>
+          <div class="help-message js-helpMessage" title="<%- @T('Самый простой вариант подключения. Партнёр вставляет готовый iframe на свою страницу.') %>">
+            <%- @Icon('help') %>
+          </div>
+        </div>
+        <div class="controls controls--button ignore-readonly">
+          <textarea readonly id="dom-servis-embed-snippet" name="embed_snippet" class="form-control js-select js-permanentReadonly" rows="10"><%= @item.embed_snippet || '' %></textarea>
+          <div class="controls-button u-clickable js-copy" role="button" data-target-field="embed_snippet" aria-label="<%- @T('Copy to clipboard') %>">
+            <span class="controls-button-inner">
+              <%- @Icon('clipboard') %>
+            </span>
+          </div>
+        </div>
+        <div class="controls">
+          <span class="help-block"><%- @T('Этот вариант подходит, если партнёру нужен минимальный код без JS-обвязки.') %></span>
+        </div>
+      </div>
+
+      <div class="form-group form-group--block">
+        <div class="formGroup-label">
+          <label for="dom-servis-embed-js-snippet">
+            <%- @T('JS-код') %>
+          </label>
+          <div class="help-message js-helpMessage" title="<%- @T('JS-вариант для сайтов, где форму удобнее подключать через скрипт и контейнер.') %>">
+            <%- @Icon('help') %>
+          </div>
+        </div>
+        <div class="controls controls--button ignore-readonly">
+          <textarea readonly id="dom-servis-embed-js-snippet" name="embed_js_snippet" class="form-control js-select js-permanentReadonly" rows="18"><%= @item.embed_js_snippet || '' %></textarea>
+          <div class="controls-button u-clickable js-copy" role="button" data-target-field="embed_js_snippet" aria-label="<%- @T('Copy to clipboard') %>">
+            <span class="controls-button-inner">
+              <%- @Icon('clipboard') %>
+            </span>
+          </div>
+        </div>
+        <div class="controls">
+          <span class="help-block"><%- @T('Это удобный вариант, если партнёр хочет вставлять форму через скрипт на обычную страницу.') %></span>
+        </div>
+      </div>
+    </div>
+    <% end %>
+  </section>
+
+  <section class="dom-servis-request-source-card__section">
+    <h2><%- @T('Безопасность и запуск') %></h2>
+    <p class="help-text">
+      <%- @T('Добавьте домен сайта партнёра в разрешённые домены, при необходимости обновите токен и после этого проверьте тестовую отправку.') %>
+    </p>
+    <div class="js-security-fields"></div>
+    <div class="dom-servis-request-source-card__instructions">
+      <ol>
+        <li><%- @T('Укажите ссылку на политику конфиденциальности партнёра, чтобы она появилась в чекбоксе согласия.') %></li>
+        <li><%- @T('Добавьте домен сайта партнёра в поле «Разрешённые домены».') %></li>
+        <li><%- @T('Скопируйте iframe или JS-код и отправьте партнёру.') %></li>
+        <li><%- @T('Попросите партнёра вставить код на страницу заявки.') %></li>
+        <li><%- @T('Сделайте тестовую заявку и проверьте, что она появилась на доске Дом-Сервис.') %></li>
+      </ol>
+    </div>
+  </section>
+</div>

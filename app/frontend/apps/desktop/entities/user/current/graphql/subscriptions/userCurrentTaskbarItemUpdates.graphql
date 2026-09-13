@@ -1,0 +1,13 @@
+subscription userCurrentTaskbarItemUpdates(
+  $app: EnumTaskbarApp!
+) {
+  userCurrentTaskbarItemUpdates(app: $app) {
+    addItem {
+      ...userCurrentTaskbarItemAttributes
+    }
+    updateItem {
+      ...userCurrentTaskbarItemAttributes
+    }
+    removeItem
+  }
+}

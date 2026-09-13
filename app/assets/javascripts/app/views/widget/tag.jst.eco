@@ -1,0 +1,18 @@
+<label><%- @T('Tags') %></label>
+<ul class="list list--sidebar">
+  <% for tag in @tags: %>
+  <li class="list-item">
+    <a href="#" class="list-item-name js-tag"><%= tag %></a>
+    <% if @editable: %>
+      <div class="list-item-delete js-delete">
+        <%- @Icon('diagonal-cross') %>
+      </div>
+    <% end %>
+  <% end %>
+</ul>
+<% if @editable: %>
+ <div class="text-muted js-newTagLabel u-clickable">+ <%- @T('Add Tag') %></div>
+ <form class="ui-front">
+   <input type="text" name="new_tag" class="hide js-newTagInput" autocomplete="off">
+ </form>
+<% end %>

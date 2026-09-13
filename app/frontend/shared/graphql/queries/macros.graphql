@@ -1,0 +1,8 @@
+query macros($groupIds: [ID!]!) {
+  macros(groupIds: $groupIds) {
+    id
+    active
+    name
+    uxFlowNextUp
+  }
+}
