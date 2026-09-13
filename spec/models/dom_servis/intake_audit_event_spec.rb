@@ -51,6 +51,29 @@ RSpec.describe DomServis::IntakeAuditEvent do
     end
   end
 
+  describe 'immutability' do
+    let(:event) { described_class.create!(decision: 'accepted') }
+
+    it 'refuses to update an existing event' do
+      event.decision = 'rejected_unknown'
+
+      expect { event.save }.to raise_error(ActiveRecord::ReadOnlyRecord)
+    end
+
+    it 'refuses update_columns on an existing event' do
+      expect { event.update_columns(decision: 'rejected_unknown') }.to raise_error(ActiveRecord::ReadOnlyRecord)
+    end
+
+    it 'refuses to destroy an existing event' do
+      expect { event.destroy }.not_to change(described_class, :count)
+      expect(event.destroyed?).to be(false)
+    end
+
+    it 'still allows creating a new event' do
+      expect { described_class.create!(decision: 'accepted') }.to change(described_class, :count).by(1)
+    end
+  end
+
   describe '.ordered_recent' do
     it 'orders events newest first' do
       older = described_class.create!(decision: 'accepted', created_at: 2.days.ago)

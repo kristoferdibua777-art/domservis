@@ -26,5 +26,16 @@ class DomServis::IntakeAuditEvent < ApplicationModel
 
   validates :decision, presence: true, inclusion: { in: DECISIONS }
 
+  before_destroy { throw(:abort) }
+
   scope :ordered_recent, -> { order(created_at: :desc, id: :desc) }
+
+  # Append-only: a persisted audit event can be created, but never changed.
+  # This blocks .save/.update/.update! on an existing record (they raise
+  # ActiveRecord::ReadOnlyRecord); destruction is separately blocked above,
+  # since #readonly? has no effect on #destroy. Deliberately no gem/DB
+  # trigger — this is the standard Rails idiom for an immutable row.
+  def readonly?
+    persisted?
+  end
 end
