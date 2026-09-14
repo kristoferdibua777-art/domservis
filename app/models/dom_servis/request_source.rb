@@ -8,8 +8,9 @@ class DomServis::RequestSource < ApplicationModel
   self.table_name = 'dom_servis_request_sources'
 
   TRANSPORT_KINDS = %w[zammad_form webhook ai].freeze
-  STATUSES = %w[active paused].freeze
+  STATUSES = %w[active paused revoked].freeze
   LEGACY_FORM_PARTNER_KEY = 'legacy-zammad-form'.freeze
+  RATE_LIMIT_CONFIG_KEYS = %w[per_minute per_hour per_day burst].freeze
 
   belongs_to :organization, optional: true
   has_many :dispatch_jobs, class_name: 'DomServis::DispatchJob', foreign_key: :request_source_id, inverse_of: :request_source
@@ -24,6 +25,9 @@ class DomServis::RequestSource < ApplicationModel
   validates :organization, presence: true, if: :active?
   validates :privacy_policy_url, length: { maximum: 2000 }, allow_blank: true
   validate :privacy_policy_url_must_be_http_url
+  validates :public_embed_id, presence: true, uniqueness: true
+  validates :credential_version, presence: true, numericality: { only_integer: true, greater_than: 0 }
+  validate :rate_limit_config_must_be_a_valid_shape
 
   before_validation :normalize_partner_key
   before_validation :normalize_transport_kind
@@ -31,6 +35,7 @@ class DomServis::RequestSource < ApplicationModel
   before_validation :normalize_allowed_domains
   before_validation :normalize_privacy_policy_url
   before_validation :ensure_embed_token
+  before_validation :ensure_public_embed_id
   before_validation :stamp_token_rotation
 
   def active?
@@ -39,6 +44,10 @@ class DomServis::RequestSource < ApplicationModel
 
   def paused?
     !active?
+  end
+
+  def revoked?
+    status == 'revoked'
   end
 
   def legacy_form?
@@ -258,6 +267,12 @@ class DomServis::RequestSource < ApplicationModel
     self.embed_token = generate_token
   end
 
+  def ensure_public_embed_id
+    return if public_embed_id.present?
+
+    self.public_embed_id = generate_public_embed_id
+  end
+
   def stamp_token_rotation
     self.token_rotated_at = Time.zone.now if new_record? || rotate_embed_token
   end
@@ -266,6 +281,13 @@ class DomServis::RequestSource < ApplicationModel
     loop do
       token = SecureRandom.urlsafe_base64(24)
       return token if self.class.where(embed_token: token).none?
+    end
+  end
+
+  def generate_public_embed_id
+    loop do
+      candidate = SecureRandom.uuid
+      return candidate if self.class.where(public_embed_id: candidate).none?
     end
   end
 
@@ -368,5 +390,28 @@ class DomServis::RequestSource < ApplicationModel
     errors.add(:privacy_policy_url, 'must be a valid http or https URL')
   rescue URI::InvalidURIError
     errors.add(:privacy_policy_url, 'must be a valid http or https URL')
+  end
+
+  # Not read by any code path yet (DB foundation only) — validated now so
+  # that whatever gets stored is already well-formed by the time a future
+  # rate limiter starts consuming it.
+  def rate_limit_config_must_be_a_valid_shape
+    return if rate_limit_config.blank?
+
+    if !rate_limit_config.is_a?(Hash)
+      errors.add(:rate_limit_config, 'must be a JSON object')
+      return
+    end
+
+    rate_limit_config.each do |key, value|
+      if RATE_LIMIT_CONFIG_KEYS.exclude?(key.to_s)
+        errors.add(:rate_limit_config, "has unknown key '#{key}'")
+        next
+      end
+
+      if !value.is_a?(Integer) || value.negative?
+        errors.add(:rate_limit_config, "must have a non-negative integer for '#{key}'")
+      end
+    end
   end
 end
