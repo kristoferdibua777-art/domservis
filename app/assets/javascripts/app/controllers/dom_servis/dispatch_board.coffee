@@ -1438,7 +1438,7 @@ class App.DomServisDispatchBoard extends App.Controller
           @detailItem('Код заявки', job.job_code || @fallbackJobCode(job))
           @detailItem('Источник', @sourceLabel(job.source || 'manual'))
           @detailItem('Партнёр', job.request_source_label || job.request_source_partner_key || 'Не задан')
-          @detailItem('Backing Ticket', job.ticket_id || 'Ещё не создан')
+          @detailItem(__('Backing Ticket'), job.ticket_id || 'Ещё не создан')
         ])
       }
     ]
@@ -1743,29 +1743,14 @@ class App.DomServisDispatchBoard extends App.Controller
       else
         if value? && "#{value}".length > 0 then value else '—'
 
-  fieldOptions: (fieldKey) ->
-    switch fieldKey
-      when 'priority'
-        [
-          { id: 'low', label: 'Низкий' }
-          { id: 'medium', label: 'Средний' }
-          { id: 'high', label: 'Высокий' }
-          { id: 'critical', label: 'Критичный' }
-        ]
-      when 'visit_day'
-        _.map @weekdayItems(), (item) -> { id: item.id, label: item.shortLabel }
-      when 'source'
-        [
-          { id: 'manual', label: 'Вручную' }
-          { id: 'ai', label: 'AI / разбор' }
-        ]
-      when 'assignee_id'
-        [{ id: '', label: 'Не назначен' }].concat(@assigneeOptions())
-      when 'organization_id'
-        @organizationOptions()
-      else
-        []
-
+  # NOTE: an earlier, narrower `fieldOptions` (source: manual/ai only) used to
+  # live here. It was a second definition of the same class method as the
+  # `fieldOptions` further below (source: manual/form/email/webhook/ai) - in
+  # a CoffeeScript class body, defining the same method name twice compiles
+  # to two sequential prototype assignments, so the later one silently wins
+  # and the earlier one was already fully dead/unreachable code. Removed as
+  # part of fixing CoffeeLint's "Duplicate key defined in object or class";
+  # the surviving definition below is unchanged in behavior.
   assigneeOptions: ->
     users = App.User.all() || []
 
@@ -1939,8 +1924,8 @@ class App.DomServisDispatchBoard extends App.Controller
 
       file = queue.shift()
       @uploadAttachmentFile(jobId, file, kind)
-        .done(=> uploadNext())
-        .fail((xhr) => deferred.reject(xhr))
+        .done(-> uploadNext())
+        .fail((xhr) -> deferred.reject(xhr))
 
     uploadNext()
     deferred.promise()
@@ -2196,11 +2181,12 @@ class App.DomServisDispatchBoard extends App.Controller
     timePart = job.visit_time || 'время не задано'
     "#{dayLabel}, #{datePart}, #{timePart}"
 
-  sourceLabel: (source) ->
-    switch source
-      when 'ai' then 'AI / разбор'
-      else 'Вручную'
-
+  # NOTE: an earlier, narrower `sourceLabel` (ai / else-manual only) used to
+  # live here - a second definition of the same method as the `sourceLabel`
+  # further below (form/email/webhook/ai/else-manual). Same dead-code
+  # situation as `fieldOptions` above: removed while fixing CoffeeLint's
+  # "Duplicate key defined in object or class"; the surviving definition
+  # below already covers every case this one did.
   jobVisitDay: (job) ->
     job.visit_day || @weekdayKeyFromDate(job.visit_date) || @defaultVisitDay()
 
@@ -2475,8 +2461,8 @@ class App.DomServisDispatchBoard extends App.Controller
           { id: 'manual', label: 'Вручную' }
           { id: 'form', label: 'Форма Zammad' }
           { id: 'email', label: 'Email' }
-          { id: 'webhook', label: 'Webhook / API' }
-          { id: 'ai', label: 'AI / разбор' }
+          { id: 'webhook', label: __('Webhook / API') }
+          { id: 'ai', label: __('AI / разбор') }
         ]
       when 'assignee_id'
         [{ id: '', label: 'Не назначен' }].concat(@assigneeOptions())
@@ -2489,8 +2475,8 @@ class App.DomServisDispatchBoard extends App.Controller
     switch source
       when 'form' then 'Форма Zammad'
       when 'email' then 'Email'
-      when 'webhook' then 'Webhook / API'
-      when 'ai' then 'AI / разбор'
+      when 'webhook' then __('Webhook / API')
+      when 'ai' then __('AI / разбор')
       else 'Вручную'
 
   # ---------------------------------------------------------------------
@@ -2499,13 +2485,13 @@ class App.DomServisDispatchBoard extends App.Controller
 
   # Returns true if the current browser environment can use Web Push
   # (service worker + Push API + Notification API present).
-  pushSupported: =>
+  pushSupported: ->
     return 'serviceWorker' of navigator && 'PushManager' of window && 'Notification' of window
 
   # Returns the VAPID public key the server uses to identify itself to
   # the push service. Exposed to the frontend via a meta tag rendered by
   # the dispatch board layout (set by the admin through Settings).
-  vapidPublicKey: =>
+  vapidPublicKey: ->
     return document.querySelector('meta[name="dom-servis-vapid-public-key"]')?.content
 
   # Request notification permission, subscribe the dispatch service worker
@@ -2517,7 +2503,7 @@ class App.DomServisDispatchBoard extends App.Controller
     return if @pushSubscribing
 
     if !@vapidPublicKey()
-      @notifyPushError('Push-уведомления не настроены администратором (нет VAPID ключа).')
+      @notifyPushError(__('Push-уведомления не настроены администратором (нет VAPID ключа).'))
       return
 
     @pushSubscribing = true
@@ -2530,7 +2516,16 @@ class App.DomServisDispatchBoard extends App.Controller
         if permission != 'granted'
           @pushSubscribing = false
           @render()
+          # coffeelint: disable=detect_translatable_string
+          # Not user-facing: this is an internal control-flow sentinel,
+          # matched verbatim below via `error?.message == 'Permission
+          # denied'` to silently suppress the generic error toast. Wrapping
+          # it in __() would translate the message in non-en-US locales and
+          # break that exact-string comparison, incorrectly showing the
+          # generic "failed to enable push" toast whenever a user simply
+          # declines the browser permission prompt.
           return Promise.reject(new Error('Permission denied'))
+          # coffeelint: enable=detect_translatable_string
 
         navigator.serviceWorker.ready
       .then (registration) =>

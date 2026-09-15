@@ -183,7 +183,7 @@ class DomServisDispatch extends App.ControllerSubContent
     @preventDefault(e)
     @navigate '#dom_servis/dispatch'
 
-  normalizePolicy: (policy) =>
+  normalizePolicy: (policy) ->
     policy ||= {}
     policy.actions ?= {}
     policy.statuses ?= {}
