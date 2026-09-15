@@ -35,6 +35,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      # Preventive fix: the container image runs as a different UID than the
+      # one actions/checkout normally reconciles automatically outside a
+      # `container:` job. Git 2.35.2+ refuses to operate on a repo it does
+      # not consider "owned" by the current user ("detected dubious
+      # ownership"). Doing this before the first git command in a later step
+      # (autocorrect, diff, status) avoids a hard failure there.
+      - name: Mark workspace as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
@@ -44,31 +53,88 @@ jobs:
           node-version: 22
           cache: 'pnpm'
 
+      # Preventive fix: ci.yaml caches vendor/bundle by Gemfile.lock hash;
+      # this workflow reuses the same pre.sh (which does `bundle install`)
+      # but had no cache step, so every run rebuilt all gems from scratch.
+      # Not a correctness bug, but avoids needlessly slow/expensive runs.
+      - name: Cache Rubygems
+        id: cache-bundler
+        uses: actions/cache@v5
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-cache-bundler-${{ hashFiles('Gemfile.lock') }}
+
       - name: Pre
         run: .github/workflows/ci/pre.sh
 
+      # Preventive fix: capture RuboCop's own stdout/stderr to a log file
+      # (uploaded below) instead of only printing the exit code, and
+      # distinguish RuboCop's own documented exit codes
+      # (https://docs.rubocop.org/rubocop/latest/usage/cli_reference.html):
+      #   0 = clean run (nothing left after autocorrect)
+      #   1 = ran fine, offenses remain that -a could not fix
+      #   2 = RuboCop itself crashed (bad config, bad CLI options, internal
+      #       error) - NOT the same as "offenses found" and must not be
+      #       silently treated the same way.
+      # Any other code (e.g. 127 "command not found") means RuboCop never
+      # even started. The original `exit 0` at the end of this step made
+      # cases (2) and "never started" look identical, in the logs, to case
+      # (1) - this still doesn't hard-fail the job (so the patch step below
+      # still runs and can be inspected), but it no longer hides the
+      # distinction between "offenses remain" and "infrastructure problem".
       - name: Run safe RuboCop autocorrect
         run: |
           set +e
-          bundle exec rubocop -a
-          RUBOCOP_EXIT=$?
+          bundle exec rubocop -a 2>&1 | tee rubocop-autofix.log
+          RUBOCOP_EXIT=${PIPESTATUS[0]}
           echo "RuboCop autocorrect exit code: $RUBOCOP_EXIT"
+          case "$RUBOCOP_EXIT" in
+            0) echo "RESULT: clean - no offenses left after autocorrect." ;;
+            1) echo "RESULT: ran fine - offenses remain (expected, non-fatal)." ;;
+            2) echo "RESULT: RuboCop crashed (bad config/CLI/internal error) - inspect rubocop-autofix.log." ;;
+            *) echo "RESULT: unexpected exit code $RUBOCOP_EXIT - RuboCop may not have run at all. Inspect rubocop-autofix.log." ;;
+          esac
+          echo "RUBOCOP_EXIT=$RUBOCOP_EXIT" >> "$GITHUB_ENV"
           exit 0
 
+      # Preventive fix: `git diff --check` exits non-zero when it finds
+      # whitespace issues, and this step previously ran under the default
+      # GitHub Actions shell (`bash -eo pipefail`). A non-zero exit here
+      # would have aborted the job right at this step - skipping "Create
+      # autocorrect patch" and "Upload autocorrect patch" entirely, since
+      # neither had `if: always()`. That means a diff --check finding would
+      # have silently thrown away the one artifact needed to review it.
+      # `set +e` below keeps this step informational only; the patch/upload
+      # steps also now carry `if: always()` as a second, independent
+      # safeguard.
       - name: Show changed files
         run: |
+          set +e
           git status --short
           git diff --stat
           git diff --check
+          DIFF_CHECK_EXIT=$?
+          echo "git diff --check exit code: $DIFF_CHECK_EXIT"
+          exit 0
 
       - name: Create autocorrect patch
+        if: always()
         run: |
           git diff --binary > rubocop-autofix.patch
           ls -lh rubocop-autofix.patch
 
       - name: Upload autocorrect patch
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: rubocop-autofix-patch
           path: rubocop-autofix.patch
           if-no-files-found: error
+
+      - name: Upload RuboCop log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rubocop-autofix-log
+          path: rubocop-autofix.log
+          if-no-files-found: warn
