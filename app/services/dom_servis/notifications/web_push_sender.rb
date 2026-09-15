@@ -24,14 +24,14 @@ class DomServis::Notifications::WebPushSender
     ensure_configured!
 
     WebPush.payload_send(
-      message:    serialized_payload,
-      endpoint:   subscription.endpoint,
-      p256dh:     subscription.p256dh_key,
-      auth:       subscription.auth_key,
-      vapid:      vapid_credentials,
-      ttl:        DEFAULT_TTL,
-      urgency:    'normal',
-      ssl_timeout: 5,
+      message:      serialized_payload,
+      endpoint:     subscription.endpoint,
+      p256dh:       subscription.p256dh_key,
+      auth:         subscription.auth_key,
+      vapid:        vapid_credentials,
+      ttl:          DEFAULT_TTL,
+      urgency:      'normal',
+      ssl_timeout:  5,
       open_timeout: 5,
       read_timeout: 5,
     )
@@ -79,6 +79,6 @@ class DomServis::Notifications::WebPushSender
     return if Setting.get('dom_servis_webpush_vapid_public_key').present? &&
               Setting.get('dom_servis_webpush_vapid_private_key').present?
 
-    raise ConfigurationError, 'Dom-Servis Web Push VAPID keys are not configured. Run `rake dom_servis:webpush:generate_keys`.'
+    raise ConfigurationError, __('Dom-Servis Web Push VAPID keys are not configured. Run `rake dom_servis:webpush:generate_keys`.')
   end
 end

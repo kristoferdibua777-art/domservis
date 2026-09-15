@@ -8,8 +8,8 @@
 # can fan out push notifications to every device a master has registered.
 class CreateDomServisPushSubscriptions < ActiveRecord::Migration[7.2]
   def change
-    create_table :dom_servis_push_subscriptions do |t|
-      t.references :user, foreign_key: true, null: false
+    create_table :dom_servis_push_subscriptions, id: :integer do |t|
+      t.references :user, foreign_key: true, null: false, type: :integer
 
       # Full push service endpoint URL (e.g. https://fcm.googleapis.com/...).
       t.string :endpoint, null: false

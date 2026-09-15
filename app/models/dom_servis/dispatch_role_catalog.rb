@@ -2,16 +2,16 @@
 
 class DomServis::DispatchRoleCatalog
   ROLE_DEFINITIONS = {
-    'Dom-Servis Admin' => {
-      note:       'Assign together with Admin. Grants the Dom-Servis administrative workspace and dispatch policy controls.',
+    'Dom-Servis Admin'      => {
+      note:       __('Assign together with Admin. Grants the Dom-Servis administrative workspace and dispatch policy controls.'),
       permission: 'dom_servis.admin',
     },
     'Dom-Servis Dispatcher' => {
-      note:       'Assign together with Agent. Grants the Dom-Servis dispatcher workspace and dispatcher actions.',
+      note:       __('Assign together with Agent. Grants the Dom-Servis dispatcher workspace and dispatcher actions.'),
       permission: 'dom_servis.dispatcher',
     },
-    'Dom-Servis Master' => {
-      note:       'Assign together with Agent. Grants the Dom-Servis master workspace and master actions.',
+    'Dom-Servis Master'     => {
+      note:       __('Assign together with Agent. Grants the Dom-Servis master workspace and master actions.'),
       permission: 'dom_servis.master',
     },
   }.freeze
@@ -45,7 +45,7 @@ class DomServis::DispatchRoleCatalog
     private
 
     def first_user_id
-      User.order(:id).limit(1).pick(:id)
+      User.reorder(:id).limit(1).pick(:id)
     end
   end
 end

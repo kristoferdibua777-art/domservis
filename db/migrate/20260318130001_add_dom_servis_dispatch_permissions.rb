@@ -7,27 +7,27 @@ class AddDomServisDispatchPermissions < ActiveRecord::Migration[7.2]
       label:       'Dom-Servis Admin',
       description: 'Access the Dom-Servis administrative workspace and dispatch policy controls.',
       preferences: {
-        prio: 3490,
+        prio:         3490,
         translations: ['Dom-Servis Admin']
       },
     )
 
     Permission.create_if_not_exists(
-      name:        'dom_servis.dispatcher',
-      label:       'Dom-Servis Dispatcher',
-      description: 'Access the Dom-Servis dispatcher workspace.',
+      name:         'dom_servis.dispatcher',
+      label:        'Dom-Servis Dispatcher',
+      description:  'Access the Dom-Servis dispatcher workspace.',
       allow_signup: false,
-      preferences: {
+      preferences:  {
         prio: 3500,
       },
     )
 
     Permission.create_if_not_exists(
-      name:        'dom_servis.master',
-      label:       'Dom-Servis Master',
-      description: 'Access the Dom-Servis master workspace.',
+      name:         'dom_servis.master',
+      label:        'Dom-Servis Master',
+      description:  'Access the Dom-Servis master workspace.',
       allow_signup: false,
-      preferences: {
+      preferences:  {
         prio: 3510,
       },
     )

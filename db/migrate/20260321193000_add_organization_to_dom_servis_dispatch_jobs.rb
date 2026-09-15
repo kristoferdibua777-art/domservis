@@ -1,3 +1,5 @@
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 class AddOrganizationToDomServisDispatchJobs < ActiveRecord::Migration[7.2]
   class DispatchJob < ActiveRecord::Base
     self.table_name = 'dom_servis_dispatch_jobs'
@@ -12,14 +14,19 @@ class AddOrganizationToDomServisDispatchJobs < ActiveRecord::Migration[7.2]
   end
 
   def up
-    add_reference :dom_servis_dispatch_jobs, :organization, foreign_key: true
+    add_reference :dom_servis_dispatch_jobs, :organization, foreign_key: true, type: :integer
 
     DispatchJob.reset_column_information
     private_order = find_or_create_private_order_organization
 
-    if private_order
-      DispatchJob.where(organization_id: nil).update_all(organization_id: private_order.id)
-    end
+    return if !private_order
+
+    # rubocop:disable Rails/SkipsModelValidations -- migration data
+    # backfill: intentionally skips validations/callbacks for a one-time
+    # bulk update of historical rows.
+    DispatchJob.where(organization_id: nil).update_all(organization_id: private_order.id)
+    # rubocop:enable Rails/SkipsModelValidations
+
   end
 
   def down
@@ -29,7 +36,7 @@ class AddOrganizationToDomServisDispatchJobs < ActiveRecord::Migration[7.2]
   private
 
   def find_or_create_private_order_organization
-    system_user = User.order(:id).first
+    system_user = User.reorder(:id).first
     return nil if !system_user
 
     Organization.find_or_create_by!(name: 'Частный заказ') do |organization|

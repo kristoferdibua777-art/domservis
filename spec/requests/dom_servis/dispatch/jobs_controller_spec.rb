@@ -6,7 +6,7 @@ require 'models/contexts/factory_context'
 RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, type: :request do
   include_context 'factory'
 
-  let!(:private_organization) { Organization.find_or_create_by!(name: 'Частный заказ') }
+  before { Organization.find_or_create_by!(name: 'Частный заказ') }
 
   let(:job) do
     DomServis::DispatchJob.create!(

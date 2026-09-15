@@ -34,19 +34,18 @@ class DomServis::PushSubscriptionsController < ApplicationController
 
     authorize subscription, :create?
 
-    if subscription.valid?
-      subscription.save!
+    raise Exceptions::UnprocessableEntity, subscription.errors.full_messages.to_sentence if !subscription.valid?
 
-      render json: { status: 'ok', id: subscription.id }, status: (is_new_record ? :created : :ok)
-    else
-      raise Exceptions::UnprocessableEntity, subscription.errors.full_messages.to_sentence
-    end
+    subscription.save!
+
+    render json: { status: 'ok', id: subscription.id }, status: (is_new_record ? :created : :ok)
+
   end
 
   # DELETE /api/v1/dom_servis/push_subscriptions/:id
   def destroy
     subscription = DomServis::PushSubscription.find_by(id: params[:id])
-    raise Exceptions::UnprocessableEntity, 'Unknown push subscription.' if subscription.blank?
+    raise Exceptions::UnprocessableEntity, __('Unknown push subscription.') if subscription.blank?
 
     authorize subscription, :destroy?
 
@@ -60,7 +59,7 @@ class DomServis::PushSubscriptionsController < ApplicationController
   # the current user, so they can verify the channel works end-to-end.
   def test
     subscriptions = DomServis::PushSubscription.active.for_user(current_user)
-    raise Exceptions::UnprocessableEntity, 'No active push subscriptions found for your user.' if subscriptions.blank?
+    raise Exceptions::UnprocessableEntity, __('No active push subscriptions found for your user.') if subscriptions.blank?
 
     payload = {
       title: 'Дом-Сервис',
@@ -90,9 +89,9 @@ class DomServis::PushSubscriptionsController < ApplicationController
       auth_key:        raw_keys[:auth].presence || params[:auth_key].presence,
       expiration_time: parse_expiration(params[:expiration_time].presence),
     }.tap do |attrs|
-      raise Exceptions::UnprocessableEntity, 'Push subscription endpoint is required.' if attrs[:endpoint].blank?
-      raise Exceptions::UnprocessableEntity, 'Push subscription p256dh key is required.' if attrs[:p256dh_key].blank?
-      raise Exceptions::UnprocessableEntity, 'Push subscription auth key is required.' if attrs[:auth_key].blank?
+      raise Exceptions::UnprocessableEntity, __('Push subscription endpoint is required.') if attrs[:endpoint].blank?
+      raise Exceptions::UnprocessableEntity, __('Push subscription p256dh key is required.') if attrs[:p256dh_key].blank?
+      raise Exceptions::UnprocessableEntity, __('Push subscription auth key is required.') if attrs[:auth_key].blank?
     end
   end
 

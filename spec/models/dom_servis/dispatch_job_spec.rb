@@ -11,14 +11,14 @@ RSpec.describe DomServis::DispatchJob, type: :model do
   let(:private_organization) { create(:organization, name: 'Частный заказ') }
   let(:dispatch_job_attrs) do
     {
-      service_type:  'Boiler repair',
-      address:       'Lenina 10',
-      client_phone:  '+79001234567',
-      visit_day:     'mon',
-      visit_date:    '2026-03-23',
-      priority:      'medium',
-      status:        'pool',
-      source:        'manual',
+      service_type: 'Boiler repair',
+      address:      'Lenina 10',
+      client_phone: '+79001234567',
+      visit_day:    'mon',
+      visit_date:   '2026-03-23',
+      priority:     'medium',
+      status:       'pool',
+      source:       'manual',
     }
   end
 
@@ -37,12 +37,12 @@ RSpec.describe DomServis::DispatchJob, type: :model do
     job = described_class.create!(dispatch_job_attrs)
 
     expect(PushMessages).to have_received(:send).with(hash_including(
-      type:    'authenticated',
-      message: hash_including(
-        event: 'DomServisDispatchJob:create',
-        data:  hash_including(id: job.id, updated_at: job.updated_at),
-      ),
-    ))
+                                                        type:    'authenticated',
+                                                        message: hash_including(
+                                                          event: 'DomServisDispatchJob:create',
+                                                          data:  hash_including(id: job.id, updated_at: job.updated_at),
+                                                        ),
+                                                      ))
   end
 
   it 'sends an authenticated push after update commit' do
@@ -51,12 +51,12 @@ RSpec.describe DomServis::DispatchJob, type: :model do
     job.update!(priority: 'high')
 
     expect(PushMessages).to have_received(:send).with(hash_including(
-      type:    'authenticated',
-      message: hash_including(
-        event: 'DomServisDispatchJob:update',
-        data:  hash_including(id: job.id, updated_at: job.updated_at),
-      ),
-    ))
+                                                        type:    'authenticated',
+                                                        message: hash_including(
+                                                          event: 'DomServisDispatchJob:update',
+                                                          data:  hash_including(id: job.id, updated_at: job.updated_at),
+                                                        ),
+                                                      ))
   end
 
   it 'sends an authenticated push after destroy commit' do
@@ -67,11 +67,11 @@ RSpec.describe DomServis::DispatchJob, type: :model do
     job.destroy!
 
     expect(PushMessages).to have_received(:send).with(hash_including(
-      type:    'authenticated',
-      message: hash_including(
-        event: 'DomServisDispatchJob:destroy',
-        data:  hash_including(id: job_id, updated_at: updated_at),
-      ),
-    ))
+                                                        type:    'authenticated',
+                                                        message: hash_including(
+                                                          event: 'DomServisDispatchJob:destroy',
+                                                          data:  hash_including(id: job_id, updated_at: updated_at),
+                                                        ),
+                                                      ))
   end
 end

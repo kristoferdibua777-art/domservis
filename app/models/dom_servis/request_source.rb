@@ -12,7 +12,7 @@ class DomServis::RequestSource < ApplicationModel
   LEGACY_FORM_PARTNER_KEY = 'legacy-zammad-form'.freeze
 
   belongs_to :organization, optional: true
-  has_many :dispatch_jobs, class_name: 'DomServis::DispatchJob', foreign_key: :request_source_id, inverse_of: :request_source
+  has_many :dispatch_jobs, class_name: 'DomServis::DispatchJob', inverse_of: :request_source, dependent: :restrict_with_error
 
   attr_accessor :rotate_embed_token
 
@@ -57,7 +57,7 @@ class DomServis::RequestSource < ApplicationModel
   def embed_url
     query = {
       request_source_token: embed_token,
-      v:                   embed_cache_bust,
+      v:                    embed_cache_bust,
     }
     query[:privacy_policy_url] = privacy_policy_url if privacy_policy_url.present?
 
@@ -145,10 +145,10 @@ class DomServis::RequestSource < ApplicationModel
   end
 
   def ensure_usable_for_form!(request:)
-    raise Exceptions::Forbidden, 'Dom-Servis request source is paused.' if paused?
-    raise Exceptions::Forbidden, 'Dom-Servis request source is not configured for Zammad forms.' if transport_kind != 'zammad_form'
-    raise Exceptions::UnprocessableEntity, 'Dom-Servis request source requires a partner organization.' if organization_id.blank?
-    raise Exceptions::Forbidden, 'Dom-Servis request source is not allowed from this domain.' if !allowed_domain?(request)
+    raise Exceptions::Forbidden, __('Dom-Servis request source is paused.') if paused?
+    raise Exceptions::Forbidden, __('Dom-Servis request source is not configured for Zammad forms.') if transport_kind != 'zammad_form'
+    raise Exceptions::UnprocessableEntity, __('Dom-Servis request source requires a partner organization.') if organization_id.blank?
+    raise Exceptions::Forbidden, __('Dom-Servis request source is not allowed from this domain.') if !allowed_domain?(request)
 
     true
   end
@@ -169,14 +169,14 @@ class DomServis::RequestSource < ApplicationModel
 
   def attributes_with_association_ids
     super.merge(
-      display_name:           display_name,
-      organization_name:      Organization.find_by(id: organization_id)&.name,
-      embed_url:              embed_url,
-      embed_snippet:          embed_snippet,
-      embed_js_snippet:       embed_js_snippet,
-      privacy_policy_url:     privacy_policy_url,
+      display_name:            display_name,
+      organization_name:       Organization.find_by(id: organization_id)&.name,
+      embed_url:               embed_url,
+      embed_snippet:           embed_snippet,
+      embed_js_snippet:        embed_js_snippet,
+      privacy_policy_url:      privacy_policy_url,
       allowed_domains_display: allowed_domains.join("\n"),
-      request_source_type:    transport_kind,
+      request_source_type:     transport_kind,
     ).compact
   end
 
@@ -190,7 +190,7 @@ class DomServis::RequestSource < ApplicationModel
       return nil if !intake_enabled && organization_id.blank?
 
       source = find_or_initialize_by(partner_key: LEGACY_FORM_PARTNER_KEY)
-      source.name = 'Legacy Zammad Form' if source.name.blank?
+      source.name = __('Legacy Zammad Form') if source.name.blank?
       source.embed_token = 'legacy-zammad-form-token' if source.embed_token.blank?
       source.organization_id = organization_id if source.organization_id.blank? && organization_id.present?
       source.transport_kind = 'zammad_form'
@@ -204,7 +204,7 @@ class DomServis::RequestSource < ApplicationModel
     def resolve_form_source(request_source_token:, request:)
       if request_source_token.present?
         source = find_by(embed_token: request_source_token)
-        raise Exceptions::Forbidden, 'Unknown Dom-Servis request source.' if source.blank?
+        raise Exceptions::Forbidden, __('Unknown Dom-Servis request source.') if source.blank?
 
         source.ensure_usable_for_form!(request: request)
         return source
@@ -242,7 +242,7 @@ class DomServis::RequestSource < ApplicationModel
 
   def normalize_domains(value)
     Array(value)
-      .flat_map { |entry| entry.to_s.split(/[\n,]/) }
+      .flat_map { |entry| entry.to_s.split(%r{[\n,]}) }
       .filter_map do |entry|
         normalized = entry.to_s.strip.downcase
         normalized = normalized.sub(%r{\Ahttps?://}, '')
@@ -349,7 +349,7 @@ class DomServis::RequestSource < ApplicationModel
     return nil if origin.blank?
 
     parsed = URI.parse(origin)
-    host = parsed.host.presence || origin.to_s.sub(%r{\Ahttps?://}, '').split(/[\/?#]/, 2).first
+    host = parsed.host.presence || origin.to_s.sub(%r{\Ahttps?://}, '').split(%r{[/?#]}, 2).first
     host.to_s.downcase.presence
   rescue URI::InvalidURIError
     nil

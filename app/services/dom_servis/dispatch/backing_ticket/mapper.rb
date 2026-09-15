@@ -53,11 +53,11 @@ class DomServis::Dispatch::BackingTicket::Mapper
 
   def creation_article
     {
-      body:     ["Created from Dom-Servis dispatch board.", snapshot_body].join("\n\n"),
+      body:     [__('Created from Dom-Servis dispatch board.'), snapshot_body].join("\n\n"),
       internal: true,
       sender:   'Agent',
       type:     'note',
-      subject:  'Dom-Servis dispatch job created',
+      subject:  __('Dom-Servis dispatch job created'),
     }
   end
 
@@ -86,15 +86,15 @@ class DomServis::Dispatch::BackingTicket::Mapper
       internal: true,
       sender:   'Agent',
       type:     'note',
-      subject:  'Dom-Servis dispatch job updated',
+      subject:  __('Dom-Servis dispatch job updated'),
     }
   end
 
   private
 
   def base_attributes
-    supported_custom_fields.each_with_object({}) do |field_name, memo|
-      memo[field_name] = send(field_name)
+    supported_custom_fields.index_with do |field_name|
+      send(field_name)
     end
   end
 
@@ -152,8 +152,6 @@ class DomServis::Dispatch::BackingTicket::Mapper
       ["- Assigned to #{user_name(meta['to'] || meta[:to])}."]
     when 'assignee_changed'
       ["- Assignee: #{user_name(meta['from'] || meta[:from])} -> #{user_name(meta['to'] || meta[:to])}."]
-    else
-      nil
     end
   end
 
@@ -207,7 +205,7 @@ class DomServis::Dispatch::BackingTicket::Mapper
   end
 
   def value_or_dash(value)
-    value.present? ? value : '-'
+    value.presence || '-'
   end
 
   def status_name(value)
@@ -217,13 +215,13 @@ class DomServis::Dispatch::BackingTicket::Mapper
     when 'taken'
       'Taken'
     when 'in_progress'
-      'In progress'
+      __('In progress')
     when 'done'
       'Done'
     when 'cancelled'
       'Cancelled'
     when 'transferred_to_partner'
-      'Transferred to partner'
+      __('Transferred to partner')
     else
       value_or_dash(value)
     end

@@ -53,10 +53,10 @@ class User < ApplicationModel
   before_validation :check_mail_delivery_failed, on: :update
   before_save       :ensure_notification_preferences, if: :reset_notification_config_before_save
   before_create     :validate_preferences, :domain_based_assignment, :set_locale
+  before_create     :ensure_dom_servis_ticket_group_access
   before_update     :validate_preferences, :reset_login_failed_after_password_change, :validate_agent_limit_by_attributes, :last_admin_check_by_attribute
   before_destroy    :destroy_longer_required_objects, :destroy_move_dependency_ownership
   after_commit      :update_caller_id
-  before_create     :ensure_dom_servis_ticket_group_access
   after_commit      :bootstrap_dom_servis_roles, on: :create
 
   validate :ensure_identifier, :ensure_email
@@ -1139,8 +1139,14 @@ raise 'At least one user need to have admin permissions'
     return if DomServis::DispatchRoleCatalog.seeded?
     return if !DomServis::DispatchRoleCatalog.sync!(actor_id: id)
 
+    # rubocop:disable Zammad/DetectTranslatableString -- 'Dom-Servis Admin' is
+    # the literal Role#name created by DomServis::DispatchRoleCatalog#sync!,
+    # not display text. Wrapping it in __() would make this Role.find_by /
+    # role? lookup silently stop matching once a translation for the phrase
+    # exists, breaking the automatic admin-role grant below.
     admin_overlay_role = Role.find_by(name: 'Dom-Servis Admin')
     return if !admin_overlay_role || role?('Dom-Servis Admin')
+    # rubocop:enable Zammad/DetectTranslatableString
 
     roles << admin_overlay_role
   end

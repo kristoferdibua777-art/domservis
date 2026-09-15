@@ -2,23 +2,23 @@
 
 class CreateDomServisDispatchTables < ActiveRecord::Migration[7.2]
   def change
-    create_table :dom_servis_dispatch_jobs do |t|
-      t.references :created_by, foreign_key: { to_table: :users }
-      t.references :updated_by, foreign_key: { to_table: :users }
-      t.references :assignee,   foreign_key: { to_table: :users }
-      t.references :ticket,     foreign_key: true
+    create_table :dom_servis_dispatch_jobs, id: :integer do |t|
+      t.references :created_by, foreign_key: { to_table: :users }, type: :integer
+      t.references :updated_by, foreign_key: { to_table: :users }, type: :integer
+      t.references :assignee,   foreign_key: { to_table: :users }, type: :integer
+      t.references :ticket,     foreign_key: true, type: :integer
 
       t.string :status,       null: false, default: 'pool'
       t.string :priority,     null: false, default: 'medium'
       t.string :service_type, null: false
       t.string :client_name
       t.string :client_phone
-      t.string :address,      null: false
+      t.string :address, null: false
       t.string :visit_date
       t.string :visit_time
       t.text   :description
       t.text   :comment
-      t.string :source,       null: false, default: 'manual'
+      t.string :source, null: false, default: 'manual'
       t.datetime :published_at
       t.datetime :taken_at
       t.datetime :completed_at
@@ -33,9 +33,9 @@ class CreateDomServisDispatchTables < ActiveRecord::Migration[7.2]
     add_index :dom_servis_dispatch_jobs, :visit_date
     add_index :dom_servis_dispatch_jobs, %i[status assignee_id], name: 'idx_dom_servis_dispatch_jobs_on_status_and_assignee'
 
-    create_table :dom_servis_dispatch_events do |t|
-      t.references :dispatch_job, null: false, foreign_key: { to_table: :dom_servis_dispatch_jobs }
-      t.references :actor_user, foreign_key: { to_table: :users }
+    create_table :dom_servis_dispatch_events, id: :integer do |t|
+      t.references :dispatch_job, null: false, foreign_key: { to_table: :dom_servis_dispatch_jobs }, type: :integer
+      t.references :actor_user, foreign_key: { to_table: :users }, type: :integer
       t.string :event_type, null: false
       t.jsonb :meta, null: false, default: {}
 

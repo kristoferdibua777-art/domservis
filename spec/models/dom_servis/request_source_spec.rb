@@ -6,10 +6,10 @@ RSpec.describe DomServis::RequestSource do
   describe '#embed_url' do
     it 'includes the embed token and a release cache bust' do
       source = described_class.create!(
-        name:           'Partner A Form',
-        partner_key:    'partner-a',
-        transport_kind: 'zammad_form',
-        status:         'paused',
+        name:               'Partner A Form',
+        partner_key:        'partner-a',
+        transport_kind:     'zammad_form',
+        status:             'paused',
         privacy_policy_url: 'https://partner-a.example.com/privacy',
       )
 

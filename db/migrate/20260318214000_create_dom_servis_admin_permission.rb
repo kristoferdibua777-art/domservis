@@ -3,12 +3,12 @@
 class CreateDomServisAdminPermission < ActiveRecord::Migration[7.2]
   def up
     Permission.create_if_not_exists(
-      name:        'dom_servis.admin',
-      label:       'Dom-Servis Admin',
-      description: 'Access the Dom-Servis administrative workspace and dispatch policy controls.',
+      name:         'dom_servis.admin',
+      label:        'Dom-Servis Admin',
+      description:  'Access the Dom-Servis administrative workspace and dispatch policy controls.',
       allow_signup: false,
-      preferences: {
-        prio: 3490,
+      preferences:  {
+        prio:         3490,
         translations: ['Dom-Servis Admin'],
       },
     )
@@ -20,11 +20,12 @@ class CreateDomServisAdminPermission < ActiveRecord::Migration[7.2]
     end
 
     setting = Setting.find_by(name: 'dom_servis_dispatch_policy')
-    if setting
-      setting.preferences ||= {}
-      setting.preferences['permission'] = ['dom_servis.admin']
-      setting.save!
-    end
+    return if !setting
+
+    setting.preferences ||= {}
+    setting.preferences['permission'] = ['dom_servis.admin']
+    setting.save!
+
   end
 
   def down

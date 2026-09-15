@@ -30,18 +30,18 @@ class DomServis::Intake::DispatchJobCreator
   private
 
   def validate_payload!
-    raise Exceptions::UnprocessableEntity, 'Dom-Servis intake payload is missing dispatch attributes.' if payload[:dispatch].blank?
-    raise Exceptions::UnprocessableEntity, 'Dom-Servis intake payload requires a source.' if normalized_source.blank?
-    raise Exceptions::UnprocessableEntity, "Dom-Servis intake payload uses unknown source '#{normalized_source}'." if !SOURCES.include?(normalized_source)
-    raise Exceptions::UnprocessableEntity, 'Dom-Servis intake payload requires a source reference.' if normalized_source_reference.blank?
-    raise Exceptions::UnprocessableEntity, 'Dom-Servis intake payload requires a request source.' if normalized_request_source_id.blank?
-    raise Exceptions::UnprocessableEntity, 'Dom-Servis intake payload requires a channel key.' if payload[:channel_key].blank?
-    raise Exceptions::UnprocessableEntity, 'Dom-Servis intake payload requires a partner organization.' if request_source.organization_id.blank?
-    raise Exceptions::Forbidden, 'Dom-Servis request source is paused.' if request_source.paused?
+    raise Exceptions::UnprocessableEntity, __('Dom-Servis intake payload is missing dispatch attributes.') if payload[:dispatch].blank?
+    raise Exceptions::UnprocessableEntity, __('Dom-Servis intake payload requires a source.') if normalized_source.blank?
+    raise Exceptions::UnprocessableEntity, "Dom-Servis intake payload uses unknown source '#{normalized_source}'." if SOURCES.exclude?(normalized_source)
+    raise Exceptions::UnprocessableEntity, __('Dom-Servis intake payload requires a source reference.') if normalized_source_reference.blank?
+    raise Exceptions::UnprocessableEntity, __('Dom-Servis intake payload requires a request source.') if normalized_request_source_id.blank?
+    raise Exceptions::UnprocessableEntity, __('Dom-Servis intake payload requires a channel key.') if payload[:channel_key].blank?
+    raise Exceptions::UnprocessableEntity, __('Dom-Servis intake payload requires a partner organization.') if request_source.organization_id.blank?
+    raise Exceptions::Forbidden, __('Dom-Servis request source is paused.') if request_source.paused?
 
     dispatch = payload[:dispatch]
-    raise Exceptions::UnprocessableEntity, 'Dom-Servis intake payload requires service type.' if dispatch[:service_type].blank?
-    raise Exceptions::UnprocessableEntity, 'Dom-Servis intake payload requires address.' if dispatch[:address].blank?
+    raise Exceptions::UnprocessableEntity, __('Dom-Servis intake payload requires service type.') if dispatch[:service_type].blank?
+    raise Exceptions::UnprocessableEntity, __('Dom-Servis intake payload requires address.') if dispatch[:address].blank?
   end
 
   def existing_dispatch_job
@@ -60,14 +60,14 @@ class DomServis::Intake::DispatchJobCreator
   def dispatch_attributes
     payload[:dispatch].merge(
       source:             normalized_source,
-      request_source_id:   normalized_request_source_id,
-      source_reference:    normalized_source_reference,
-      organization_id:     request_source.organization_id,
-      intake_channel_key:  payload[:channel_key].presence,
-      intake_payload:      payload[:raw_payload].presence || {},
-      ticket_id:           ticket&.id,
-      created_by_id:       actor_user.id,
-      updated_by_id:       actor_user.id,
+      request_source_id:  normalized_request_source_id,
+      source_reference:   normalized_source_reference,
+      organization_id:    request_source.organization_id,
+      intake_channel_key: payload[:channel_key].presence,
+      intake_payload:     payload[:raw_payload].presence || {},
+      ticket_id:          ticket&.id,
+      created_by_id:      actor_user.id,
+      updated_by_id:      actor_user.id,
     )
   end
 
@@ -82,17 +82,17 @@ class DomServis::Intake::DispatchJobCreator
 
   def intake_metadata(dispatch_job)
     {
-      source:             normalized_source,
-      source_reference:    normalized_source_reference,
-      request_source_id:   normalized_request_source_id,
-      partner_org_id:      request_source.organization_id,
-      request_source_key:  request_source.partner_key,
-      request_source_name: request_source.name,
+      source:                normalized_source,
+      source_reference:      normalized_source_reference,
+      request_source_id:     normalized_request_source_id,
+      partner_org_id:        request_source.organization_id,
+      request_source_key:    request_source.partner_key,
+      request_source_name:   request_source.name,
       request_source_origin: payload[:request_source_origin].presence || payload.dig(:raw_payload, :request_source_origin).presence,
-      channel_key:         payload[:channel_key],
-      dispatch_job_id:     dispatch_job.id,
-      ticket_id:           ticket.id,
-      raw_payload:         payload[:raw_payload],
+      channel_key:           payload[:channel_key],
+      dispatch_job_id:       dispatch_job.id,
+      ticket_id:             ticket.id,
+      raw_payload:           payload[:raw_payload],
     }.compact
   end
 
@@ -113,16 +113,22 @@ class DomServis::Intake::DispatchJobCreator
   end
 
   def request_source
-    @request_source ||= DomServis::RequestSource.find_by(id: normalized_request_source_id) || raise(Exceptions::UnprocessableEntity, 'Dom-Servis intake requires a valid request source.')
+    @request_source ||= DomServis::RequestSource.find_by(id: normalized_request_source_id) || raise(Exceptions::UnprocessableEntity, __('Dom-Servis intake requires a valid request source.'))
   end
 
   def actor_user
-    @actor_user ||= User.order(:id).detect { |user| user.permissions?('ticket.agent') } || raise(Exceptions::UnprocessableEntity, 'Dom-Servis intake requires an available ticket agent user.')
+    @actor_user ||= User.reorder(:id).detect { |user| user.permissions?('ticket.agent') } || raise(Exceptions::UnprocessableEntity, __('Dom-Servis intake requires an available ticket agent user.'))
   end
 
   def mark_request_source_used!
+    # rubocop:disable Rails/SkipsModelValidations -- `touch` is the
+    # idiomatic, deliberate way to bump a single "last used" timestamp
+    # without running RequestSource's validation/callback chain; the
+    # surrounding rescue below already treats this as best-effort
+    # tracking that must never block ticket intake.
     request_source.touch(:last_used_at)
-  rescue StandardError => e
+    # rubocop:enable Rails/SkipsModelValidations
+  rescue => e
     Rails.logger.warn("Dom-Servis request source usage tracking failed for #{request_source.id}: #{e.message}")
   end
 end

@@ -2,8 +2,35 @@
 
 require 'rails_helper'
 
+# rubocop:disable RSpec/DescribeClass -- this is a multi-class integration
+# spec covering the whole backing-ticket bridge (Resolver, Mapper, Create,
+# and, further below, SyncFromDispatch as its own locally-shadowed
+# `described_class`), not a single unit under test, so there is no one
+# class this `describe` could name without misrepresenting its scope.
 RSpec.describe 'Dom-Servis backing ticket bridge' do
+  # rubocop:enable RSpec/DescribeClass
   let(:group)        { create(:group, name: '000 Bridge Group') }
+  let(:dispatch_job) do
+    DomServis::DispatchJob.create!(
+      service_type: 'Boiler repair',
+      address:      'Lenina 10',
+      client_name:  'Ivan Petrov',
+      client_phone: '+79001234567',
+      visit_day:    'mon',
+      visit_date:   '2026-03-23',
+      visit_time:   '10:00-12:00',
+      priority:     'medium',
+      organization: organization,
+      work_tags:    %w[boiler urgent],
+      description:  'Initial intake description',
+      comment:      'Call before arrival',
+      status:       'taken',
+      assignee:     master,
+      source:       'manual',
+      created_by:   dispatcher,
+      updated_by:   dispatcher,
+    )
+  end
   let(:dispatcher)   { create(:agent, groups: [group]) }
   let(:master)       { create(:agent, groups: [group]) }
   let(:organization) { create(:organization, name: 'Partner Org') }
@@ -12,28 +39,6 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     %w[boiler urgent waiting-parts gas].each do |tag_name|
       Tag::Item.lookup_by_name_and_create(tag_name)
     end
-  end
-
-  let(:dispatch_job) do
-    DomServis::DispatchJob.create!(
-      service_type:    'Boiler repair',
-      address:         'Lenina 10',
-      client_name:     'Ivan Petrov',
-      client_phone:    '+79001234567',
-      visit_day:       'mon',
-      visit_date:      '2026-03-23',
-      visit_time:      '10:00-12:00',
-      priority:        'medium',
-      organization:    organization,
-      work_tags:       %w[boiler urgent],
-      description:     'Initial intake description',
-      comment:         'Call before arrival',
-      status:          'taken',
-      assignee:        master,
-      source:          'manual',
-      created_by:      dispatcher,
-      updated_by:      dispatcher,
-    )
   end
 
   it 'creates and links a backing ticket with dispatch projection fields' do
@@ -112,12 +117,12 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
         dispatch_job: dispatch_job,
         operator:     dispatcher,
         changes:      {
-          'status_changed'     => { from: 'taken', to: 'done' },
-          'priority_changed'   => { from: 'medium', to: 'high' },
-          'moved_weekday'      => { from: 'mon', to: 'tue' },
-          'tags_changed'       => { to: %w[gas waiting-parts] },
-          'comment_added'      => { comment: 'Work completed successfully' },
-          'description_updated'=> { description: 'Updated completion details' },
+          'status_changed'      => { from: 'taken', to: 'done' },
+          'priority_changed'    => { from: 'medium', to: 'high' },
+          'moved_weekday'       => { from: 'mon', to: 'tue' },
+          'tags_changed'        => { to: %w[gas waiting-parts] },
+          'comment_added'       => { comment: 'Work completed successfully' },
+          'description_updated' => { description: 'Updated completion details' },
         }
       )
       .execute

@@ -25,7 +25,7 @@ class DispatchBoardController < ApplicationController
     # its own update lifecycle through skipWaiting/clientsClaim.
     response.headers['Cache-Control'] = 'public, max-age=0, must-revalidate'
     response.headers['Service-Worker-Allowed'] = '/dispatch'
-    render(file: Rails.root.join('public/assets/dispatch/sw.js'), layout: false, content_type: 'text/javascript')
+    render(file: Rails.public_path.join('assets/dispatch/sw.js'), layout: false, content_type: 'text/javascript')
   end
 
   def manifest
@@ -37,7 +37,7 @@ class DispatchBoardController < ApplicationController
         id:               '/dispatch/',
         short_name:       'Dom-Servis',
         name:             name,
-        description:      'Dom-Servis dispatch board for masters and dispatchers.',
+        description:      __('Dom-Servis dispatch board for masters and dispatchers.'),
         orientation:      'any',
         background_color: '#0a1119',
         theme_color:      '#20242d',

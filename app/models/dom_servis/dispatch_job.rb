@@ -30,9 +30,8 @@ class DomServis::DispatchJob < ApplicationModel
 
   has_many :events,
            class_name: 'DomServis::DispatchEvent',
-           foreign_key: :dispatch_job_id,
            inverse_of: :dispatch_job,
-           dependent: :destroy
+           dependent:  :destroy
 
   validates :status, inclusion: { in: STATUSES }
   validates :priority, inclusion: { in: PRIORITIES }
@@ -82,8 +81,8 @@ class DomServis::DispatchJob < ApplicationModel
 
   def attributes_with_association_ids
     super.merge(
-      request_source_label: request_source&.display_name,
-      request_source_partner_key: request_source&.partner_key,
+      request_source_label:          request_source&.display_name,
+      request_source_partner_key:    request_source&.partner_key,
       request_source_transport_kind: request_source&.transport_kind,
     ).compact
   end
@@ -111,7 +110,7 @@ class DomServis::DispatchJob < ApplicationModel
           updated_at: updated_at,
         },
       },
-      type: 'authenticated',
+      type:    'authenticated',
     )
   end
 
@@ -268,13 +267,13 @@ class DomServis::DispatchJob < ApplicationModel
     private
 
     def create_private_organization
-      system_user = User.order(:id).first
+      system_user = User.reorder(:id).first
       return nil if !system_user
 
       Organization.create_with(
         active:        true,
         shared:        false,
-        note:          'System organization for direct Dom-Servis retail jobs.',
+        note:          __('System organization for direct Dom-Servis retail jobs.'),
         created_by_id: system_user.id,
         updated_by_id: system_user.id,
       ).find_or_create_by!(name: 'Частный заказ')
