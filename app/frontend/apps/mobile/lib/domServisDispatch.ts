@@ -2,7 +2,11 @@
 
 import type { useSessionStore } from '#shared/stores/session.ts'
 
-const dispatchPermissions = ['dom_servis.admin', 'dom_servis.dispatcher', 'dom_servis.master'] as const
+const dispatchPermissions = [
+  'dom_servis.admin',
+  'dom_servis.dispatcher',
+  'dom_servis.master',
+] as const
 
 export const domServisDispatchDesktopPath = '/#dom_servis/dispatch'
 export const domServisDispatchMobilePath = '/dom-servis/dispatch'
