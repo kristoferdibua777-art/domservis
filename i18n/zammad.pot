@@ -638,6 +638,10 @@ msgstr ""
 msgid "AI"
 msgstr ""
 
+#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2465
+msgid "AI / разбор"
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/_ai/ai_agent.coffee:6
 #: app/assets/javascripts/app/controllers/_application_controller/_modal_generic_history.coffee:42
 #: app/assets/javascripts/app/controllers/_ui_element/_application_action.coffee:79
@@ -2520,6 +2524,10 @@ msgstr ""
 #: app/assets/javascripts/app/controllers/import_otrs.coffee:154
 #: app/assets/javascripts/app/controllers/import_zendesk.coffee:156
 msgid "Background process did not start or has not finished! Please contact your support."
+msgstr ""
+
+#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:1441
+msgid "Backing Ticket"
 msgstr ""
 
 #: app/models/report.rb:38
@@ -13531,6 +13539,10 @@ msgstr ""
 msgid "Push subscription p256dh key is required."
 msgstr ""
 
+#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2506
+msgid "Push-уведомления не настроены администратором (нет VAPID ключа)."
+msgstr ""
+
 #: app/assets/javascripts/app/views/maintenance.jst.eco:27
 #: db/seeds/settings.rb:52
 msgid "Put a message on the login page. To change it, click on the text area below and change it in-line."
@@ -20290,6 +20302,10 @@ msgstr ""
 #: app/assets/javascripts/app/views/channel/sms_account_overview.jst.eco:42
 #: db/seeds/permissions.rb:89
 msgid "Webhook"
+msgstr ""
+
+#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2464
+msgid "Webhook / API"
 msgstr ""
 
 #: app/models/channel/driver/sms/message_bird.rb:90
