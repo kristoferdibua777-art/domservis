@@ -13,16 +13,36 @@ jobs:
     container:
       image: zammad/zammad-ci:latest
 
+    services:
+      postgresql:
+        image: postgres:18
+        env:
+          POSTGRES_USER: zammad
+          POSTGRES_PASSWORD: zammad
+
+      redis:
+        image: redis:6
+
     env:
       RAILS_ENV: test
       Z_LOCALES: "en-us:de-de"
       TZ: 'Europe/London'
+      REDIS_URL: redis://redis:6379
       CI_SKIP_ASSETS_PRECOMPILE: 'true'
       CI_SKIP_DB_RESET: 'true'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'pnpm'
 
       - name: Pre
         run: .github/workflows/ci/pre.sh
@@ -35,19 +55,18 @@ jobs:
           echo "RuboCop autocorrect exit code: $RUBOCOP_EXIT"
           exit 0
 
-      - name: Show changes
+      - name: Show changed files
         run: |
           git status --short
           git diff --stat
           git diff --check
 
-      - name: Create patch
+      - name: Create autocorrect patch
         run: |
           git diff --binary > rubocop-autofix.patch
-          echo "Patch size:"
           ls -lh rubocop-autofix.patch
 
-      - name: Upload patch
+      - name: Upload autocorrect patch
         uses: actions/upload-artifact@v4
         with:
           name: rubocop-autofix-patch
