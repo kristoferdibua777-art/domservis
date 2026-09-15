@@ -89,6 +89,20 @@ const csrfToken = () => {
   return document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content
 }
 
+const dayLabel = (visitDay?: string) => {
+  const map: Record<string, string> = {
+    mon: 'Пн',
+    tue: 'Вт',
+    wed: 'Ср',
+    thu: 'Чт',
+    fri: 'Пт',
+    sat: 'Сб',
+    sun: 'Вс',
+  }
+
+  return map[visitDay || ''] || visitDay || 'День не указан'
+}
+
 const formatSchedule = (job: DispatchJob) => {
   const parts = [dayLabel(job.visit_day)]
 
@@ -119,20 +133,6 @@ const statusLabel = (status?: DispatchStatus) => {
   }
 
   return map[status || ''] || status || 'Не указан'
-}
-
-const dayLabel = (visitDay?: string) => {
-  const map: Record<string, string> = {
-    mon: 'Пн',
-    tue: 'Вт',
-    wed: 'Ср',
-    thu: 'Чт',
-    fri: 'Пт',
-    sat: 'Сб',
-    sun: 'Вс',
-  }
-
-  return map[visitDay || ''] || visitDay || 'День не указан'
 }
 
 const currentUserInternalId = computed(() => Number(session.user?.internalId || 0))
