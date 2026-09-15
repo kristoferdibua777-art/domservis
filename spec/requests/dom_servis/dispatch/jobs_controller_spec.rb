@@ -6,7 +6,11 @@ require 'models/contexts/factory_context'
 RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, type: :request do
   include_context 'factory'
 
-  before { Organization.find_or_create_by!(name: 'Частный заказ') }
+  before do
+    Organization.find_or_create_by!(name: 'Частный заказ')
+    DomServis::DispatchRoleCatalog.sync!(actor_id: 1)
+    allow_any_instance_of(DomServis::Dispatch::JobsController).to receive(:sync_backing_ticket!).and_return(true)
+  end
 
   let(:job) do
     DomServis::DispatchJob.create!(
@@ -33,11 +37,6 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
       master_role = Role.find_by(name: 'Dom-Servis Master')
       user.roles << master_role if master_role && !user.roles.exists?(master_role.id)
     end
-  end
-
-  before do
-    DomServis::DispatchRoleCatalog.sync!(actor_id: 1)
-    allow_any_instance_of(DomServis::Dispatch::JobsController).to receive(:sync_backing_ticket!).and_return(true)
   end
 
   describe 'POST /api/v1/dom_servis/dispatch/jobs/:id/assign' do
