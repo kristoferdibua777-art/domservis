@@ -10,6 +10,24 @@ jobs:
   rubocop-autofix:
     runs-on: ubuntu-latest
 
+    # Root cause (confirmed by the real run's "Bad substitution" error, and
+    # by https://github.com/actions/runner/issues/1533): a job that uses
+    # `container:` does NOT get bash as its implicit default shell the way
+    # a normal (non-containerized) Linux job does - it silently falls back
+    # to `sh` (dash) for every inline `run:` block unless `shell:` is set
+    # explicitly. dash has no `${PIPESTATUS[...]}` array substitution,
+    # which is exactly what produced "Bad substitution". ci.yaml's own
+    # "Pre"/"Lint"/"Test" steps never hit this because they call
+    # `run: .github/workflows/ci/<script>.sh` - a path to a file with its
+    # own `#!/usr/bin/env bash` shebang, so the OS runs that file as bash
+    # regardless of the step's own default shell. Our inline `run: |`
+    # blocks have no such shebang of their own, so they need the default
+    # pinned explicitly. Setting it once here at the job level covers every
+    # step below without repeating `shell: bash` on each one.
+    defaults:
+      run:
+        shell: bash
+
     container:
       image: zammad/zammad-ci:latest
 
@@ -67,34 +85,122 @@ jobs:
       - name: Pre
         run: .github/workflows/ci/pre.sh
 
+      # Root cause of "bundle: not found": pre.sh sources
+      # /etc/profile.d/rvm.sh to put `ruby`/`bundle` on PATH, but that
+      # happens inside pre.sh's OWN process. Each `run:` step is a fresh
+      # shell/process, and pre.sh never writes those PATH changes to
+      # $GITHUB_PATH/$GITHUB_ENV, so nothing from it survives into later
+      # steps. Proof this is how the project's own working CI treats it,
+      # not an assumption: ci/lint.sh (line 7) and ci/test.sh (line 7) each
+      # independently re-run `source /etc/profile.d/rvm.sh` at their own
+      # top, even though ci.yaml's "Pre" step (running pre.sh) already ran
+      # immediately before them. If RVM's PATH setup persisted across
+      # steps, those re-sources in lint.sh/test.sh would be redundant -
+      # they exist because it does not persist. Our previous "Run safe
+      # RuboCop autocorrect" step never re-sourced rvm.sh, so `bundle` was
+      # not on PATH there - hence "bundle: not found".
+      #
+      # This diagnostic step makes that environment visible and provable
+      # before RuboCop runs, without hiding a missing tool: `set +e` keeps
+      # a failing probe (e.g. `which bundle` when bundle is absent) from
+      # aborting the step before the remaining probes have printed.
+      - name: Diagnose Ruby/Bundler environment
+        run: |
+          set +e
+          echo "--- identity / workspace ---"
+          whoami
+          pwd
+          echo "SHELL=$SHELL"
+          echo "PATH (before rvm.sh)=$PATH"
+          echo "--- sourcing rvm.sh (same as ci/lint.sh, ci/test.sh) ---"
+          # shellcheck disable=SC1091
+          source /etc/profile.d/rvm.sh
+          echo "PATH (after rvm.sh)=$PATH"
+          echo "--- tool resolution ---"
+          echo -n "ruby: "; which ruby; ruby --version
+          echo -n "bundle: "; which bundle; bundle --version
+          echo "--- Gemfile-required Ruby vs active Ruby ---"
+          grep "^ruby " Gemfile
+          echo "--- bundle check (does not install, just reports) ---"
+          bundle check
+          echo "(any missing-tool output above is the real, unmasked state - not swallowed)"
+
       # Preventive fix: capture RuboCop's own stdout/stderr to a log file
       # (uploaded below) instead of only printing the exit code, and
-      # distinguish RuboCop's own documented exit codes
-      # (https://docs.rubocop.org/rubocop/latest/usage/cli_reference.html):
-      #   0 = clean run (nothing left after autocorrect)
-      #   1 = ran fine, offenses remain that -a could not fix
-      #   2 = RuboCop itself crashed (bad config, bad CLI options, internal
-      #       error) - NOT the same as "offenses found" and must not be
-      #       silently treated the same way.
-      # Any other code (e.g. 127 "command not found") means RuboCop never
-      # even started. The original `exit 0` at the end of this step made
-      # cases (2) and "never started" look identical, in the logs, to case
-      # (1) - this still doesn't hard-fail the job (so the patch step below
-      # still runs and can be inspected), but it no longer hides the
-      # distinction between "offenses remain" and "infrastructure problem".
+      # distinguish four outcomes, per the project's requirement to never
+      # let an infrastructure failure look like "offenses remain":
+      #   A. exit 0            - clean run, nothing left after autocorrect.
+      #   B. exit 1            - ran fine, offenses remain (expected).
+      #   C. exit 127 (or the
+      #      "files inspected" summary line is absent from the log even
+      #      though the exit code looks like B) - RuboCop/bundle never
+      #      actually started (missing PATH entry, missing gem, etc).
+      #   D. exit 2             - RuboCop itself crashed (bad config, bad
+      #      CLI options, internal error). Documented at
+      #      https://docs.rubocop.org/rubocop/latest/usage/cli_reference.html
+      # The B/C ambiguity matters because Bundler can also exit 1 on its
+      # own (e.g. "could not find gem rubocop") before RuboCop ever runs,
+      # which would otherwise be misread as "B: offenses remain". Grepping
+      # the captured log for RuboCop's own summary line ("files inspected")
+      # closes that gap instead of trusting the exit code alone.
+      # This still ends with `exit 0` so the patch/log artifacts below are
+      # always produced and inspectable - but the RESULT line printed here,
+      # and the artifacts themselves, no longer hide which of A/B/C/D
+      # actually happened.
       - name: Run safe RuboCop autocorrect
         run: |
           set +e
+          # shellcheck disable=SC1091
+          source /etc/profile.d/rvm.sh
+          # .gitlab/environment.env is generated by pre.sh (via
+          # configure_environment.rb) in the step above, so it exists by
+          # now. RuboCop itself never touches Rails/DB/Redis (its custom
+          # cops under .dev/rubocop/cop/zammad/ are plain `require_relative`
+          # Ruby classes, not `require "rails_helper"`), so this is not
+          # load-bearing for RuboCop - it's sourced only to mirror
+          # ci/lint.sh's actual environment exactly, per the project's own
+          # "same environment as lint.sh" requirement.
+          if [ -f .gitlab/environment.env ]; then
+            # shellcheck disable=SC1091
+            source .gitlab/environment.env
+          else
+            echo "NOTE: .gitlab/environment.env not found - continuing without it (RuboCop does not require it)."
+          fi
+
           bundle exec rubocop -a 2>&1 | tee rubocop-autofix.log
           RUBOCOP_EXIT=${PIPESTATUS[0]}
           echo "RuboCop autocorrect exit code: $RUBOCOP_EXIT"
+
+          if grep -qE "[0-9]+ files? inspected" rubocop-autofix.log; then
+            RUBOCOP_RAN=true
+          else
+            RUBOCOP_RAN=false
+          fi
+
           case "$RUBOCOP_EXIT" in
-            0) echo "RESULT: clean - no offenses left after autocorrect." ;;
-            1) echo "RESULT: ran fine - offenses remain (expected, non-fatal)." ;;
-            2) echo "RESULT: RuboCop crashed (bad config/CLI/internal error) - inspect rubocop-autofix.log." ;;
-            *) echo "RESULT: unexpected exit code $RUBOCOP_EXIT - RuboCop may not have run at all. Inspect rubocop-autofix.log." ;;
+            0)
+              echo "RESULT: A - clean, no offenses left after autocorrect."
+              ;;
+            1)
+              if [ "$RUBOCOP_RAN" = "true" ]; then
+                echo "RESULT: B - ran fine, offenses remain (expected, non-fatal)."
+              else
+                echo "RESULT: C - exit 1 but no RuboCop summary line found in the log; this is Bundler/shell failing before RuboCop ever ran, not 'offenses remain'. Inspect rubocop-autofix.log."
+              fi
+              ;;
+            2)
+              echo "RESULT: D - RuboCop crashed (bad config/CLI/internal error). Inspect rubocop-autofix.log."
+              ;;
+            127)
+              echo "RESULT: C - command not found (bundle/ruby not on PATH). Infrastructure not ready, not an offense count. Inspect rubocop-autofix.log."
+              ;;
+            *)
+              echo "RESULT: C/D - unexpected exit code $RUBOCOP_EXIT, RuboCop may not have run at all. Inspect rubocop-autofix.log."
+              ;;
           esac
+
           echo "RUBOCOP_EXIT=$RUBOCOP_EXIT" >> "$GITHUB_ENV"
+          echo "RUBOCOP_RAN=$RUBOCOP_RAN" >> "$GITHUB_ENV"
           exit 0
 
       # Preventive fix: `git diff --check` exits non-zero when it finds
