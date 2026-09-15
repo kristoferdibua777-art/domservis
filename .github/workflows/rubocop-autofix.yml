@@ -1,6 +1,9 @@
 name: RuboCop Autofix
 
 on:
+  push:
+    branches:
+      - fix/rubocop-baseline
   workflow_dispatch:
 
 jobs:
