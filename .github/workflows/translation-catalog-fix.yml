@@ -1,0 +1,175 @@
+name: Translation Catalog Fix
+
+on:
+  push:
+    branches:
+      - fix/rubocop-baseline
+  workflow_dispatch:
+
+jobs:
+  translation-catalog-fix:
+    runs-on: ubuntu-latest
+
+    # Same container-job shell caveat as .github/workflows/rubocop-autofix.yml:
+    # `container:` jobs default inline `run:` blocks to `sh` (dash), not bash.
+    defaults:
+      run:
+        shell: bash
+
+    container:
+      image: zammad/zammad-ci:latest
+
+    services:
+      postgresql:
+        image: postgres:18
+        env:
+          POSTGRES_USER: zammad
+          POSTGRES_PASSWORD: zammad
+
+      redis:
+        image: redis:6
+
+    env:
+      RAILS_ENV: test
+      Z_LOCALES: "en-us:de-de"
+      TZ: 'Europe/London'
+      REDIS_URL: redis://redis:6379
+      CI_SKIP_ASSETS_PRECOMPILE: 'true'
+      CI_SKIP_DB_RESET: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Mark workspace as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Cache Rubygems
+        id: cache-bundler
+        uses: actions/cache@v5
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-cache-bundler-${{ hashFiles('Gemfile.lock') }}
+
+      - name: Pre
+        run: .github/workflows/ci/pre.sh
+
+      - name: Diagnose Ruby/Bundler environment
+        run: |
+          set +e
+          echo "--- identity / workspace ---"
+          whoami
+          pwd
+          echo "PATH (before rvm.sh)=$PATH"
+          # shellcheck disable=SC1091
+          source /etc/profile.d/rvm.sh
+          echo "PATH (after rvm.sh)=$PATH"
+          echo -n "ruby: "; which ruby; ruby --version
+          echo -n "bundle: "; which bundle; bundle --version
+          bundle check
+
+      # Snapshot what CI currently sees as stale, exactly as
+      # .github/workflows/ci/lint.sh does it, so the "before" state is
+      # captured from the real environment rather than assumed.
+      - name: Confirm catalog is currently stale (--check, expected to fail)
+        run: |
+          set +e
+          # shellcheck disable=SC1091
+          source /etc/profile.d/rvm.sh
+          if [ -f .gitlab/environment.env ]; then
+            # shellcheck disable=SC1091
+            source .gitlab/environment.env
+          fi
+          bundle exec rails generate zammad:translation_catalog --check 2>&1 | tee translation-catalog-check-before.log
+          echo "exit code: ${PIPESTATUS[0]}"
+          exit 0
+
+      # This is the actual official generator, run for real (no --check),
+      # so it rewrites i18n/zammad.pot based on the current Ruby/ERB/JS
+      # source. No --full flag: that only adds the VerifyLocaleEntries /
+      # template-refresh writers, which are `optional` and query DB-backed
+      # Locale/Translation models - not needed just to refresh the catalog
+      # file itself, and this keeps the job's DB dependency minimal.
+      - name: Regenerate translation catalog (official generator)
+        run: |
+          set +e
+          # shellcheck disable=SC1091
+          source /etc/profile.d/rvm.sh
+          if [ -f .gitlab/environment.env ]; then
+            # shellcheck disable=SC1091
+            source .gitlab/environment.env
+          fi
+          bundle exec rails generate zammad:translation_catalog 2>&1 | tee translation-catalog-generate.log
+          GEN_EXIT=${PIPESTATUS[0]}
+          echo "generator exit code: $GEN_EXIT"
+          echo "GEN_EXIT=$GEN_EXIT" >> "$GITHUB_ENV"
+          exit 0
+
+      # Verification: re-run the exact same --check CI uses, so the
+      # artifact tells us for certain whether the regenerated file is now
+      # actually up-to-date, instead of assuming success from the
+      # generator's own exit code.
+      - name: Re-check catalog is now up-to-date
+        run: |
+          set +e
+          # shellcheck disable=SC1091
+          source /etc/profile.d/rvm.sh
+          if [ -f .gitlab/environment.env ]; then
+            # shellcheck disable=SC1091
+            source .gitlab/environment.env
+          fi
+          bundle exec rails generate zammad:translation_catalog --check 2>&1 | tee translation-catalog-check-after.log
+          CHECK_EXIT=${PIPESTATUS[0]}
+          echo "post-regeneration --check exit code: $CHECK_EXIT"
+          echo "CHECK_EXIT=$CHECK_EXIT" >> "$GITHUB_ENV"
+          exit 0
+
+      - name: Show changed files
+        run: |
+          set +e
+          git status --short
+          git diff --stat -- i18n/zammad.pot
+          git diff --check -- i18n/zammad.pot
+          exit 0
+
+      - name: Create catalog patch
+        if: always()
+        run: |
+          git diff --binary -- i18n/zammad.pot > translation-catalog.patch
+          ls -lh translation-catalog.patch
+
+      - name: Upload catalog patch
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: translation-catalog-patch
+          path: translation-catalog.patch
+          if-no-files-found: error
+
+      - name: Upload regenerated zammad.pot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: translation-catalog-pot
+          path: i18n/zammad.pot
+          if-no-files-found: error
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: translation-catalog-logs
+          path: |
+            translation-catalog-check-before.log
+            translation-catalog-generate.log
+            translation-catalog-check-after.log
+          if-no-files-found: warn
