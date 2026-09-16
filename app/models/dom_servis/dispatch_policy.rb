@@ -24,9 +24,9 @@ class DomServis::DispatchPolicy
       base_role:    'Agent',
       # rubocop:disable Zammad/DetectTranslatableString -- this mirrors the
       # literal Role#name Zammad looks up elsewhere (DomServis::DispatchRoleCatalog,
-      # User#bootstrap_dom_servis_roles, db/migrate/20260318211000_add_dom_servis_admin_role.rb).
-      # Translating it would make Role.find_by(name: ...) silently stop
-      # matching once a translation for this phrase exists.
+      # db/migrate/20260318211000_add_dom_servis_admin_role.rb). Translating it
+      # would make Role.find_by(name: ...) silently stop matching once a
+      # translation for this phrase exists.
       overlay_role: 'Dom-Servis Master',
       # rubocop:enable Zammad/DetectTranslatableString
       permission:   'dom_servis.master',
