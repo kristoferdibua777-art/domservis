@@ -1,6 +1,7 @@
 ########################################
 # Remaining difference to zammad-org:
-# MD033 disabled for zammad-org, but no need to disable it here
+# MD033 disabled for zammad-org, but here we keep it enabled and only allow
+# the <a> element (see MD033 below) - narrower than a blanket disable.
 ########################################
 
 # Default state for all rules
@@ -10,6 +11,16 @@ default: true
 MD004:
   # List style
   style: "dash"
+
+# MD033/no-inline-html : Inline HTML : https://github.com/DavidAnson/markdownlint/blob/main/doc/md033.md
+MD033:
+  # Allowed elements
+  # install.md uses <a id="..."></a> as stable manual anchors for its
+  # table of contents (e.g. #requirements); Markdown has no non-HTML way to
+  # declare a named anchor, so the <a> element is explicitly allowed here.
+  # No other inline HTML elements are permitted.
+  allowed_elements:
+    - "a"
 
 # MD013/line-length : Line length : https://github.com/DavidAnson/markdownlint/blob/main/doc/md013.md
 MD013:
