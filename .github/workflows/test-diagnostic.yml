@@ -1,0 +1,177 @@
+name: Test diagnostic (temporary)
+
+on:
+  push:
+    branches:
+      - fix/rubocop-baseline
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-diagnostic:
+    runs-on: ubuntu-latest
+
+    container:
+      image: zammad/zammad-ci:latest
+
+    defaults:
+      run:
+        shell: bash
+
+    services:
+      postgresql:
+        image: postgres:18
+        env:
+          POSTGRES_USER: zammad
+          POSTGRES_PASSWORD: zammad
+
+      redis:
+        image: redis:6
+
+    env:
+      RAILS_ENV: test
+      Z_LOCALES: "en-us:de-de"
+      TZ: Europe/London
+      REDIS_URL: redis://redis:6379
+      CI_SKIP_ASSETS_PRECOMPILE: "true"
+      CI_SKIP_DB_RESET: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Cache Rubygems
+        id: cache-bundler
+        uses: actions/cache@v5
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-cache-bundler-${{ hashFiles('Gemfile.lock') }}
+
+      - name: Pre
+        run: .github/workflows/ci/pre.sh
+
+      - name: "Stage 1/6: assets:precompile"
+        id: assets_precompile
+        continue-on-error: true
+        run: |
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          bundle exec rake assets:precompile
+
+      - name: "Stage 2/6: pnpm test (Vitest)"
+        id: vitest
+        continue-on-error: true
+        run: |
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          pnpm test
+
+      - name: "Stage 3/6: zammad:db:init"
+        id: db_init_before_rspec
+        continue-on-error: true
+        run: |
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          bundle exec rake zammad:db:init
+
+      - name: "Stage 4/6: RSpec"
+        id: rspec
+        continue-on-error: true
+        run: |
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          bundle exec rspec \
+            --exclude-pattern "spec/system/**/*_spec.rb" \
+            -t ~searchindex \
+            -t ~integration \
+            -t ~required_envs
+
+      - name: "Stage 5/6: zammad:db:reset"
+        id: db_reset_before_minitest
+        continue-on-error: true
+        run: |
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          bundle exec rake zammad:db:reset
+
+      - name: "Stage 6/6: Minitest"
+        id: minitest
+        continue-on-error: true
+        run: |
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          bundle exec rake test:units
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Test diagnostic summary"
+            echo
+            echo "| Stage | Outcome |"
+            echo "| --- | --- |"
+            echo "| assets:precompile | ${{ steps.assets_precompile.outcome }} |"
+            echo "| pnpm test (Vitest) | ${{ steps.vitest.outcome }} |"
+            echo "| db:init (pre-RSpec) | ${{ steps.db_init_before_rspec.outcome }} |"
+            echo "| RSpec | ${{ steps.rspec.outcome }} |"
+            echo "| db:reset (pre-Minitest) | ${{ steps.db_reset_before_minitest.outcome }} |"
+            echo "| Minitest | ${{ steps.minitest.outcome }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Gate
+        if: always()
+        run: |
+          FAILED=0
+
+          check_stage() {
+            local name="$1"
+            local outcome="$2"
+
+            echo "$name: $outcome"
+
+            if [[ "$outcome" != "success" ]]; then
+              FAILED=1
+            fi
+          }
+
+          check_stage \
+            "assets:precompile" \
+            "${{ steps.assets_precompile.outcome }}"
+
+          check_stage \
+            "pnpm test (Vitest)" \
+            "${{ steps.vitest.outcome }}"
+
+          check_stage \
+            "db:init (pre-RSpec)" \
+            "${{ steps.db_init_before_rspec.outcome }}"
+
+          check_stage \
+            "RSpec" \
+            "${{ steps.rspec.outcome }}"
+
+          check_stage \
+            "db:reset (pre-Minitest)" \
+            "${{ steps.db_reset_before_minitest.outcome }}"
+
+          check_stage \
+            "Minitest" \
+            "${{ steps.minitest.outcome }}"
+
+          if [[ "$FAILED" -ne 0 ]]; then
+            echo "::error::One or more diagnostic Test stages failed."
+            exit 1
+          fi
+
+          echo "All diagnostic Test stages passed."
