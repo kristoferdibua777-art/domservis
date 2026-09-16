@@ -23,15 +23,11 @@ let sequence = 0
 
 export const diagnosticTicketCreateUserEnabled = () => enabled
 
-export const diagnosticTicketCreateUserLog = (
-  label: string,
-  data?: Record<string, unknown>,
-) => {
+export const diagnosticTicketCreateUserLog = (label: string, data?: Record<string, unknown>) => {
   if (!enabled) return
 
   sequence += 1
 
-  // eslint-disable-next-line no-console
   console.log(
     `[DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER] #${sequence} ${new Date().toISOString()} ${label}${
       data ? ` ${JSON.stringify(data)}` : ''
