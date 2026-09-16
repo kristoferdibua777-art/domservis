@@ -11,7 +11,33 @@ import { convertToGraphQLId } from '#shared/graphql/utils.ts'
 import { useSessionStore } from '#shared/stores/session.ts'
 import type { UserData } from '#shared/types/store.ts'
 
+import { routes } from '#mobile/router/index.ts'
+
 import LayoutBottomNavigation from '../LayoutBottomNavigation.vue'
+
+import type { RouteRecordRaw } from 'vue-router'
+
+// Use the real mobile route table (instead of the generic test router
+// stub) so that CommonLink can resolve hrefs the same way it does in
+// production: only a route that actually matches gets the router's
+// `/mobile` history base applied. Without this, `/dom-servis/dispatch`
+// falls through to the catch-all "Error" route, CommonLink treats it as
+// unmatched, and the rendered href is the raw, unprefixed link target
+// instead of the real `/mobile/dom-servis/dispatch` browser URL.
+const mainRoutes = routes.find((route) => route.name === 'Main')?.children || []
+const mobileTestRoutes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'Main',
+    component: { template: '<div></div>' },
+    children: mainRoutes,
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'Error',
+    component: { template: '<div></div>' },
+  },
+]
 
 describe('bottom navigation in layout', () => {
   it('renders navigation', async () => {
@@ -19,6 +45,7 @@ describe('bottom navigation in layout', () => {
     const view = renderComponent(LayoutBottomNavigation, {
       store: true,
       router: true,
+      routerRoutes: mobileTestRoutes,
     })
     const store = useSessionStore()
 
@@ -42,6 +69,7 @@ describe('bottom navigation in layout', () => {
     const view = renderComponent(LayoutBottomNavigation, {
       store: true,
       router: true,
+      routerRoutes: mobileTestRoutes,
     })
     const store = useSessionStore()
 
@@ -72,6 +100,7 @@ describe('bottom navigation in layout', () => {
     const view = renderComponent(LayoutBottomNavigation, {
       store: true,
       router: true,
+      routerRoutes: mobileTestRoutes,
     })
     const store = useSessionStore()
 
