@@ -31,7 +31,7 @@ RSpec.describe DomServis::DispatchRoleCatalog do
   # zammad:db:init/db:reset left it, the same way it undoes any other
   # in-example change.
   describe '.sync!' do
-    it 'creates the three overlay roles with their matching permissions granted, and reports itself seeded' do
+    it 'creates the three overlay roles with their matching permissions granted, and reports itself seeded', :aggregate_failures do
       Role.where(name: described_class.names).destroy_all
       expect(described_class.seeded?).to be(false)
 
@@ -44,7 +44,7 @@ RSpec.describe DomServis::DispatchRoleCatalog do
       expect(Role.find_by(name: 'Dom-Servis Master')&.with_permission?('dom_servis.master')).to be(true)
     end
 
-    it 'does nothing and returns false without an actor id, and does not raise' do
+    it 'does nothing and returns false without an actor id, and does not raise', :aggregate_failures do
       Role.where(name: described_class.names).destroy_all
       expect(described_class.seeded?).to be(false)
 
@@ -85,7 +85,7 @@ RSpec.describe DomServis::DispatchRoleCatalog do
     # undo that `setval` on its own - the `ensure` block always realigns it
     # back to MAX(id) afterwards, pass or fail, so no stale sequence state
     # leaks into whichever spec runs next.
-    it 'does not collide with the already-existing explicit-id Admin role when roles_id_seq has not been advanced' do
+    it 'does not collide with the already-existing explicit-id Admin role when roles_id_seq has not been advanced', :aggregate_failures do
       Role.where(name: described_class.names).destroy_all
       expect(Role.exists?(id: 1)).to be(true) # the seeded 'Admin' role
       expect(described_class.seeded?).to be(false)

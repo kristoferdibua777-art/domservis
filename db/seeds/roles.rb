@@ -62,5 +62,5 @@ ActiveRecord::Base.connection.reset_pk_sequence!('roles')
 # what made this eventually self-heal on the first admin-permission user
 # created after install; that callback also incorrectly auto-granted the
 # overlay role to that user, which is why it was removed rather than kept -
-# see spec/models/user/dom_servis_role_bootstrap_spec.rb.
+# see spec/models/user/user_dom_servis_role_bootstrap_spec.rb.
 DomServis::DispatchRoleCatalog.sync!(actor_id: 1)
