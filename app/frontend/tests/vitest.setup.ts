@@ -70,6 +70,13 @@ Object.defineProperty(Node.prototype, 'getClientRects', {
 Object.defineProperty(Element.prototype, 'scroll', { value: vi.fn() })
 Object.defineProperty(Element.prototype, 'scrollBy', { value: vi.fn() })
 Object.defineProperty(Element.prototype, 'scrollIntoView', { value: vi.fn() })
+// jsdom does not implement `Element.prototype.scrollTo` (unlike `scroll`,
+// `scrollBy` and `scrollIntoView` right above, which are already stubbed
+// here). Real browsers implement it correctly, so production code calling
+// `element.scrollTo(...)` - e.g. TicketList.vue's post-bulk-edit
+// scroll-to-top - is correct as written and needs no defensive guard; this
+// closes the same jsdom gap the three sibling methods above already close.
+Object.defineProperty(Element.prototype, 'scrollTo', { value: vi.fn() })
 
 const descriptor = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src')!
 

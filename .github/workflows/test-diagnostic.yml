@@ -86,6 +86,22 @@ jobs:
           source .gitlab/environment.env
           pnpm test 2>&1 | tee diagnostic-logs/vitest.log
 
+      # TEMPORARY targeted diagnostic (round 5): runs only
+      # ticket-create-user.spec.ts, with DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER=1
+      # enabling the narrowly-gated logging in
+      # tests/support/diagnostic-ticket-create-user.ts, to observe the exact
+      # FormUpdater request sequence around the file's two known timeouts.
+      # Does not replace or modify Stage 2/6 above - that stage already ran
+      # the real, unmodified `pnpm test` command with no diagnostic flag set.
+      - name: "Stage 2b/6 (temporary): targeted ticket-create-user.spec.ts diagnostic"
+        id: vitest_ticket_create_user_diagnostic
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER=1 pnpm test ticket-create-user.spec.ts 2>&1 | tee diagnostic-logs/ticket-create-user-targeted.log
+
       - name: "Stage 3/6: zammad:db:init"
         id: db_init_before_rspec
         continue-on-error: true
@@ -132,6 +148,7 @@ jobs:
         run: |
           ASSETS_OUTCOME="${{ steps.assets_precompile.outcome }}"
           VITEST_OUTCOME="${{ steps.vitest.outcome }}"
+          VITEST_TARGETED_OUTCOME="${{ steps.vitest_ticket_create_user_diagnostic.outcome }}"
           DB_INIT_OUTCOME="${{ steps.db_init_before_rspec.outcome }}"
           RSPEC_OUTCOME="${{ steps.rspec.outcome }}"
           DB_RESET_OUTCOME="${{ steps.db_reset_before_minitest.outcome }}"
@@ -144,6 +161,7 @@ jobs:
             echo "| --- | --- |"
             echo "| assets:precompile | ${ASSETS_OUTCOME} |"
             echo "| pnpm test (Vitest) | ${VITEST_OUTCOME} |"
+            echo "| pnpm test (targeted ticket-create-user diagnostic) | ${VITEST_TARGETED_OUTCOME} |"
             echo "| db:init (pre-RSpec) | ${DB_INIT_OUTCOME} |"
             echo "| RSpec | ${RSPEC_OUTCOME} |"
             echo "| db:reset (pre-Minitest) | ${DB_RESET_OUTCOME} |"
@@ -182,6 +200,17 @@ jobs:
               diagnostic-logs/vitest.log \
               '^ ?(FAIL|Test Files|Tests)[[:space:]]|✗|×'
           fi
+
+          # Always surface the targeted round-5 diagnostic log lines
+          # (DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER output), not only on
+          # failure - the FormUpdater request sequence they show is the
+          # point of this stage regardless of whether the targeted run
+          # happens to pass or fail. The stage's own success/failure is
+          # still summarized above and still gates the workflow.
+          extract \
+            "Targeted ticket-create-user.spec.ts diagnostic log" \
+            diagnostic-logs/ticket-create-user-targeted.log \
+            '^ ?(FAIL|PASS|Test Files|Tests)[[:space:]]|✗|×|\[DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER\]'
 
           if [[ "$RSPEC_OUTCOME" != "success" ]]; then
             extract \
@@ -228,6 +257,10 @@ jobs:
           check_stage \
             "pnpm test (Vitest)" \
             "${{ steps.vitest.outcome }}"
+
+          check_stage \
+            "pnpm test (targeted ticket-create-user diagnostic)" \
+            "${{ steps.vitest_ticket_create_user_diagnostic.outcome }}"
 
           check_stage \
             "db:init (pre-RSpec)" \

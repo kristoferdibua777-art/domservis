@@ -3,6 +3,7 @@
 import { waitFor, within } from '@testing-library/vue'
 
 import FormUpdaterUser from '#tests/graphql/factories/types/FormUpdaterUser.ts'
+import { diagnosticTicketCreateUserLog } from '#tests/support/diagnostic-ticket-create-user.ts'
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
 
 import {
@@ -22,9 +23,15 @@ describe('ticket create view - user create action', () => {
   })
 
   it('does not allow agent to toggle customer role when creating user', async () => {
+    diagnosticTicketCreateUserLog('test:start', {
+      test: 'does not allow agent to toggle customer role when creating user',
+    })
+
     mockPermissions(['ticket.agent'])
 
     const view = await visitCreateView()
+
+    diagnosticTicketCreateUserLog('test:main-form-rendered')
 
     mockObjectManagerFrontendAttributesQuery({
       objectManagerFrontendAttributes: {
@@ -72,14 +79,28 @@ describe('ticket create view - user create action', () => {
 
     const flyout = await view.findByRole('complementary', { name: 'Create new customer' })
 
+    diagnosticTicketCreateUserLog('test:flyout-opened')
+
     expect(await waitForFormUpdaterQueryCalls()).toHaveLength(2) // ticket create + user edit
 
     const emailField = await within(flyout).findByLabelText('Email')
 
+    diagnosticTicketCreateUserLog('test:before-email-typing')
+
     await view.events.type(emailField, 'foo@customer.com')
 
+    diagnosticTicketCreateUserLog('test:after-email-typing')
+
     await waitFor(async () => {
-      expect(await waitForFormUpdaterQueryCalls()).toHaveLength(3) // ticket create + user edit x2
+      diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-3')
+
+      const calls = await waitForFormUpdaterQueryCalls()
+
+      diagnosticTicketCreateUserLog('test:after-waitForFormUpdaterQueryCalls-length-3', {
+        observedLength: calls.length,
+      })
+
+      expect(calls).toHaveLength(3) // ticket create + user edit x2
     })
 
     const customerSwitch = within(flyout).queryByRole('switch', {
@@ -101,9 +122,15 @@ describe('ticket create view - user create action', () => {
   })
 
   it('allows admin to create user and toggle customer role', async () => {
+    diagnosticTicketCreateUserLog('test:start', {
+      test: 'allows admin to create user and toggle customer role',
+    })
+
     mockPermissions(['admin.user', 'ticket.agent'])
 
     const view = await visitCreateView()
+
+    diagnosticTicketCreateUserLog('test:main-form-rendered')
 
     mockObjectManagerFrontendAttributesQuery({
       objectManagerFrontendAttributes: {
@@ -141,14 +168,28 @@ describe('ticket create view - user create action', () => {
 
     const flyout = await view.findByRole('complementary', { name: 'Create new customer' })
 
+    diagnosticTicketCreateUserLog('test:flyout-opened')
+
     expect(await waitForFormUpdaterQueryCalls()).toHaveLength(2) // ticket create + user edit
 
     const emailField = await within(flyout).findByLabelText('Email')
 
+    diagnosticTicketCreateUserLog('test:before-email-typing')
+
     await view.events.type(emailField, 'foo@customer.com')
 
+    diagnosticTicketCreateUserLog('test:after-email-typing')
+
     await waitFor(async () => {
-      expect(await waitForFormUpdaterQueryCalls()).toHaveLength(3) // ticket create + user edit x2
+      diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-3')
+
+      const calls = await waitForFormUpdaterQueryCalls()
+
+      diagnosticTicketCreateUserLog('test:after-waitForFormUpdaterQueryCalls-length-3', {
+        observedLength: calls.length,
+      })
+
+      expect(calls).toHaveLength(3) // ticket create + user edit x2
     })
 
     const customerSwitch = within(flyout).getByRole('switch', {
@@ -157,10 +198,22 @@ describe('ticket create view - user create action', () => {
 
     expect(customerSwitch).toBeEnabled()
 
+    diagnosticTicketCreateUserLog('test:before-customer-switch-click')
+
     await view.events.click(customerSwitch)
 
+    diagnosticTicketCreateUserLog('test:after-customer-switch-click')
+
     await waitFor(async () => {
-      expect(await waitForFormUpdaterQueryCalls()).toHaveLength(4) // ticket create + user edit x3
+      diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-4')
+
+      const calls = await waitForFormUpdaterQueryCalls()
+
+      diagnosticTicketCreateUserLog('test:after-waitForFormUpdaterQueryCalls-length-4', {
+        observedLength: calls.length,
+      })
+
+      expect(calls).toHaveLength(4) // ticket create + user edit x3
     })
 
     await view.events.click(within(flyout).getByRole('button', { name: 'Create' }))
