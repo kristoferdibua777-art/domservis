@@ -12,6 +12,29 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
     allow_any_instance_of(DomServis::Dispatch::JobsController).to receive(:sync_backing_ticket!).and_return(true)
   end
 
+  # `authenticated_as: :admin` above resolves via `send(:admin)`
+  # (spec/support/authenticated_as.rb), which requires this file to define
+  # its own `admin` - there is no repository-wide default (confirmed against
+  # the many other specs that each define their own `let(:admin)`, e.g.
+  # spec/requests/api_auth_spec.rb). A bare `create(:admin)` is also not
+  # enough here on its own: Zammad's built-in 'Admin' role does not carry
+  # 'dom_servis.admin' by itself (see
+  # db/migrate/20260318214000_create_dom_servis_admin_permission.rb - that
+  # permission is granted only to the dedicated 'Dom-Servis Admin' overlay
+  # role). Without it, DomServis::DispatchPolicy.role_key_for falls through
+  # to its 'master' default, and the controller actions this file exercises
+  # (assign -> 'change_assignee', status -> 'transferred_to_partner') are
+  # only granted to the 'dispatcher'/'admin' role keys, not 'master' - so
+  # requests below would get 403 instead of the expected 200. Mirrors the
+  # same explicit-role-assignment pattern already used for `master_user`/
+  # `other_master_user` below.
+  let(:admin) do
+    create(:admin).tap do |user|
+      admin_role = Role.find_by(name: 'Dom-Servis Admin')
+      user.roles << admin_role if admin_role && !user.roles.exists?(admin_role.id)
+    end
+  end
+
   let(:job) do
     DomServis::DispatchJob.create!(
       service_type: 'Boiler repair',

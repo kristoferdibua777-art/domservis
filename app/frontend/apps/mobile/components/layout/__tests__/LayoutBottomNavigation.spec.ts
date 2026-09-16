@@ -11,26 +11,51 @@ import { convertToGraphQLId } from '#shared/graphql/utils.ts'
 import { useSessionStore } from '#shared/stores/session.ts'
 import type { UserData } from '#shared/types/store.ts'
 
-import { routes } from '#mobile/router/index.ts'
-
 import LayoutBottomNavigation from '../LayoutBottomNavigation.vue'
 
 import type { RouteRecordRaw } from 'vue-router'
 
-// Use the real mobile route table (instead of the generic test router
-// stub) so that CommonLink can resolve hrefs the same way it does in
+// Register the concrete routes this component links to (instead of the
+// generic test router stub, and instead of the full real mobile route
+// tree) so that CommonLink can resolve hrefs the same way it does in
 // production: only a route that actually matches gets the router's
-// `/mobile` history base applied. Without this, `/dom-servis/dispatch`
-// falls through to the catch-all "Error" route, CommonLink treats it as
-// unmatched, and the rendered href is the raw, unprefixed link target
-// instead of the real `/mobile/dom-servis/dispatch` browser URL.
-const mainRoutes = routes.find((route) => route.name === 'Main')?.children || []
+// `/mobile` history base applied. Without a matching route,
+// `/dom-servis/dispatch` falls through to the catch-all "Error" route,
+// CommonLink treats it as unmatched, and the rendered href is the raw,
+// unprefixed link target instead of the real
+// `/mobile/dom-servis/dispatch` browser URL.
+//
+// Deliberately NOT importing the real mobile route table here: in
+// production every page route is nested as a *child* of the shared
+// `Main` layout route, and the real Home route re-declares its own
+// path as the absolute `/` (see pages/home/routes.ts) - i.e. two
+// distinct route records both resolve to `/`. Reusing that whole tree
+// verbatim here (with a stub `Main` component instead of the real
+// LayoutMain.vue) made `/`'s "current route" ambiguous between the
+// `Main` wrapper and its `Home` child, which broke `isExactActive` for
+// the home tab even though the link itself still rendered correctly.
+// A small, unambiguous, single-record-per-path route list avoids that
+// collision entirely and is all this component's own tests need.
 const mobileTestRoutes: RouteRecordRaw[] = [
   {
     path: '/',
-    name: 'Main',
+    name: 'Home',
     component: { template: '<div></div>' },
-    children: mainRoutes,
+  },
+  {
+    path: '/dom-servis/dispatch',
+    name: 'DomServisDispatch',
+    component: { template: '<div></div>' },
+  },
+  {
+    path: '/notifications',
+    name: 'Notifications',
+    component: { template: '<div></div>' },
+  },
+  {
+    path: '/account',
+    name: 'AccountOverview',
+    component: { template: '<div></div>' },
   },
   {
     path: '/:pathMatch(.*)*',

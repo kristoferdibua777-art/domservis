@@ -61,73 +61,149 @@ jobs:
       - name: Pre
         run: .github/workflows/ci/pre.sh
 
+      # Runs even if "Pre" failed, so the artifact upload step always has a
+      # directory to upload (possibly empty) instead of erroring out because
+      # the path never existed.
+      - name: Ensure diagnostic log directory
+        if: always()
+        run: mkdir -p diagnostic-logs
+
       - name: "Stage 1/6: assets:precompile"
         id: assets_precompile
         continue-on-error: true
         run: |
+          set -o pipefail
           source /etc/profile.d/rvm.sh
           source .gitlab/environment.env
-          bundle exec rake assets:precompile
+          bundle exec rake assets:precompile 2>&1 | tee diagnostic-logs/assets-precompile.log
 
       - name: "Stage 2/6: pnpm test (Vitest)"
         id: vitest
         continue-on-error: true
         run: |
+          set -o pipefail
           source /etc/profile.d/rvm.sh
           source .gitlab/environment.env
-          pnpm test
+          pnpm test 2>&1 | tee diagnostic-logs/vitest.log
 
       - name: "Stage 3/6: zammad:db:init"
         id: db_init_before_rspec
         continue-on-error: true
         run: |
+          set -o pipefail
           source /etc/profile.d/rvm.sh
           source .gitlab/environment.env
-          bundle exec rake zammad:db:init
+          bundle exec rake zammad:db:init 2>&1 | tee diagnostic-logs/db-init.log
 
       - name: "Stage 4/6: RSpec"
         id: rspec
         continue-on-error: true
         run: |
+          set -o pipefail
           source /etc/profile.d/rvm.sh
           source .gitlab/environment.env
           bundle exec rspec \
             --exclude-pattern "spec/system/**/*_spec.rb" \
             -t ~searchindex \
             -t ~integration \
-            -t ~required_envs
+            -t ~required_envs \
+            2>&1 | tee diagnostic-logs/rspec.log
 
       - name: "Stage 5/6: zammad:db:reset"
         id: db_reset_before_minitest
         continue-on-error: true
         run: |
+          set -o pipefail
           source /etc/profile.d/rvm.sh
           source .gitlab/environment.env
-          bundle exec rake zammad:db:reset
+          bundle exec rake zammad:db:reset 2>&1 | tee diagnostic-logs/db-reset.log
 
       - name: "Stage 6/6: Minitest"
         id: minitest
         continue-on-error: true
         run: |
+          set -o pipefail
           source /etc/profile.d/rvm.sh
           source .gitlab/environment.env
-          bundle exec rake test:units
+          bundle exec rake test:units 2>&1 | tee diagnostic-logs/minitest.log
 
       - name: Summary
         if: always()
         run: |
+          ASSETS_OUTCOME="${{ steps.assets_precompile.outcome }}"
+          VITEST_OUTCOME="${{ steps.vitest.outcome }}"
+          DB_INIT_OUTCOME="${{ steps.db_init_before_rspec.outcome }}"
+          RSPEC_OUTCOME="${{ steps.rspec.outcome }}"
+          DB_RESET_OUTCOME="${{ steps.db_reset_before_minitest.outcome }}"
+          MINITEST_OUTCOME="${{ steps.minitest.outcome }}"
+
           {
             echo "## Test diagnostic summary"
             echo
             echo "| Stage | Outcome |"
             echo "| --- | --- |"
-            echo "| assets:precompile | ${{ steps.assets_precompile.outcome }} |"
-            echo "| pnpm test (Vitest) | ${{ steps.vitest.outcome }} |"
-            echo "| db:init (pre-RSpec) | ${{ steps.db_init_before_rspec.outcome }} |"
-            echo "| RSpec | ${{ steps.rspec.outcome }} |"
-            echo "| db:reset (pre-Minitest) | ${{ steps.db_reset_before_minitest.outcome }} |"
-            echo "| Minitest | ${{ steps.minitest.outcome }} |"
+            echo "| assets:precompile | ${ASSETS_OUTCOME} |"
+            echo "| pnpm test (Vitest) | ${VITEST_OUTCOME} |"
+            echo "| db:init (pre-RSpec) | ${DB_INIT_OUTCOME} |"
+            echo "| RSpec | ${RSPEC_OUTCOME} |"
+            echo "| db:reset (pre-Minitest) | ${DB_RESET_OUTCOME} |"
+            echo "| Minitest | ${MINITEST_OUTCOME} |"
           } >> "$GITHUB_STEP_SUMMARY"
+
+          # Best-effort failure excerpts for stages that did not succeed.
+          # Every grep is allowed to find nothing (`|| true`) so a clean
+          # match failure never fails this step - the full untruncated
+          # logs are always available in the uploaded artifact regardless
+          # of what this excerpt captures.
+          extract() {
+            local heading="$1"
+            local log_file="$2"
+            local pattern="$3"
+
+            [ -f "$log_file" ] || return 0
+
+            local excerpt
+            excerpt="$(grep -E "$pattern" "$log_file" || true)"
+
+            [ -n "$excerpt" ] || return 0
+
+            {
+              echo
+              echo "### ${heading}"
+              echo '```'
+              echo "$excerpt" | tail -n 200
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          if [[ "$VITEST_OUTCOME" != "success" ]]; then
+            extract \
+              "Vitest failure excerpt" \
+              diagnostic-logs/vitest.log \
+              '^ ?(FAIL|Test Files|Tests)[[:space:]]|✗|×'
+          fi
+
+          if [[ "$RSPEC_OUTCOME" != "success" ]]; then
+            extract \
+              "RSpec failure excerpt" \
+              diagnostic-logs/rspec.log \
+              '^Failures:|^Failure/Error:|^Failed examples:|^rspec .*# |[0-9]+ examples?, [0-9]+ failures?'
+          fi
+
+          if [[ "$MINITEST_OUTCOME" != "success" ]]; then
+            extract \
+              "Minitest failure excerpt" \
+              diagnostic-logs/minitest.log \
+              '^Failure:|^Error:|[0-9]+ runs, [0-9]+ assertions, [0-9]+ failures, [0-9]+ errors'
+          fi
+
+      - name: Upload diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: domservis-test-diagnostic-logs
+          path: diagnostic-logs/
+          if-no-files-found: warn
 
       - name: Gate
         if: always()
