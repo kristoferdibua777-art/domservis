@@ -77,6 +77,14 @@ jobs:
           source .gitlab/environment.env
           bundle exec rake assets:precompile 2>&1 | tee diagnostic-logs/assets-precompile.log
 
+      # TEMPORARY (round 6): DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER=1 is now
+      # also set here, not just in the isolated Stage 2b/6 run below. The
+      # isolated run (ticket-create-user.spec.ts on its own) always passes
+      # cleanly with the expected FormUpdater sequence - the timeout only
+      # reproduces here, in the full suite, so this is the run whose log
+      # actually needs the diagnostic output. The flag stays narrowly gated
+      # (see tests/support/diagnostic-ticket-create-user.ts) and only logs
+      # for the `formUpdater` operation, so no other spec is affected.
       - name: "Stage 2/6: pnpm test (Vitest)"
         id: vitest
         continue-on-error: true
@@ -84,15 +92,16 @@ jobs:
           set -o pipefail
           source /etc/profile.d/rvm.sh
           source .gitlab/environment.env
-          pnpm test 2>&1 | tee diagnostic-logs/vitest.log
+          DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER=1 pnpm test 2>&1 | tee diagnostic-logs/vitest.log
 
       # TEMPORARY targeted diagnostic (round 5): runs only
       # ticket-create-user.spec.ts, with DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER=1
       # enabling the narrowly-gated logging in
       # tests/support/diagnostic-ticket-create-user.ts, to observe the exact
       # FormUpdater request sequence around the file's two known timeouts.
-      # Does not replace or modify Stage 2/6 above - that stage already ran
-      # the real, unmodified `pnpm test` command with no diagnostic flag set.
+      # Kept alongside Stage 2/6 above (which now also sets the same flag) as
+      # a control: this isolated run is what already showed the sequence
+      # completing cleanly outside the full suite.
       - name: "Stage 2b/6 (temporary): targeted ticket-create-user.spec.ts diagnostic"
         id: vitest_ticket_create_user_diagnostic
         continue-on-error: true
@@ -198,7 +207,7 @@ jobs:
             extract \
               "Vitest failure excerpt" \
               diagnostic-logs/vitest.log \
-              '^ ?(FAIL|Test Files|Tests)[[:space:]]|✗|×'
+              '^ ?(FAIL|Test Files|Tests)[[:space:]]|✗|×|\[DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER\]'
           fi
 
           # Always surface the targeted round-5 diagnostic log lines

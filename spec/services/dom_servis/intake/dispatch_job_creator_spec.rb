@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe DomServis::Intake::DispatchJobCreator do
+RSpec.describe DomServis::Intake::DispatchJobCreator, current_user_id: 1 do
   let(:group)         { create(:group, name: '000 Intake Group') }
   let(:dispatcher)    { create(:agent, groups: [group]) }
   let(:partner_org)   { create(:organization, name: 'Partner Org') }

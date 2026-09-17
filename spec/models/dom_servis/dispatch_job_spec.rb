@@ -3,10 +3,18 @@
 require 'rails_helper'
 require 'models/contexts/factory_context'
 
-RSpec.describe DomServis::DispatchJob, type: :model do
+RSpec.describe DomServis::DispatchJob, type: :model, current_user_id: 1 do
   self.use_transactional_tests = false
 
   include_context 'factory'
+
+  # The 'factory' shared context (spec/models/contexts/factory_context.rb)
+  # adds a bare `it 'saves successfully' do expect(subject).to be_persisted
+  # end` and relies on the describing spec to define what `subject` is -
+  # mirrors the same explicit-subject pattern used by the other consumers of
+  # that shared context (e.g. spec/models/knowledge_base/locale_spec.rb's
+  # `subject { create(:knowledge_base_locale) }`).
+  subject { described_class.create!(dispatch_job_attrs) }
 
   let(:private_organization) { create(:organization, name: 'Частный заказ') }
   let(:dispatch_job_attrs) do
