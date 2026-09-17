@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/rubocop-baseline
+      - fix/round7-rspec-vitest-diagnostics
   workflow_dispatch:
 
 permissions:
