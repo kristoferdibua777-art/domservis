@@ -140,11 +140,11 @@ RSpec.describe DomServis::DispatchRoleCatalog do
       Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).destroy_all
 
       expect(described_class.ensure_permissions!).to be(true)
-      first_run_ids = Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).order(:name).pluck(:id)
+      first_run_ids = Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).reorder(:name).pluck(:id)
 
       expect { described_class.ensure_permissions! }.not_to raise_error
 
-      expect(Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).order(:name).pluck(:id)).to eq(first_run_ids)
+      expect(Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).reorder(:name).pluck(:id)).to eq(first_run_ids)
     end
   end
 

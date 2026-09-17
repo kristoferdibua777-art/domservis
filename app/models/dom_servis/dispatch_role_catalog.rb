@@ -22,24 +22,24 @@ class DomServis::DispatchRoleCatalog
   # the full Permission metadata, so this has its own definition.
   PERMISSION_DEFINITIONS = {
     'dom_servis.admin'      => {
-      label:       'Dom-Servis Admin',
-      description: 'Access the Dom-Servis administrative workspace and dispatch policy controls.',
+      label:       __('Dom-Servis Admin'),
+      description: __('Access the Dom-Servis administrative workspace and dispatch policy controls.'),
       preferences: {
         prio:         3490,
-        translations: ['Dom-Servis Admin'],
+        translations: [__('Dom-Servis Admin')],
       },
     },
     'dom_servis.dispatcher' => {
-      label:        'Dom-Servis Dispatcher',
-      description:  'Access the Dom-Servis dispatcher workspace.',
+      label:        __('Dom-Servis Dispatcher'),
+      description:  __('Access the Dom-Servis dispatcher workspace.'),
       allow_signup: false,
       preferences:  {
         prio: 3500,
       },
     },
     'dom_servis.master'     => {
-      label:        'Dom-Servis Master',
-      description:  'Access the Dom-Servis master workspace.',
+      label:        __('Dom-Servis Master'),
+      description:  __('Access the Dom-Servis master workspace.'),
       allow_signup: false,
       preferences:  {
         prio: 3510,
