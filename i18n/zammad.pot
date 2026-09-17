@@ -847,6 +847,18 @@ msgstr ""
 msgid "Access denied"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_role_catalog.rb:25
+msgid "Access the Dom-Servis administrative workspace and dispatch policy controls."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_role_catalog.rb:33
+msgid "Access the Dom-Servis dispatcher workspace."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_role_catalog.rb:41
+msgid "Access the Dom-Servis master workspace."
+msgstr ""
+
 #: db/seeds/permissions.rb:351
 msgid "Access the agent chat features."
 msgstr ""
@@ -1482,7 +1494,7 @@ msgid "Agent idle timeout"
 msgstr ""
 
 #: app/models/role.rb:151
-#: app/models/user.rb:760
+#: app/models/user.rb:759
 msgid "Agent limit exceeded, please check your account settings."
 msgstr ""
 
@@ -2121,7 +2133,7 @@ msgstr ""
 msgid "Assignment timeout in minutes if assigned agent is not working on it. Ticket will be shown as unassigend."
 msgstr ""
 
-#: app/models/user.rb:662
+#: app/models/user.rb:661
 msgid "At least one identifier (firstname, lastname, phone, mobile or email) for user is required."
 msgstr ""
 
@@ -2134,7 +2146,7 @@ msgid "At least one object must be selected."
 msgstr ""
 
 #: app/models/role.rb:128
-#: app/models/user.rb:739
+#: app/models/user.rb:738
 msgid "At least one user needs to have admin permissions."
 msgstr ""
 
@@ -3869,7 +3881,7 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/widget/two_factor_login/help_text.jst.eco:8
 #: app/frontend/apps/desktop/pages/authentication/views/Login.vue:303
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:170
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:171
 msgid "Contact the administrator if you have any problems logging in."
 msgstr ""
 
@@ -3944,7 +3956,7 @@ msgid "Continue session"
 msgstr ""
 
 #: app/frontend/apps/mobile/pages/account/views/AccountOverview.vue:150
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:173
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:174
 msgid "Continue to desktop"
 msgstr ""
 
@@ -6100,6 +6112,18 @@ msgstr ""
 msgid "Document file"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_role_catalog.rb:5
+msgid "Dom-Servis Admin"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_role_catalog.rb:9
+msgid "Dom-Servis Dispatcher"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_role_catalog.rb:13
+msgid "Dom-Servis Master"
+msgstr ""
+
 #: app/services/dom_servis/notifications/web_push_sender.rb:80
 msgid "Dom-Servis Web Push VAPID keys are not configured. Run `rake dom_servis:webpush:generate_keys`."
 msgstr ""
@@ -6592,7 +6616,7 @@ msgstr ""
 msgid "Email address"
 msgstr ""
 
-#: app/models/user.rb:672
+#: app/models/user.rb:671
 msgid "Email address '%{email}' is already used for another user."
 msgstr ""
 
@@ -8077,7 +8101,7 @@ msgstr ""
 #: app/frontend/apps/desktop/components/TwoFactor/TwoFactorConfigurationWizard.vue:62
 #: app/frontend/apps/desktop/pages/guided-setup/components/GuidedSetupActionFooter.vue:85
 #: app/frontend/apps/mobile/components/CommonBackButton/CommonBackButton.vue:41
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:98
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:99
 msgid "Go back"
 msgstr ""
 
@@ -8328,7 +8352,7 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/widget/two_factor_login/help_text.jst.eco:3
 #: app/frontend/apps/desktop/pages/authentication/views/Login.vue:269
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:141
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:142
 msgid "Having problems?"
 msgstr ""
 
@@ -8693,7 +8717,7 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/login.jst.eco:105
 #: app/frontend/apps/desktop/pages/authentication/views/Login.vue:290
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:158
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:159
 msgid "If you have problems with the third-party login you can request a one-time password login as an admin."
 msgstr ""
 
@@ -9240,7 +9264,7 @@ msgstr ""
 msgid "Invalid dispatch visit day."
 msgstr ""
 
-#: app/models/user.rb:611
+#: app/models/user.rb:610
 msgid "Invalid email '%{email}'"
 msgstr ""
 
@@ -10909,7 +10933,7 @@ msgstr ""
 msgid "More information can be found here."
 msgstr ""
 
-#: app/models/user.rb:691
+#: app/models/user.rb:690
 msgid "More than 250 secondary organizations are not allowed."
 msgstr ""
 
@@ -13721,7 +13745,7 @@ msgid "References - Search for follow-up also in In-Reply-To or References heade
 msgstr ""
 
 #: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:8
-#: app/frontend/apps/mobile/pages/dom-servis/views/DomServisDispatch.vue:437
+#: app/frontend/apps/mobile/pages/dom-servis/views/DomServisDispatch.vue:446
 msgid "Refresh"
 msgstr ""
 
@@ -14051,7 +14075,7 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/login.jst.eco:106
 #: app/frontend/apps/desktop/pages/authentication/views/Login.vue:295
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:163
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:164
 msgid "Request the password login here."
 msgstr ""
 
@@ -14811,11 +14835,11 @@ msgstr ""
 msgid "Secondary organizations"
 msgstr ""
 
-#: app/models/user.rb:679
+#: app/models/user.rb:678
 msgid "Secondary organizations are only allowed when the primary organization is given."
 msgstr ""
 
-#: app/models/user.rb:685
+#: app/models/user.rb:684
 msgid "Secondary organizations cannot include the primary organization."
 msgstr ""
 
@@ -17518,7 +17542,7 @@ msgid "The server settings could not be automatically detected. Please configure
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/login.coffee:30
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:43
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:44
 msgid "The session is no longer valid. Please log in again."
 msgstr ""
 
@@ -19172,7 +19196,7 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/widget/two_factor_login/help_text.jst.eco:4
 #: app/frontend/apps/desktop/pages/authentication/views/Login.vue:271
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:146
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:147
 #: app/frontend/shared/composables/authentication/useLoginTwoFactor.ts:96
 msgid "Try another method"
 msgstr ""
@@ -19453,7 +19477,7 @@ msgstr ""
 msgid "Unread notification"
 msgstr ""
 
-#: app/frontend/apps/mobile/components/layout/LayoutBottomNavigation.vue:55
+#: app/frontend/apps/mobile/components/layout/LayoutBottomNavigation.vue:56
 msgid "Unread notifications"
 msgstr ""
 
@@ -21892,7 +21916,7 @@ msgstr ""
 msgid "is the wrong length (should be 1 character)"
 msgstr ""
 
-#: app/models/user.rb:876
+#: app/models/user.rb:875
 msgid "is too long"
 msgstr ""
 
