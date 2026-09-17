@@ -63,4 +63,9 @@ ActiveRecord::Base.connection.reset_pk_sequence!('roles')
 # created after install; that callback also incorrectly auto-granted the
 # overlay role to that user, which is why it was removed rather than kept -
 # see spec/models/user/user_dom_servis_role_bootstrap_spec.rb.
-DomServis::DispatchRoleCatalog.sync!(actor_id: 1)
+#
+# bootstrap! ensures the three dom_servis.* permissions exist before
+# granting them to these roles, rather than assuming
+# db/migrate/20260318130001_add_dom_servis_dispatch_permissions.rb has
+# already run (see DomServis::DispatchRoleCatalog#ensure_permissions!).
+DomServis::DispatchRoleCatalog.bootstrap!(actor_id: 1)

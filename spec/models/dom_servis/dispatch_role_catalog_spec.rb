@@ -99,4 +99,88 @@ RSpec.describe DomServis::DispatchRoleCatalog do
       ActiveRecord::Base.connection.reset_pk_sequence!('roles')
     end
   end
+
+  # Permission rows referenced by an overlay Role are removed via the Role
+  # first - `destroy_all` on the HABTM association cleans up its own
+  # permissions_roles join rows - before removing the Permission rows
+  # themselves by name, rather than a broader delete.
+  describe '.ensure_permissions!' do
+    it 'creates the three DomServis permissions with the same attributes as the migration, when absent', :aggregate_failures do
+      Role.where(name: described_class.names).destroy_all
+      Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).destroy_all
+      expect(Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).count).to eq(0)
+
+      expect(described_class.ensure_permissions!).to be(true)
+
+      expect(Permission.find_by(name: 'dom_servis.admin')).to have_attributes(
+        label:        'Dom-Servis Admin',
+        description:  'Access the Dom-Servis administrative workspace and dispatch policy controls.',
+        allow_signup: false,
+        active:       true,
+        preferences:  include(prio: 3490, translations: ['Dom-Servis Admin']),
+      )
+      expect(Permission.find_by(name: 'dom_servis.dispatcher')).to have_attributes(
+        label:        'Dom-Servis Dispatcher',
+        description:  'Access the Dom-Servis dispatcher workspace.',
+        allow_signup: false,
+        active:       true,
+        preferences:  include(prio: 3500),
+      )
+      expect(Permission.find_by(name: 'dom_servis.master')).to have_attributes(
+        label:        'Dom-Servis Master',
+        description:  'Access the Dom-Servis master workspace.',
+        allow_signup: false,
+        active:       true,
+        preferences:  include(prio: 3510),
+      )
+    end
+
+    it 'is idempotent - calling it again when the permissions already exist does not raise or duplicate rows', :aggregate_failures do
+      Role.where(name: described_class.names).destroy_all
+      Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).destroy_all
+
+      expect(described_class.ensure_permissions!).to be(true)
+      first_run_ids = Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).order(:name).pluck(:id)
+
+      expect { described_class.ensure_permissions! }.not_to raise_error
+
+      expect(Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).order(:name).pluck(:id)).to eq(first_run_ids)
+    end
+  end
+
+  describe '.bootstrap!' do
+    it 'ensures the three DomServis permissions exist, then creates the three overlay roles with each granted its matching permission', :aggregate_failures do
+      Role.where(name: described_class.names).destroy_all
+      Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).destroy_all
+      expect(described_class.seeded?).to be(false)
+
+      expect(described_class.bootstrap!(actor_id: 1)).to be(true)
+
+      expect(described_class.seeded?).to be(true)
+      expect(Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).count).to eq(3)
+
+      expect(Role.find_by(name: 'Dom-Servis Admin')&.with_permission?('dom_servis.admin')).to be(true)
+      expect(Role.find_by(name: 'Dom-Servis Dispatcher')&.with_permission?('dom_servis.dispatcher')).to be(true)
+      expect(Role.find_by(name: 'Dom-Servis Master')&.with_permission?('dom_servis.master')).to be(true)
+
+      # bootstrap! must not also grant a DomServis permission to the stock
+      # Admin/Agent/Customer roles.
+      expect(Role.find_by(name: 'Admin').with_permission?('dom_servis.admin')).to be(false)
+      expect(Role.find_by(name: 'Agent').with_permission?('dom_servis.dispatcher')).to be(false)
+      expect(Role.find_by(name: 'Agent').with_permission?('dom_servis.master')).to be(false)
+      expect(Role.find_by(name: 'Customer').with_permission?('dom_servis.admin')).to be(false)
+    end
+
+    it 'is idempotent - running it twice in sequence does not raise, and leaves one row per permission/role', :aggregate_failures do
+      Role.where(name: described_class.names).destroy_all
+      Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).destroy_all
+
+      expect(described_class.bootstrap!(actor_id: 1)).to be(true)
+
+      expect { described_class.bootstrap!(actor_id: 1) }.not_to raise_error
+
+      expect(Permission.where(name: described_class::PERMISSION_DEFINITIONS.keys).count).to eq(3)
+      expect(Role.where(name: described_class.names).count).to eq(3)
+    end
+  end
 end
