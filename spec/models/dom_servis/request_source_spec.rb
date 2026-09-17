@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe DomServis::RequestSource do
+RSpec.describe DomServis::RequestSource, current_user_id: 1 do
   describe '#embed_url' do
     it 'includes the embed token and a release cache bust' do
       source = described_class.create!(
