@@ -13,7 +13,10 @@ import {
 } from '#shared/components/Form/graphql/queries/formUpdater.mocks.ts'
 import { mockObjectManagerFrontendAttributesQuery } from '#shared/entities/object-attributes/graphql/queries/objectManagerFrontendAttributes.mocks.ts'
 import { waitForUserAddMutationCalls } from '#shared/entities/user/graphql/mutations/add.mocks.ts'
+import { destroyComponent } from '#shared/components/DynamicInitializer/manage.ts'
 import { convertToGraphQLId } from '#shared/graphql/utils.ts'
+
+import { getOpenedFlyouts } from '#desktop/components/CommonFlyout/useFlyout.ts'
 
 import { handleMockFormUpdaterQuery, visitCreateView } from '../support/ticket-create-helpers.ts'
 
@@ -24,7 +27,12 @@ const waitForFormUpdaterQueryCallCount = (expectedCount: number) =>
   })
 
 describe('ticket create view - user create action', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // The global test flyout host is intentionally mounted once per worker.
+    // Ensure stale overlays from earlier files cannot leak into this suite.
+    await destroyComponent('flyout')
+    getOpenedFlyouts().clear()
+
     // Main form
     handleMockFormUpdaterQuery()
   })
