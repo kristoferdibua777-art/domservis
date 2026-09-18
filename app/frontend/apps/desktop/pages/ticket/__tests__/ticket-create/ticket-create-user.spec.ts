@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-import { waitFor, within } from '@testing-library/vue'
+import { within } from '@testing-library/vue'
 
 import FormUpdaterUser from '#tests/graphql/factories/types/FormUpdaterUser.ts'
 import { diagnosticTicketCreateUserLog } from '#tests/support/diagnostic-ticket-create-user.ts'
@@ -91,17 +91,15 @@ describe('ticket create view - user create action', () => {
 
     diagnosticTicketCreateUserLog('test:after-email-typing')
 
-    await waitFor(async () => {
-      diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-3')
+    diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-3')
 
-      const calls = await waitForFormUpdaterQueryCalls()
+    const callsAfterEmail = await waitForFormUpdaterQueryCalls()
 
-      diagnosticTicketCreateUserLog('test:after-waitForFormUpdaterQueryCalls-length-3', {
-        observedLength: calls.length,
-      })
-
-      expect(calls).toHaveLength(3) // ticket create + user edit x2
+    diagnosticTicketCreateUserLog('test:after-waitForFormUpdaterQueryCalls-length-3', {
+      observedLength: callsAfterEmail.length,
     })
+
+    expect(callsAfterEmail).toHaveLength(3) // ticket create + user edit x2
 
     const customerSwitch = within(flyout).queryByRole('switch', {
       name: 'CustomerPeople who create Tickets ask for help.',
@@ -180,17 +178,15 @@ describe('ticket create view - user create action', () => {
 
     diagnosticTicketCreateUserLog('test:after-email-typing')
 
-    await waitFor(async () => {
-      diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-3')
+    diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-3')
 
-      const calls = await waitForFormUpdaterQueryCalls()
+    const callsAfterEmail = await waitForFormUpdaterQueryCalls()
 
-      diagnosticTicketCreateUserLog('test:after-waitForFormUpdaterQueryCalls-length-3', {
-        observedLength: calls.length,
-      })
-
-      expect(calls).toHaveLength(3) // ticket create + user edit x2
+    diagnosticTicketCreateUserLog('test:after-waitForFormUpdaterQueryCalls-length-3', {
+      observedLength: callsAfterEmail.length,
     })
+
+    expect(callsAfterEmail).toHaveLength(3) // ticket create + user edit x2
 
     const customerSwitch = within(flyout).getByRole('switch', {
       name: 'CustomerPeople who create Tickets ask for help.',
@@ -204,17 +200,15 @@ describe('ticket create view - user create action', () => {
 
     diagnosticTicketCreateUserLog('test:after-customer-switch-click')
 
-    await waitFor(async () => {
-      diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-4')
+    diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-4')
 
-      const calls = await waitForFormUpdaterQueryCalls()
+    const callsAfterRoleToggle = await waitForFormUpdaterQueryCalls()
 
-      diagnosticTicketCreateUserLog('test:after-waitForFormUpdaterQueryCalls-length-4', {
-        observedLength: calls.length,
-      })
-
-      expect(calls).toHaveLength(4) // ticket create + user edit x3
+    diagnosticTicketCreateUserLog('test:after-waitForFormUpdaterQueryCalls-length-4', {
+      observedLength: callsAfterRoleToggle.length,
     })
+
+    expect(callsAfterRoleToggle).toHaveLength(4) // ticket create + user edit x3
 
     await view.events.click(within(flyout).getByRole('button', { name: 'Create' }))
 
