@@ -78,7 +78,7 @@ RSpec.describe ObjectManager::Attribute::SetDefaults, time_zone: 'Europe/London'
       end
 
       it 'date is set' do
-        freeze_time
+        travel_to Time.current.change(hour: 12, min: 0, sec: 0, usec: 0)
         expect(example.rspec_date).to eq 1.day.from_now.to_date
       end
 

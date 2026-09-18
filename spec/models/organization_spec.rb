@@ -37,7 +37,14 @@ RSpec.describe Organization, type: :model do
 
     describe '.destroy' do
 
-      let!(:refs_known) { { 'Ticket' => { 'organization_id'=> 1 }, 'User' => { 'organization_id'=> 1 } } }
+      let!(:refs_known) do
+        {
+          'DomServis::DispatchJob'   => { 'organization_id'=> 0 },
+          'DomServis::RequestSource' => { 'organization_id'=> 0 },
+          'Ticket'                   => { 'organization_id'=> 1 },
+          'User'                     => { 'organization_id'=> 1 },
+        }
+      end
       let!(:user)       { create(:customer, organization: organization) }
       let!(:ticket)     { create(:ticket, organization: organization, customer: user) }
 

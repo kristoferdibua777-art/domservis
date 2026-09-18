@@ -25,7 +25,7 @@ RSpec.describe DomServis::RequestSource, current_user_id: 1 do
       expect(source.embed_snippet).to include('data-dom-servis-partner-embed="true"')
       expect(source.embed_snippet).to include('dom-servis:resize')
       expect(source.embed_snippet).to include('height: 640px')
-      expect(source.embed_js_snippet).to include(url)
+      expect(source.embed_js_snippet).to include(url.to_json)
       expect(source.embed_js_snippet).to include('dom-servis:resize')
     end
   end
