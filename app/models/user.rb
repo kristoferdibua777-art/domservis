@@ -1131,12 +1131,22 @@ raise 'At least one user need to have admin permissions'
 
   def ensure_dom_servis_ticket_group_access
     return if !Role.with_permissions('ticket.agent').exists?(id: role_ids)
-    return if group_ids_access('create').present?
+    return if dom_servis_ticket_group_create_access?
 
     ticket_group = Group.find_by(name: 'Users') || Group.find_by(id: 1)
     return if !ticket_group
 
     self.group_ids_access_map = { ticket_group.id => 'full' }
+  end
+
+  def dom_servis_ticket_group_create_access?
+    return false if !active?
+
+    RoleGroup.eager_load(:group).exists?(
+      role_id: role_ids,
+      access: %i[create full],
+      groups:  { active: true }
+    )
   end
 
   # When adding/removing a phone/mobile number from the User table,
