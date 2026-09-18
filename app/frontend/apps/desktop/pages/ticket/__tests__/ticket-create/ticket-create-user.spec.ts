@@ -5,6 +5,7 @@ import { within } from '@testing-library/vue'
 import FormUpdaterUser from '#tests/graphql/factories/types/FormUpdaterUser.ts'
 import { diagnosticTicketCreateUserLog } from '#tests/support/diagnostic-ticket-create-user.ts'
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
+import { waitUntil } from '#tests/support/vitest-wrapper.ts'
 
 import {
   mockFormUpdaterQuery,
@@ -15,6 +16,12 @@ import { waitForUserAddMutationCalls } from '#shared/entities/user/graphql/mutat
 import { convertToGraphQLId } from '#shared/graphql/utils.ts'
 
 import { handleMockFormUpdaterQuery, visitCreateView } from '../support/ticket-create-helpers.ts'
+
+const waitForFormUpdaterQueryCallCount = (expectedCount: number) =>
+  waitUntil(async () => {
+    const calls = await waitForFormUpdaterQueryCalls()
+    return calls.length >= expectedCount ? calls : false
+  })
 
 describe('ticket create view - user create action', () => {
   beforeEach(() => {
@@ -81,7 +88,7 @@ describe('ticket create view - user create action', () => {
 
     diagnosticTicketCreateUserLog('test:flyout-opened')
 
-    expect(await waitForFormUpdaterQueryCalls()).toHaveLength(2) // ticket create + user edit
+    expect(await waitForFormUpdaterQueryCallCount(2)).toHaveLength(2) // ticket create + user edit
 
     const emailField = await within(flyout).findByLabelText('Email')
 
@@ -93,7 +100,7 @@ describe('ticket create view - user create action', () => {
 
     diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-3')
 
-    const callsAfterEmail = await waitForFormUpdaterQueryCalls()
+    const callsAfterEmail = await waitForFormUpdaterQueryCallCount(3)
 
     diagnosticTicketCreateUserLog('test:after-waitForFormUpdaterQueryCalls-length-3', {
       observedLength: callsAfterEmail.length,
@@ -168,7 +175,7 @@ describe('ticket create view - user create action', () => {
 
     diagnosticTicketCreateUserLog('test:flyout-opened')
 
-    expect(await waitForFormUpdaterQueryCalls()).toHaveLength(2) // ticket create + user edit
+    expect(await waitForFormUpdaterQueryCallCount(2)).toHaveLength(2) // ticket create + user edit
 
     const emailField = await within(flyout).findByLabelText('Email')
 
@@ -180,7 +187,7 @@ describe('ticket create view - user create action', () => {
 
     diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-3')
 
-    const callsAfterEmail = await waitForFormUpdaterQueryCalls()
+    const callsAfterEmail = await waitForFormUpdaterQueryCallCount(3)
 
     diagnosticTicketCreateUserLog('test:after-waitForFormUpdaterQueryCalls-length-3', {
       observedLength: callsAfterEmail.length,
@@ -202,7 +209,7 @@ describe('ticket create view - user create action', () => {
 
     diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-4')
 
-    const callsAfterRoleToggle = await waitForFormUpdaterQueryCalls()
+    const callsAfterRoleToggle = await waitForFormUpdaterQueryCallCount(4)
 
     diagnosticTicketCreateUserLog('test:after-waitForFormUpdaterQueryCalls-length-4', {
       observedLength: callsAfterRoleToggle.length,
