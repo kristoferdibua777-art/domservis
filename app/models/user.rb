@@ -1130,7 +1130,7 @@ raise 'At least one user need to have admin permissions'
   end
 
   def ensure_dom_servis_ticket_group_access
-    return if !permissions?('ticket.agent')
+    return if !Role.with_permissions('ticket.agent').where(id: role_ids).exists?
     return if group_ids_access('create').present?
 
     ticket_group = Group.find_by(name: 'Users') || Group.find_by(id: 1)
