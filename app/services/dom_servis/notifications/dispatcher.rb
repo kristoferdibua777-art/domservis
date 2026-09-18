@@ -18,13 +18,20 @@ class DomServis::Notifications::Dispatcher
   # type names. These become TypeLookup entries in Zammad's notification
   # vocabulary and are shown in the notification dropdown.
   NOTIFICATION_TYPES = {
-    new_pool_job:        'create',           # a job entered the shared pool
-    assigned_to_you:     'Assigned to you',  # a job was assigned to this master
-    job_taken:           'update',           # someone claimed a pool job
-    job_released:        'update',           # a claimed job was returned to pool
-    job_unclaimed:       'reminder_reached', # escalation: still in pool past the deadline
-    job_cancelled:       'update',
-    job_done:            'update',
+    new_pool_job:    'create', # a job entered the shared pool
+    # rubocop:disable Zammad/DetectTranslatableString -- this is the
+    # OnlineNotification#type value (see online_notification_type below,
+    # consumed by OnlineNotification.add(type: ...)), a controlled
+    # identifier the frontend matches on for icon/behavior, not display
+    # text. Wrapping it in __() would break that match once a translation
+    # for the phrase exists.
+    assigned_to_you: 'Assigned to you', # a job was assigned to this master
+    # rubocop:enable Zammad/DetectTranslatableString
+    job_taken:       'update',           # someone claimed a pool job
+    job_released:    'update',           # a claimed job was returned to pool
+    job_unclaimed:   'reminder_reached', # escalation: still in pool past the deadline
+    job_cancelled:   'update',
+    job_done:        'update',
   }.freeze
 
   def initialize(job:, event_type:, recipients:, actor: nil)
@@ -43,6 +50,24 @@ class DomServis::Notifications::Dispatcher
       deliver_in_app(user)
       deliver_web_push(user)
     end
+  end
+
+  # Returns the users who hold any of the given Dom-Servis permission keys
+  # and are active. Used by callers to resolve recipient lists.
+  #
+  # Kept above `private` deliberately: `private` only affects instance
+  # methods, not `def self.x` singleton methods, so this was already
+  # public in practice despite previously sitting textually after
+  # `private` (RuboCop's Lint/IneffectiveAccessModifier flagged that
+  # mismatch). It has real external callers
+  # (DomServis::DispatchEscalationJob, DomServis::DispatchJob), so it must
+  # stay public - moving it here just makes that honest instead of
+  # relying on `private_class_method`, which is not used.
+  def self.recipients_for_permissions(*permission_keys)
+    role_ids = Role.with_permissions(permission_keys.flatten).pluck(:id)
+    return User.none if role_ids.blank?
+
+    User.joins(:roles).where(roles: { id: role_ids }, users: { active: true }).distinct
   end
 
   private
@@ -80,7 +105,7 @@ class DomServis::Notifications::Dispatcher
     {
       title: push_title,
       body:  push_body(user),
-      url:   "/dispatch/",
+      url:   '/dispatch/',
       tag:   "dom-servis-job-#{job.id}",
     }
   end
@@ -102,7 +127,7 @@ class DomServis::Notifications::Dispatcher
     end
   end
 
-  def push_body(user)
+  def push_body(_user)
     parts = [job.service_type, job.address].compact_blank
     parts << job.job_code if job.job_code.present?
 
@@ -120,14 +145,5 @@ class DomServis::Notifications::Dispatcher
 
   def online_notification_type
     NOTIFICATION_TYPES.fetch(event_type, 'update')
-  end
-
-  # Returns the users who hold any of the given Dom-Servis permission keys
-  # and are active. Used by callers to resolve recipient lists.
-  def self.recipients_for_permissions(*permission_keys)
-    role_ids = Role.with_permissions(permission_keys.flatten).pluck(:id)
-    return User.none if role_ids.blank?
-
-    User.joins(:roles).where(roles: { id: role_ids }, users: { active: true }).distinct
   end
 end

@@ -3,10 +3,10 @@
 class AddDomServisFormIntakeSettings < ActiveRecord::Migration[7.2]
   def up
     Setting.create_if_not_exists(
-      title:       __('Enable Dom-Servis intake bridge'),
+      title:       'Enable Dom-Servis intake bridge',
       name:        'dom_servis_form_intake_enabled',
       area:        'Form::Base',
-      description: __('Defines if web form tickets should be promoted to Dom-Servis dispatch jobs.'),
+      description: 'Defines if web form tickets should be promoted to Dom-Servis dispatch jobs.',
       options:     {
         form: [
           {
@@ -29,10 +29,10 @@ class AddDomServisFormIntakeSettings < ActiveRecord::Migration[7.2]
     )
 
     Setting.create_if_not_exists(
-      title:       __('Dom-Servis partner organization'),
+      title:       'Dom-Servis partner organization',
       name:        'dom_servis_form_organization_id',
       area:        'Form::Base',
-      description: __('Defines which partner organization owns tickets promoted from the web form.'),
+      description: 'Defines which partner organization owns tickets promoted from the web form.',
       options:     {
         form: [
           {

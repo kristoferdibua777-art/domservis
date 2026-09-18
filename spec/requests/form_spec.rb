@@ -277,19 +277,19 @@ RSpec.describe 'Form', type: :request do
         Setting.set('form_ticket_create', true)
         Setting.set('form_ticket_create_group_id', group.id)
         Setting.set('form_allowed_params', %w[
-          organization_id
-          dom_servis_service_type
-          dom_servis_address
-          dom_servis_client_name
-          dom_servis_client_phone
-          dom_servis_visit_day
-          dom_servis_visit_date
-          dom_servis_visit_time
-          dom_servis_dispatch_priority
-          dom_servis_description
-          dom_servis_comment
-          dom_servis_work_tags
-        ])
+                      organization_id
+                      dom_servis_service_type
+                      dom_servis_address
+                      dom_servis_client_name
+                      dom_servis_client_phone
+                      dom_servis_visit_day
+                      dom_servis_visit_date
+                      dom_servis_visit_time
+                      dom_servis_dispatch_priority
+                      dom_servis_description
+                      dom_servis_comment
+                      dom_servis_work_tags
+                    ])
         Setting.set('dom_servis_form_intake_enabled', true)
         Setting.set('dom_servis_form_organization_id', partner_org.id)
 
@@ -298,24 +298,24 @@ RSpec.describe 'Form', type: :request do
 
       it 'creates a dispatch job from the form ticket and binds the configured partner organization' do
         params = {
-          fingerprint: fingerprint,
-          token:       token,
-          name:        'Bob Smith',
-          email:       'discard@zammad.com',
-          title:       'Need help with boiler',
-          body:        'The boiler is leaking and needs inspection.',
-          organization_id: forged_org.id,
-          dom_servis_service_type: 'Boiler repair',
-          dom_servis_address:      'Lenina 10',
-          dom_servis_client_name:   'Bob Smith',
-          dom_servis_client_phone:  '+79001234567',
-          dom_servis_visit_day:     'mon',
-          dom_servis_visit_date:    '2026-03-23',
-          dom_servis_visit_time:    '10:00-12:00',
+          fingerprint:                  fingerprint,
+          token:                        token,
+          name:                         'Bob Smith',
+          email:                        'discard@zammad.com',
+          title:                        'Need help with boiler',
+          body:                         'The boiler is leaking and needs inspection.',
+          organization_id:              forged_org.id,
+          dom_servis_service_type:      'Boiler repair',
+          dom_servis_address:           'Lenina 10',
+          dom_servis_client_name:       'Bob Smith',
+          dom_servis_client_phone:      '+79001234567',
+          dom_servis_visit_day:         'mon',
+          dom_servis_visit_date:        '2026-03-23',
+          dom_servis_visit_time:        '10:00-12:00',
           dom_servis_dispatch_priority: 'high',
-          dom_servis_description:   'Need replacement and inspection.',
-          dom_servis_comment:       'Call before arrival',
-          dom_servis_work_tags:     'boiler,urgent',
+          dom_servis_description:       'Need replacement and inspection.',
+          dom_servis_comment:           'Call before arrival',
+          dom_servis_work_tags:         'boiler,urgent',
         }
 
         post '/api/v1/form_submit', params: params, as: :json
@@ -349,22 +349,22 @@ RSpec.describe 'Form', type: :request do
 
       it 'infers weekday from visit_date when the partner form does not send visit_day' do
         params = {
-          fingerprint: fingerprint,
-          token:       token,
-          name:        'Bob Smith',
-          email:       'discard@zammad.com',
-          title:       'Need help with boiler',
-          body:        'The boiler is leaking and needs inspection.',
-          dom_servis_service_type: 'Boiler repair',
-          dom_servis_address:      'Lenina 10',
-          dom_servis_client_name:   'Bob Smith',
-          dom_servis_client_phone:  '+79001234567',
-          dom_servis_visit_date:    '2026-03-23',
-          dom_servis_visit_time:    '10:00',
+          fingerprint:                  fingerprint,
+          token:                        token,
+          name:                         'Bob Smith',
+          email:                        'discard@zammad.com',
+          title:                        'Need help with boiler',
+          body:                         'The boiler is leaking and needs inspection.',
+          dom_servis_service_type:      'Boiler repair',
+          dom_servis_address:           'Lenina 10',
+          dom_servis_client_name:       'Bob Smith',
+          dom_servis_client_phone:      '+79001234567',
+          dom_servis_visit_date:        '2026-03-23',
+          dom_servis_visit_time:        '10:00',
           dom_servis_dispatch_priority: 'high',
-          dom_servis_description:   'Need replacement and inspection.',
-          dom_servis_comment:       'Call before arrival',
-          dom_servis_work_tags:     'boiler,urgent',
+          dom_servis_description:       'Need replacement and inspection.',
+          dom_servis_comment:           'Call before arrival',
+          dom_servis_work_tags:         'boiler,urgent',
         }
 
         post '/api/v1/form_submit', params: params, as: :json
@@ -383,21 +383,21 @@ RSpec.describe 'Form', type: :request do
 
       it 'creates a dispatch job when the partner form does not expose an email field' do
         params = {
-          fingerprint: fingerprint,
-          token:       token,
-          name:        'Bob Smith',
-          title:       'Need help with boiler',
-          body:        'The boiler is leaking and needs inspection.',
-          dom_servis_service_type: 'Boiler repair',
-          dom_servis_address:      'Lenina 10',
-          dom_servis_client_name:   'Bob Smith',
-          dom_servis_client_phone:  '+79001234567',
-          dom_servis_visit_date:    '2026-03-23',
-          dom_servis_visit_time:    '10:00',
+          fingerprint:                  fingerprint,
+          token:                        token,
+          name:                         'Bob Smith',
+          title:                        'Need help with boiler',
+          body:                         'The boiler is leaking and needs inspection.',
+          dom_servis_service_type:      'Boiler repair',
+          dom_servis_address:           'Lenina 10',
+          dom_servis_client_name:       'Bob Smith',
+          dom_servis_client_phone:      '+79001234567',
+          dom_servis_visit_date:        '2026-03-23',
+          dom_servis_visit_time:        '10:00',
           dom_servis_dispatch_priority: 'high',
-          dom_servis_description:   'Need replacement and inspection.',
-          dom_servis_comment:       'Call before arrival',
-          dom_servis_work_tags:     'boiler,urgent',
+          dom_servis_description:       'Need replacement and inspection.',
+          dom_servis_comment:           'Call before arrival',
+          dom_servis_work_tags:         'boiler,urgent',
         }
 
         post '/api/v1/form_submit', params: params, as: :json
@@ -421,22 +421,22 @@ RSpec.describe 'Form', type: :request do
       let(:fingerprint_b)  { SecureRandom.hex(40) }
       let(:request_source_a) do
         DomServis::RequestSource.create!(
-          name:           'Partner A Form',
-          partner_key:    'partner-a-form',
-          organization:   partner_org,
-          transport_kind: 'zammad_form',
-          status:         'active',
-          allowed_domains: ['partner-a.example.com'],
+          name:               'Partner A Form',
+          partner_key:        'partner-a-form',
+          organization:       partner_org,
+          transport_kind:     'zammad_form',
+          status:             'active',
+          allowed_domains:    ['partner-a.example.com'],
           privacy_policy_url: 'https://partner-a.example.com/privacy',
         )
       end
       let(:request_source_b) do
         DomServis::RequestSource.create!(
-          name:           'Partner B Form',
-          partner_key:    'partner-b-form',
-          organization:   forged_org,
-          transport_kind: 'zammad_form',
-          status:         'active',
+          name:            'Partner B Form',
+          partner_key:     'partner-b-form',
+          organization:    forged_org,
+          transport_kind:  'zammad_form',
+          status:          'active',
           allowed_domains: ['partner-b.example.com'],
         )
       end
@@ -445,19 +445,19 @@ RSpec.describe 'Form', type: :request do
         Setting.set('form_ticket_create', true)
         Setting.set('form_ticket_create_group_id', group.id)
         Setting.set('form_allowed_params', %w[
-          organization_id
-          dom_servis_service_type
-          dom_servis_address
-          dom_servis_client_name
-          dom_servis_client_phone
-          dom_servis_visit_day
-          dom_servis_visit_date
-          dom_servis_visit_time
-          dom_servis_dispatch_priority
-          dom_servis_description
-          dom_servis_comment
-          dom_servis_work_tags
-        ])
+                      organization_id
+                      dom_servis_service_type
+                      dom_servis_address
+                      dom_servis_client_name
+                      dom_servis_client_phone
+                      dom_servis_visit_day
+                      dom_servis_visit_date
+                      dom_servis_visit_time
+                      dom_servis_dispatch_priority
+                      dom_servis_description
+                      dom_servis_comment
+                      dom_servis_work_tags
+                    ])
 
         post '/api/v1/form_config', params: { fingerprint: fingerprint_a, request_source_token: request_source_a.embed_token }, as: :json
         expect(response).to have_http_status(:ok)
@@ -467,24 +467,24 @@ RSpec.describe 'Form', type: :request do
 
       it 'creates distinct dispatch jobs for different partner sources' do
         params_a = {
-          fingerprint: fingerprint_a,
-          request_source_token: request_source_a.embed_token,
-          token: token,
-          name: 'Bob Smith',
-          email: 'discard@zammad.com',
-          title: 'Need help with boiler',
-          body: 'The boiler is leaking and needs inspection.',
-          dom_servis_service_type: 'Boiler repair',
-          dom_servis_address:      'Lenina 10',
-          dom_servis_client_name:  'Bob Smith',
-          dom_servis_client_phone: '+79001234567',
-          dom_servis_visit_day:    'mon',
-          dom_servis_visit_date:    '2026-03-23',
-          dom_servis_visit_time:    '10:00-12:00',
+          fingerprint:                  fingerprint_a,
+          request_source_token:         request_source_a.embed_token,
+          token:                        token,
+          name:                         'Bob Smith',
+          email:                        'discard@zammad.com',
+          title:                        'Need help with boiler',
+          body:                         'The boiler is leaking and needs inspection.',
+          dom_servis_service_type:      'Boiler repair',
+          dom_servis_address:           'Lenina 10',
+          dom_servis_client_name:       'Bob Smith',
+          dom_servis_client_phone:      '+79001234567',
+          dom_servis_visit_day:         'mon',
+          dom_servis_visit_date:        '2026-03-23',
+          dom_servis_visit_time:        '10:00-12:00',
           dom_servis_dispatch_priority: 'high',
-          dom_servis_description:   'Need replacement and inspection.',
-          dom_servis_comment:       'Call before arrival',
-          dom_servis_work_tags:     'boiler,urgent',
+          dom_servis_description:       'Need replacement and inspection.',
+          dom_servis_comment:           'Call before arrival',
+          dom_servis_work_tags:         'boiler,urgent',
         }
 
         post '/api/v1/form_submit', params: params_a, as: :json
@@ -495,10 +495,10 @@ RSpec.describe 'Form', type: :request do
         token_b = json_response['token']
 
         params_b = params_a.merge(
-          fingerprint: fingerprint_b,
-          request_source_token: request_source_b.embed_token,
-          token: token_b,
-          dom_servis_address: 'Karla Marksa 5',
+          fingerprint:             fingerprint_b,
+          request_source_token:    request_source_b.embed_token,
+          token:                   token_b,
+          dom_servis_address:      'Karla Marksa 5',
           dom_servis_service_type: 'Electrical repair',
         )
         post '/api/v1/form_submit', params: params_b, as: :json
@@ -518,8 +518,8 @@ RSpec.describe 'Form', type: :request do
         partner_origin = 'https://partner-a.example.com/page'
 
         post '/api/v1/form_config', params: {
-          fingerprint: fingerprint_a,
-          request_source_token: request_source_a.embed_token,
+          fingerprint:           fingerprint_a,
+          request_source_token:  request_source_a.embed_token,
           request_source_origin: partner_origin,
         }, as: :json
 
@@ -527,25 +527,25 @@ RSpec.describe 'Form', type: :request do
         expect(json_response.dig('request_source', 'partner_key')).to eq('partner-a-form')
 
         post '/api/v1/form_submit', params: {
-          fingerprint: fingerprint_a,
-          request_source_token: request_source_a.embed_token,
-          request_source_origin: partner_origin,
-          token: json_response['token'],
-          name: 'Bob Smith',
-          email: 'discard@zammad.com',
-          title: 'Need help with boiler',
-          body: 'The boiler is leaking and needs inspection.',
-          dom_servis_service_type: 'Boiler repair',
-          dom_servis_address: 'Lenina 10',
-          dom_servis_client_name: 'Bob Smith',
-          dom_servis_client_phone: '+79001234567',
-          dom_servis_visit_day: 'mon',
-          dom_servis_visit_date: '2026-03-23',
-          dom_servis_visit_time: '10:00-12:00',
+          fingerprint:                  fingerprint_a,
+          request_source_token:         request_source_a.embed_token,
+          request_source_origin:        partner_origin,
+          token:                        json_response['token'],
+          name:                         'Bob Smith',
+          email:                        'discard@zammad.com',
+          title:                        'Need help with boiler',
+          body:                         'The boiler is leaking and needs inspection.',
+          dom_servis_service_type:      'Boiler repair',
+          dom_servis_address:           'Lenina 10',
+          dom_servis_client_name:       'Bob Smith',
+          dom_servis_client_phone:      '+79001234567',
+          dom_servis_visit_day:         'mon',
+          dom_servis_visit_date:        '2026-03-23',
+          dom_servis_visit_time:        '10:00-12:00',
           dom_servis_dispatch_priority: 'high',
-          dom_servis_description: 'Need replacement and inspection.',
-          dom_servis_comment: 'Call before arrival',
-          dom_servis_work_tags: 'boiler,urgent',
+          dom_servis_description:       'Need replacement and inspection.',
+          dom_servis_comment:           'Call before arrival',
+          dom_servis_work_tags:         'boiler,urgent',
         }, as: :json
 
         expect(response).to have_http_status(:ok)
@@ -564,23 +564,23 @@ RSpec.describe 'Form', type: :request do
 
       it 'accepts the compact partner callback payload used by the iframe form' do
         post '/api/v1/form_submit', params: {
-          fingerprint: fingerprint_a,
-          request_source_token: request_source_a.embed_token,
-          request_source_origin: 'https://partner-a.example.com',
-          token: token,
-          name: 'Иван',
-          title: 'Заявка на обратный звонок',
-          body: 'Клиент оставил заявку на обратный звонок через сайт партнёра. Имя клиента: Иван. Телефон клиента: +79998884455. Нужно уточнить услугу, адрес, дату и время визита.',
-          dom_servis_client_name: 'Иван',
-          dom_servis_client_phone: '+79998884455',
-          dom_servis_service_type: 'Уточнить у клиента',
-          dom_servis_address: 'Уточнить у клиента',
-          dom_servis_visit_date: '2026-03-23',
-          dom_servis_visit_day: 'mon',
-          dom_servis_visit_time: 'Уточнить у клиента',
+          fingerprint:                  fingerprint_a,
+          request_source_token:         request_source_a.embed_token,
+          request_source_origin:        'https://partner-a.example.com',
+          token:                        token,
+          name:                         'Иван',
+          title:                        'Заявка на обратный звонок',
+          body:                         'Клиент оставил заявку на обратный звонок через сайт партнёра. Имя клиента: Иван. Телефон клиента: +79998884455. Нужно уточнить услугу, адрес, дату и время визита.',
+          dom_servis_client_name:       'Иван',
+          dom_servis_client_phone:      '+79998884455',
+          dom_servis_service_type:      'Уточнить у клиента',
+          dom_servis_address:           'Уточнить у клиента',
+          dom_servis_visit_date:        '2026-03-23',
+          dom_servis_visit_day:         'mon',
+          dom_servis_visit_time:        'Уточнить у клиента',
           dom_servis_dispatch_priority: 'medium',
-          dom_servis_description: 'Клиент оставил заявку на обратный звонок через сайт партнёра. Имя клиента: Иван. Телефон клиента: +79998884455. Нужно уточнить услугу, адрес, дату и время визита.',
-          dom_servis_comment: 'Детали услуги, адрес и время нужно уточнить у клиента.',
+          dom_servis_description:       'Клиент оставил заявку на обратный звонок через сайт партнёра. Имя клиента: Иван. Телефон клиента: +79998884455. Нужно уточнить услугу, адрес, дату и время визита.',
+          dom_servis_comment:           'Детали услуги, адрес и время нужно уточнить у клиента.',
         }, as: :json
 
         expect(response).to have_http_status(:ok)

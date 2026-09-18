@@ -53,11 +53,10 @@ class User < ApplicationModel
   before_validation :check_mail_delivery_failed, on: :update
   before_save       :ensure_notification_preferences, if: :reset_notification_config_before_save
   before_create     :validate_preferences, :domain_based_assignment, :set_locale
+  before_create     :ensure_dom_servis_ticket_group_access
   before_update     :validate_preferences, :reset_login_failed_after_password_change, :validate_agent_limit_by_attributes, :last_admin_check_by_attribute
   before_destroy    :destroy_longer_required_objects, :destroy_move_dependency_ownership
   after_commit      :update_caller_id
-  before_create     :ensure_dom_servis_ticket_group_access
-  after_commit      :bootstrap_dom_servis_roles, on: :create
 
   validate :ensure_identifier, :ensure_email
   validate :ensure_uniq_email, unless: :skip_ensure_uniq_email
@@ -1130,23 +1129,8 @@ raise 'At least one user need to have admin permissions'
     true
   end
 
-  # When adding/removing a phone/mobile number from the User table,
-  # update caller ID table
-  # to adopt/orphan matching Cti::Logs accordingly
-  # (see https://github.com/zammad/zammad/issues/2057)
-  def bootstrap_dom_servis_roles
-    return if !permissions?('admin')
-    return if DomServis::DispatchRoleCatalog.seeded?
-    return if !DomServis::DispatchRoleCatalog.sync!(actor_id: id)
-
-    admin_overlay_role = Role.find_by(name: 'Dom-Servis Admin')
-    return if !admin_overlay_role || role?('Dom-Servis Admin')
-
-    roles << admin_overlay_role
-  end
-
   def ensure_dom_servis_ticket_group_access
-    return if !permissions?('ticket.agent')
+    return if !Role.with_permissions('ticket.agent').where(id: role_ids).exists?
     return if group_ids_access('create').present?
 
     ticket_group = Group.find_by(name: 'Users') || Group.find_by(id: 1)
@@ -1155,6 +1139,10 @@ raise 'At least one user need to have admin permissions'
     self.group_ids_access_map = { ticket_group.id => 'full' }
   end
 
+  # When adding/removing a phone/mobile number from the User table,
+  # update caller ID table
+  # to adopt/orphan matching Cti::Logs accordingly
+  # (see https://github.com/zammad/zammad/issues/2057)
   def update_caller_id
     # skip if "phone/mobile" does not change, or changes like [nil, ""]
     return if persisted? && previous_changes.slice(:phone, :mobile).values.flatten.none?(&:present?)

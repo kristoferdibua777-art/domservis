@@ -23,9 +23,11 @@ This note describes the working model for partner intake in Dom-Servis after the
 4. Copy the generated `embed_url` or `embed_snippet`.
 5. Place the snippet on the partner site.
 6. The partner site must pass `request_source_token` only; it must not send `organization_id`.
-7. If the embed is rendered in an iframe, forward the parent page origin as `request_source_origin` so allowed-domain checks can validate the real partner site.
+7. If the embed is rendered in an iframe, forward the parent page origin as `request_source_origin` so allowed-domain
+   checks can validate the real partner site.
 8. The generated iframe already contains the consent text and the partner privacy-policy link.
-9. The generated embed listens for resize messages from the iframe and updates the iframe height automatically, so partner modals do not need a second inner scrollbar.
+9. The generated embed listens for resize messages from the iframe and updates the iframe height automatically, so
+   partner modals do not need a second inner scrollbar.
 
 ## Runtime flow
 
@@ -34,7 +36,8 @@ This note describes the working model for partner intake in Dom-Servis after the
 - The iframe fills dispatch placeholders such as `service_type`, `address`, and `visit_date` automatically before submit.
 - The iframe posts its height to the parent window as the layout changes.
 - Zammad creates a `Ticket`.
-- The Dom-Servis intake bridge resolves `request_source_token` to a registry record and, when present, validates `request_source_origin` against the allowed-domain list.
+- The Dom-Servis intake bridge resolves `request_source_token` to a registry record and, when present, validates
+  `request_source_origin` against the allowed-domain list.
 - The bridge promotes the ticket into a `DispatchJob`.
 - The job stores `request_source_id`, `organization_id`, and the intake metadata needed for reporting.
 
@@ -46,4 +49,5 @@ This note describes the working model for partner intake in Dom-Servis after the
 
 ## Non-native sources
 
-Future sources such as webhook or AI intake should bind through the same registry record shape, even if they create `DispatchJob` directly instead of going through the Zammad form transport.
+Future sources such as webhook or AI intake should bind through the same registry record shape, even if they create
+`DispatchJob` directly instead of going through the Zammad form transport.

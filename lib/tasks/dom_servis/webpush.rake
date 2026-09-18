@@ -22,7 +22,7 @@ namespace :dom_servis do
       puts 'Dom-Servis Web Push VAPID keys generated and stored.'
       puts "Public key:  #{vapid_key.public_key}"
       puts 'Private key: [hidden]'
-      puts 'Subject:     ' + (Setting.get('dom_servis_webpush_subject').presence || '(default mailto:)')
+      puts "Subject:     #{Setting.get('dom_servis_webpush_subject').presence || '(default mailto:)'}"
     rescue LoadError
       abort 'The web-push gem is not installed. Run `bundle install` first.'
     end

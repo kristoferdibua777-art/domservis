@@ -444,7 +444,18 @@ describe('UserTaskbarTabs.vue', () => {
       userCurrentTaskbarItemListPrio: {
         __typename: 'UserCurrentTaskbarItemListPrioPayload',
         success: true,
-        errors: [],
+        // `errors: null` is the repository-wide convention for a successful
+        // mutation payload (43 other mock responses use it this way,
+        // including MutationHandler's own unit test). `errors: []` is
+        // technically a non-empty JS value (`Boolean([]) === true`), so
+        // `MutationHandler#send`'s `if (errors)` check treated the empty
+        // array itself as an error condition and rejected with an empty
+        // `UserError` - which the component's fire-and-forget
+        // `.send({...})` call (UserTaskbarTabs.vue, no `.catch`) never
+        // observes, surfacing only as an unhandled rejection in CI. This
+        // was a mock-data mismatch, not a defect in MutationHandler or in
+        // the component.
+        errors: null,
       },
     })
 

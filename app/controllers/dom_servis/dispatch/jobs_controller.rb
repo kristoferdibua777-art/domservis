@@ -56,13 +56,13 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     ensure_action_allowed!('change_assignee')
 
     assignee_id = normalized_assignee_id(params.require(:assignee_id))
-    raise Exceptions::UnprocessableEntity, 'Invalid assignee.' if assignee_id.blank?
+    raise Exceptions::UnprocessableEntity, __('Invalid assignee.') if assignee_id.blank?
 
     assignee = User.find_by(id: assignee_id)
-    raise Exceptions::UnprocessableEntity, 'Invalid assignee.' if assignee.blank?
-    raise Exceptions::UnprocessableEntity, 'Assignee must be an active user.' if assignee.active == false
-    raise Exceptions::Forbidden, 'Assignee must be a Dom-Servis master.' if !assignee.permissions?('dom_servis.master')
-    raise Exceptions::UnprocessableEntity, 'Cannot assign a finished dispatch job.' if job.status.in?(%w[done cancelled transferred_to_partner])
+    raise Exceptions::UnprocessableEntity, __('Invalid assignee.') if assignee.blank?
+    raise Exceptions::UnprocessableEntity, __('Assignee must be an active user.') if assignee.active == false
+    raise Exceptions::Forbidden, __('Assignee must be a Dom-Servis master.') if !assignee.permissions?('dom_servis.master')
+    raise Exceptions::UnprocessableEntity, __('Cannot assign a finished dispatch job.') if job.status.in?(%w[done cancelled transferred_to_partner])
 
     previous_assignee_id = job.assignee_id
 
@@ -105,9 +105,9 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
       end
 
       job.update!(
-        assignee_id: current_user.id,
-        status:      job.status == 'pool' ? 'taken' : job.status,
-        taken_at:    job.taken_at || Time.zone.now,
+        assignee_id:   current_user.id,
+        status:        job.status == 'pool' ? 'taken' : job.status,
+        taken_at:      job.taken_at || Time.zone.now,
         updated_by_id: current_user.id,
       )
       create_event!(job, 'taken')
@@ -130,9 +130,9 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
 
     job.with_lock do
       job.update!(
-        assignee_id: nil,
-        status:      'pool',
-        taken_at:    nil,
+        assignee_id:   nil,
+        status:        'pool',
+        taken_at:      nil,
         updated_by_id: current_user.id,
       )
       create_event!(job, 'released')
@@ -148,7 +148,8 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     authorize job, :update_status?
 
     status = params.require(:status).to_s
-    raise Exceptions::UnprocessableEntity, 'Invalid dispatch job status.' if !DomServis::DispatchJob::STATUSES.include?(status)
+    raise Exceptions::UnprocessableEntity, __('Invalid dispatch job status.') if DomServis::DispatchJob::STATUSES.exclude?(status)
+
     ensure_status_allowed!(status)
     ensure_action_allowed!('cancel_job') if status == 'cancelled'
     ensure_action_allowed!('set_status_in_progress') if status == 'in_progress'
@@ -174,7 +175,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     ensure_field_editable!('visit_day')
 
     visit_day = params.require(:visit_day).to_s
-    raise Exceptions::UnprocessableEntity, 'Invalid dispatch visit day.' if !DomServis::DispatchJob::VISIT_DAYS.include?(visit_day)
+    raise Exceptions::UnprocessableEntity, __('Invalid dispatch visit day.') if DomServis::DispatchJob::VISIT_DAYS.exclude?(visit_day)
 
     updates = {
       visit_day:,
@@ -198,7 +199,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     ensure_field_editable!('priority')
 
     priority = params.require(:priority).to_s
-    raise Exceptions::UnprocessableEntity, 'Invalid dispatch job priority.' if !DomServis::DispatchJob::PRIORITIES.include?(priority)
+    raise Exceptions::UnprocessableEntity, __('Invalid dispatch job priority.') if DomServis::DispatchJob::PRIORITIES.exclude?(priority)
 
     job.with_lock do
       job.update!(priority:, updated_by_id: current_user.id)
@@ -212,13 +213,14 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
 
   def parse_input
     input = params.require(:input).to_s.strip
-    raise Exceptions::UnprocessableEntity, 'No input submitted.' if input.blank?
+    raise Exceptions::UnprocessableEntity, __('No input submitted.') if input.blank?
+
     ensure_action_allowed!('create_job')
 
     render json: {
       draft: {
         service_type: infer_service_type(input),
-        address:      'Address to be confirmed',
+        address:      __('Address to be confirmed'),
         description:  input,
         priority:     infer_priority(input),
         status:       'pool',
@@ -320,18 +322,18 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
 
   def infer_priority(input)
     lowered = input.downcase
-    return 'critical' if lowered.match?(/авар|сроч|горит|замерз|затоп|ошибк/i)
+    return 'critical' if lowered.match?(%r{авар|сроч|горит|замерз|затоп|ошибк}i)
 
     'medium'
   end
 
   def infer_service_type(input)
     lowered = input.downcase
-    return 'Plumbing' if lowered.match?(/кран|смесител|вода|сантех/i)
-    return 'Boiler' if lowered.match?(/кот[её]л|отоплен|газ/i)
-    return 'Electrical' if lowered.match?(/розет|свет|элект|люстр/i)
+    return 'Plumbing' if lowered.match?(%r{кран|смесител|вода|сантех}i)
+    return 'Boiler' if lowered.match?(%r{кот[её]л|отоплен|газ}i)
+    return 'Electrical' if lowered.match?(%r{розет|свет|элект|люстр}i)
 
-    'General Service'
+    __('General Service')
   end
 
   def master_access?
@@ -373,7 +375,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     if updates[:status].present? && updates[:status] != job.status
       status = updates[:status].to_s
 
-      raise Exceptions::UnprocessableEntity, 'Invalid dispatch job status.' if !DomServis::DispatchJob::STATUSES.include?(status)
+      raise Exceptions::UnprocessableEntity, __('Invalid dispatch job status.') if DomServis::DispatchJob::STATUSES.exclude?(status)
 
       ensure_status_allowed!(status)
       ensure_action_allowed!('cancel_job') if status == 'cancelled'
@@ -387,7 +389,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     end
 
     if updates.key?(:assignee_id) && normalized_assignee_id(updates[:assignee_id]) != normalized_assignee_id(job.assignee_id)
-      raise Exceptions::Forbidden, 'Dispatch assignee can only be changed through the assign action.'
+      raise Exceptions::Forbidden, __('Dispatch assignee can only be changed through the assign action.')
     end
 
     if updates.key?(:comment) && updates[:comment].to_s != job.comment.to_s

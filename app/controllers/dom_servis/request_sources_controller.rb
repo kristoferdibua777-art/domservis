@@ -4,7 +4,7 @@ class DomServis::RequestSourcesController < ApplicationController
   prepend_before_action :authenticate_and_authorize!
 
   def index
-    model_index_render(DomServis::RequestSource.order(:id), params)
+    model_index_render(DomServis::RequestSource.reorder(:id), params)
   end
 
   def show

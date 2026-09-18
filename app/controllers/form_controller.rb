@@ -25,15 +25,17 @@ class FormController < ApplicationController
     }
 
     result[:enabled] = false if request_source&.paused?
-    result[:request_source] = {
-      id:             request_source.id,
-      partner_key:     request_source.partner_key,
-      name:            request_source.name,
-      organization_id: request_source.organization_id,
-      transport_kind:   request_source.transport_kind,
-      privacy_policy_url: request_source.privacy_policy_url,
-      settings:           request_source.settings.presence || {},
-    } if request_source.present?
+    if request_source.present?
+      result[:request_source] = {
+        id:                 request_source.id,
+        partner_key:        request_source.partner_key,
+        name:               request_source.name,
+        organization_id:    request_source.organization_id,
+        transport_kind:     request_source.transport_kind,
+        privacy_policy_url: request_source.privacy_policy_url,
+        settings:           request_source.settings.presence || {},
+      }
+    end
 
     if authorized?(policy_record, :test?)
       result[:enabled] = true
@@ -242,11 +244,11 @@ class FormController < ApplicationController
   def promote_dom_servis_intake!(ticket)
     request_source = dom_servis_request_source
     payload = DomServis::Intake::TicketAdapter.new(
-      ticket:          ticket,
-      request_source:  request_source,
-      source:          'form',
-      channel_key:     request_source.transport_kind,
-      source_reference: ticket.number,
+      ticket:                ticket,
+      request_source:        request_source,
+      source:                'form',
+      channel_key:           request_source.transport_kind,
+      source_reference:      ticket.number,
       request_source_origin: params[:request_source_origin].presence,
     ).payload
 

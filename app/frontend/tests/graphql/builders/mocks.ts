@@ -28,6 +28,10 @@ import {
 } from 'graphql'
 import { noop } from 'lodash-es'
 
+import {
+  diagnosticTicketCreateUserEnabled,
+  diagnosticTicketCreateUserLog,
+} from '#tests/support/diagnostic-ticket-create-user.ts'
 import { waitForNextTick } from '#tests/support/utils.ts'
 import { waitUntil } from '#tests/support/vitest-wrapper.ts'
 
@@ -48,6 +52,28 @@ interface MockCall<T = any> {
   document: DocumentNode
   result: T
   variables: Record<string, any>
+}
+
+// Round-5 diagnostic-only structural types (see
+// tests/support/diagnostic-ticket-create-user.ts). Narrow shapes covering
+// only the fields the diagnostic log inspects, so this instrumentation does
+// not introduce a new `any` - unlike the rest of this file's pre-existing,
+// unrelated `any` usage, these two types exist solely for the diagnostic and
+// are meant to be removed together with it.
+interface DiagnosticFormUpdaterVariables {
+  formUpdaterId?: unknown
+  meta?: {
+    initial?: unknown
+    reset?: unknown
+    requestId?: unknown
+    changedField?: {
+      name?: unknown
+    }
+  }
+}
+
+interface DiagnosticFormUpdaterDefaults {
+  fields?: Record<string, unknown>
 }
 
 const mockDefaults = new Map<string, any>()
@@ -360,13 +386,49 @@ class MockLink extends ApolloLink {
         mockSubscriptionHanlders.set(queryKey, handler)
         return noop
       }
+      // Narrowly-gated round-5 diagnostic: see
+      // tests/support/diagnostic-ticket-create-user.ts. No-op (and no
+      // property access beyond the boolean check) unless
+      // DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER=1, and further scoped to the
+      // `formUpdater` operation only, so it cannot affect or log for any
+      // other query/mutation/subscription.
+      const isDiagnosedFormUpdaterCall =
+        diagnosticTicketCreateUserEnabled() && definition.name?.value === 'formUpdater'
+
+      if (isDiagnosedFormUpdaterCall) {
+        const formUpdaterVariables = variables as DiagnosticFormUpdaterVariables
+        diagnosticTicketCreateUserLog('graphql:formUpdater:request-received', {
+          formUpdaterId: formUpdaterVariables?.formUpdaterId,
+          metaInitial: formUpdaterVariables?.meta?.initial,
+          metaReset: formUpdaterVariables?.meta?.reset,
+          metaRequestId: formUpdaterVariables?.meta?.requestId,
+          changedFieldName: formUpdaterVariables?.meta?.changedField?.name,
+        })
+      }
+
       try {
         const defaults = getQueryDefaults(queryKey, definition, variables)
+
+        if (isDiagnosedFormUpdaterCall) {
+          diagnosticTicketCreateUserLog('graphql:formUpdater:defaults-resolved', {
+            mockDefaultsFieldKeys: Object.keys(
+              (defaults as DiagnosticFormUpdaterDefaults)?.fields || {},
+            ),
+          })
+        }
+
         const returnResult = mockOperation(query, variables, defaults)
         const result = { data: returnResult }
         const calls = mockCalls.get(queryKey) || []
         calls.push({ document: query, result: result.data, variables })
         mockCalls.set(queryKey, calls)
+
+        if (isDiagnosedFormUpdaterCall) {
+          diagnosticTicketCreateUserLog('graphql:formUpdater:resolved-and-recorded', {
+            observedCallCountForKey: calls.length,
+          })
+        }
+
         observer.next(
           cloneDeep({
             data: stripQueryData(definition, fragments, result.data),
@@ -374,6 +436,11 @@ class MockLink extends ApolloLink {
         )
         observer.complete()
       } catch (e) {
+        if (isDiagnosedFormUpdaterCall) {
+          diagnosticTicketCreateUserLog('graphql:formUpdater:error', {
+            message: e instanceof Error ? e.message : String(e),
+          })
+        }
         console.error(e)
         throw e
       }

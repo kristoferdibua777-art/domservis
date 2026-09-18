@@ -1,7 +1,7 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class DomServis::DispatchPolicy
-  SETTING_NAME = 'dom_servis_dispatch_policy'
+  SETTING_NAME = 'dom_servis_dispatch_policy'.freeze
   ROLE_KEYS    = %w[master dispatcher admin].freeze
 
   READ_ONLY_FIELDS = %w[
@@ -22,81 +22,93 @@ class DomServis::DispatchPolicy
       key:          'master',
       label:        'Master',
       base_role:    'Agent',
+      # rubocop:disable Zammad/DetectTranslatableString -- this mirrors the
+      # literal Role#name Zammad looks up elsewhere (DomServis::DispatchRoleCatalog,
+      # db/migrate/20260318211000_add_dom_servis_admin_role.rb). Translating it
+      # would make Role.find_by(name: ...) silently stop matching once a
+      # translation for this phrase exists.
       overlay_role: 'Dom-Servis Master',
+      # rubocop:enable Zammad/DetectTranslatableString
       permission:   'dom_servis.master',
-      description:  'Takes jobs from the shared pool and moves owned jobs through the master workflow.',
+      description:  __('Takes jobs from the shared pool and moves owned jobs through the master workflow.'),
     },
     {
       key:          'dispatcher',
       label:        'Dispatcher',
       base_role:    'Agent',
+      # rubocop:disable Zammad/DetectTranslatableString -- see note on the
+      # 'master' entry above: this is a Role#name identifier, not display text.
       overlay_role: 'Dom-Servis Dispatcher',
+      # rubocop:enable Zammad/DetectTranslatableString
       permission:   'dom_servis.dispatcher',
-      description:  'Creates, edits, reschedules and coordinates jobs across the board.',
+      description:  __('Creates, edits, reschedules and coordinates jobs across the board.'),
     },
     {
       key:          'admin',
-      label:        'Owner / Admin',
+      label:        __('Owner / Admin'),
       base_role:    'Admin',
+      # rubocop:disable Zammad/DetectTranslatableString -- see note on the
+      # 'master' entry above: this is a Role#name identifier, not display text.
       overlay_role: 'Dom-Servis Admin',
+      # rubocop:enable Zammad/DetectTranslatableString
       permission:   'dom_servis.admin',
-      description:  'Owns the dispatch policy, dashboards and administrative control of the module.',
+      description:  __('Owns the dispatch policy, dashboards and administrative control of the module.'),
     },
   ].freeze
 
   ACTION_GROUPS = [
     {
       key:   'job_lifecycle',
-      label: 'Job lifecycle actions',
+      label: __('Job lifecycle actions'),
       items: [
-        { key: 'create_job',            label: 'Create job',            description: 'Open and submit a new dispatch job into the board.' },
-        { key: 'publish_to_pool',       label: 'Publish to pool',       description: 'Expose a newly created job to the shared master pool.' },
-        { key: 'take_job',              label: 'Take job',              description: 'Claim a shared pool job.' },
-        { key: 'release_to_pool',       label: 'Release to pool',       description: 'Return an owned job back into the pool.' },
-        { key: 'set_status_in_progress', label: 'Set in progress',      description: 'Move a job into active execution.' },
-        { key: 'set_status_done',       label: 'Set done',              description: 'Mark a job as completed.' },
-        { key: 'cancel_job',            label: 'Cancel job',            description: 'Cancel an active or pending job.' },
-        { key: 'transfer_to_partner',   label: 'Transfer to partner',   description: 'Close the job on our board and hand it off to a partner service.' },
-        { key: 'reopen_job',            label: 'Reopen job',            description: 'Reopen a completed or cancelled job.' },
+        { key: 'create_job',            label: __('Create job'),            description: __('Open and submit a new dispatch job into the board.') },
+        { key: 'publish_to_pool',       label: __('Publish to pool'),       description: __('Expose a newly created job to the shared master pool.') },
+        { key: 'take_job',              label: __('Take job'),              description: __('Claim a shared pool job.') },
+        { key: 'release_to_pool',       label: __('Release to pool'),       description: __('Return an owned job back into the pool.') },
+        { key: 'set_status_in_progress', label: __('Set in progress'),      description: __('Move a job into active execution.') },
+        { key: 'set_status_done',       label: __('Set done'),              description: __('Mark a job as completed.') },
+        { key: 'cancel_job',            label: __('Cancel job'),            description: __('Cancel an active or pending job.') },
+        { key: 'transfer_to_partner',   label: __('Transfer to partner'),   description: __('Close the job on our board and hand it off to a partner service.') },
+        { key: 'reopen_job',            label: __('Reopen job'),            description: __('Reopen a completed or cancelled job.') },
       ],
     },
     {
       key:   'coordination',
-      label: 'Coordination actions',
+      label: __('Coordination actions'),
       items: [
-        { key: 'move_job_day',          label: 'Move job day',          description: 'Move a job to another weekday inside the dispatch board.' },
-        { key: 'move_job_week',         label: 'Move job week',         description: 'Move a job across weeks.' },
-        { key: 'change_priority',       label: 'Change priority',       description: 'Change the visual and operational priority of a job.' },
-        { key: 'change_assignee',       label: 'Assign master',         description: 'Assign or reassign a job through the dedicated operational action.' },
-        { key: 'edit_all_fields',       label: 'Edit all fields',       description: 'Open full payload editing for job data.' },
-        { key: 'delete_job',            label: 'Delete job',            description: 'Delete a dispatch job from the board.' },
+        { key: 'move_job_day',          label: __('Move job day'),          description: __('Move a job to another weekday inside the dispatch board.') },
+        { key: 'move_job_week',         label: __('Move job week'),         description: __('Move a job across weeks.') },
+        { key: 'change_priority',       label: __('Change priority'),       description: __('Change the visual and operational priority of a job.') },
+        { key: 'change_assignee',       label: __('Assign master'),         description: __('Assign or reassign a job through the dedicated operational action.') },
+        { key: 'edit_all_fields',       label: __('Edit all fields'),       description: __('Open full payload editing for job data.') },
+        { key: 'delete_job',            label: __('Delete job'),            description: __('Delete a dispatch job from the board.') },
       ],
     },
     {
       key:   'job_content',
-      label: 'Content and evidence',
+      label: __('Content and evidence'),
       items: [
-        { key: 'add_comment',           label: 'Add comment',           description: 'Add or update an operational comment on the job.' },
-        { key: 'add_attachment',        label: 'Add attachment',        description: 'Attach files, photos or evidence to the job.' },
-        { key: 'remove_attachment',     label: 'Remove attachment',     description: 'Remove files from the job payload.' },
+        { key: 'add_comment',           label: __('Add comment'),           description: __('Add or update an operational comment on the job.') },
+        { key: 'add_attachment',        label: __('Add attachment'),        description: __('Attach files, photos or evidence to the job.') },
+        { key: 'remove_attachment',     label: __('Remove attachment'),     description: __('Remove files from the job payload.') },
       ],
     },
   ].freeze
 
   STATUS_REGISTRY = [
-    { key: 'pool',        label: 'Pool',        description: 'Shared pool state before a master claims the job.' },
-    { key: 'taken',       label: 'Taken',       description: 'Claimed by a worker but not yet started.' },
-    { key: 'in_progress', label: 'In progress', description: 'Actively being worked on.' },
-    { key: 'done',        label: 'Done',        description: 'Completed and closed for the operational workflow.' },
-    { key: 'cancelled',   label: 'Cancelled',   description: 'Cancelled before completion.' },
-    { key: 'transferred_to_partner', label: 'Transferred to partner', description: 'Closed on the Dom-Servis board after handoff to a partner service.' },
+    { key: 'pool',        label: 'Pool',        description: __('Shared pool state before a master claims the job.') },
+    { key: 'taken',       label: 'Taken',       description: __('Claimed by a worker but not yet started.') },
+    { key: 'in_progress', label: __('In progress'), description: __('Actively being worked on.') },
+    { key: 'done',        label: 'Done',        description: __('Completed and closed for the operational workflow.') },
+    { key: 'cancelled',   label: 'Cancelled',   description: __('Cancelled before completion.') },
+    { key: 'transferred_to_partner', label: __('Transferred to partner'), description: __('Closed on the Dom-Servis board after handoff to a partner service.') },
   ].freeze
 
   SETTINGS_REGISTRY = [
     {
       key:         'deadline_warning_minutes',
-      label:       'Deadline warning minutes',
-      description: 'How many minutes before the visit deadline a pool job should turn red on the board.',
+      label:       __('Deadline warning minutes'),
+      description: __('How many minutes before the visit deadline a pool job should turn red on the board.'),
       default:     120,
       min:         1,
       step:        5,
@@ -104,35 +116,35 @@ class DomServis::DispatchPolicy
   ].freeze
 
   FIELD_METADATA = {
-    'job_code'     => { label: 'Job code',      group: 'identity',     source: 'db' },
-    'source'       => { label: 'Source',        group: 'identity',     source: 'db' },
-    'status'       => { label: 'Status',        group: 'lifecycle',    source: 'db' },
-    'priority'     => { label: 'Priority',      group: 'lifecycle',    source: 'db' },
-    'visit_day'    => { label: 'Visit day',     group: 'schedule',     source: 'db' },
-    'visit_date'   => { label: 'Visit date',    group: 'schedule',     source: 'db' },
-    'visit_time'   => { label: 'Visit time',    group: 'schedule',     source: 'db' },
-    'address'      => { label: 'Address',       group: 'customer',     source: 'db' },
-    'client_name'  => { label: 'Client name',   group: 'customer',     source: 'db' },
-    'client_phone' => { label: 'Client phone',  group: 'customer',     source: 'db' },
-    'service_type' => { label: 'Service type',  group: 'job_content',  source: 'db' },
-    'description'  => { label: 'Description',   group: 'job_content',  source: 'db' },
-    'comment'      => { label: 'Comment',       group: 'job_content',  source: 'db' },
-    'work_tags'    => { label: 'Work tags',     group: 'job_content',  source: 'db' },
-    'assignee_id'  => { label: 'Assignee',      group: 'assignment',   source: 'db' },
-    'ticket_id'    => { label: 'Linked ticket', group: 'assignment',   source: 'db' },
-    'published_at' => { label: 'Published at',  group: 'lifecycle',    source: 'db' },
-    'taken_at'     => { label: 'Taken at',      group: 'lifecycle',    source: 'db' },
-    'completed_at' => { label: 'Completed at',  group: 'lifecycle',    source: 'db' },
-    'cancelled_at' => { label: 'Cancelled at',  group: 'lifecycle',    source: 'db' },
-    'organization_id' => { label: 'Customer account', group: 'customer', source: 'db' },
-    'attachments'  => { label: 'Attachments',   group: 'attachments',  source: 'virtual' },
+    'job_code'        => { label: __('Job code'), group: 'identity', source: 'db' },
+    'source'          => { label: 'Source',        group: 'identity',     source: 'db' },
+    'status'          => { label: 'Status',        group: 'lifecycle',    source: 'db' },
+    'priority'        => { label: 'Priority',      group: 'lifecycle',    source: 'db' },
+    'visit_day'       => { label: __('Visit day'),     group: 'schedule',     source: 'db' },
+    'visit_date'      => { label: __('Visit date'),    group: 'schedule',     source: 'db' },
+    'visit_time'      => { label: __('Visit time'),    group: 'schedule',     source: 'db' },
+    'address'         => { label: 'Address', group: 'customer', source: 'db' },
+    'client_name'     => { label: __('Client name'),   group: 'customer',     source: 'db' },
+    'client_phone'    => { label: __('Client phone'),  group: 'customer',     source: 'db' },
+    'service_type'    => { label: __('Service type'),  group: 'job_content',  source: 'db' },
+    'description'     => { label: 'Description',   group: 'job_content',  source: 'db' },
+    'comment'         => { label: 'Comment',       group: 'job_content',  source: 'db' },
+    'work_tags'       => { label: __('Work tags'), group: 'job_content', source: 'db' },
+    'assignee_id'     => { label: 'Assignee', group: 'assignment', source: 'db' },
+    'ticket_id'       => { label: __('Linked ticket'), group: 'assignment',   source: 'db' },
+    'published_at'    => { label: __('Published at'),  group: 'lifecycle',    source: 'db' },
+    'taken_at'        => { label: __('Taken at'),      group: 'lifecycle',    source: 'db' },
+    'completed_at'    => { label: __('Completed at'),  group: 'lifecycle',    source: 'db' },
+    'cancelled_at'    => { label: __('Cancelled at'),  group: 'lifecycle',    source: 'db' },
+    'organization_id' => { label: __('Customer account'), group: 'customer', source: 'db' },
+    'attachments'     => { label: 'Attachments', group: 'attachments', source: 'virtual' },
   }.freeze
 
   FIELD_GROUPS = {
     'identity'    => 'Identity',
     'customer'    => 'Customer',
     'schedule'    => 'Scheduling',
-    'job_content' => 'Job content',
+    'job_content' => __('Job content'),
     'assignment'  => 'Assignment',
     'lifecycle'   => 'Lifecycle',
     'attachments' => 'Attachments',
@@ -257,39 +269,39 @@ class DomServis::DispatchPolicy
     end
 
     def default_actions
-      action_items.each_with_object({}) do |action, memo|
-        memo[action[:key]] = {
+      action_items.to_h do |action|
+        [action[:key], {
           'master'     => action_default(action[:key], 'master'),
           'dispatcher' => action_default(action[:key], 'dispatcher'),
           'admin'      => action_default(action[:key], 'admin'),
-        }
+        }]
       end
     end
 
     def default_statuses
-      STATUS_REGISTRY.each_with_object({}) do |status, memo|
-        memo[status[:key]] = {
+      STATUS_REGISTRY.to_h do |status|
+        [status[:key], {
           'master'     => status_default(status[:key], 'master'),
           'dispatcher' => status_default(status[:key], 'dispatcher'),
           'admin'      => status_default(status[:key], 'admin'),
-        }
+        }]
       end
     end
 
     def default_fields
-      field_entries.each_with_object({}) do |field, memo|
-        memo[field['key']] = ROLE_KEYS.each_with_object({}) do |role, role_memo|
-          role_memo[role] = {
+      field_entries.to_h do |field|
+        [field['key'], ROLE_KEYS.index_with do |role|
+          {
             'visible'  => field_visible_default(field['key'], role),
             'editable' => field_editable_default(field['key'], role),
           }
-        end
+        end]
       end
     end
 
     def default_settings
-      SETTINGS_REGISTRY.each_with_object({}) do |setting, memo|
-        memo[setting[:key]] = setting_default(setting[:key])
+      SETTINGS_REGISTRY.to_h do |setting|
+        [setting[:key], setting_default(setting[:key])]
       end
     end
 
@@ -342,7 +354,7 @@ class DomServis::DispatchPolicy
 
     def action_default(action_key, role_key)
       matrix = {
-        'master' => %w[
+        'master'     => %w[
           take_job
           release_to_pool
           set_status_in_progress
@@ -370,7 +382,7 @@ class DomServis::DispatchPolicy
           remove_attachment
           delete_job
         ],
-        'admin' => %w[
+        'admin'      => %w[
           create_job
           publish_to_pool
           take_job
@@ -397,9 +409,9 @@ class DomServis::DispatchPolicy
 
     def status_default(status_key, role_key)
       matrix = {
-        'master' => %w[in_progress done],
+        'master'     => %w[in_progress done],
         'dispatcher' => %w[pool taken in_progress done cancelled transferred_to_partner],
-        'admin' => %w[pool taken in_progress done cancelled transferred_to_partner],
+        'admin'      => %w[pool taken in_progress done cancelled transferred_to_partner],
       }
 
       matrix.fetch(role_key, []).include?(status_key)
@@ -442,8 +454,6 @@ class DomServis::DispatchPolicy
       case key
       when 'deadline_warning_minutes'
         120
-      else
-        nil
       end
     end
 

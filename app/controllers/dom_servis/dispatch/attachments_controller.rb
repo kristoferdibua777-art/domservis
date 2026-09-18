@@ -81,18 +81,18 @@ class DomServis::Dispatch::AttachmentsController < DomServis::Dispatch::BaseCont
 
   def attachment_payload(record, store)
     {
-      id:               store.id,
-      filename:         store.filename,
-      size:             store.size,
-      kind:             attachment_kind(store),
-      kind_label:       attachment_kind_label(attachment_kind(store)),
-      content_type:     attachment_content_type(store),
-      created_at:       store.created_at,
-      created_by_id:    store.created_by_id,
-      created_by_name:  attachment_actor_name(store.created_by),
-      can_delete:       attachment_deletable?(record, store),
-      download_url:     "#{Rails.configuration.api_path}/dom_servis/dispatch/jobs/#{record.id}/attachments/#{store.id}",
-      preview_url:      previewable_attachment?(store) ? "#{Rails.configuration.api_path}/dom_servis/dispatch/jobs/#{record.id}/attachments/#{store.id}?view=preview&disposition=inline" : nil,
+      id:              store.id,
+      filename:        store.filename,
+      size:            store.size,
+      kind:            attachment_kind(store),
+      kind_label:      attachment_kind_label(attachment_kind(store)),
+      content_type:    attachment_content_type(store),
+      created_at:      store.created_at,
+      created_by_id:   store.created_by_id,
+      created_by_name: attachment_actor_name(store.created_by),
+      can_delete:      attachment_deletable?(record, store),
+      download_url:    "#{Rails.configuration.api_path}/dom_servis/dispatch/jobs/#{record.id}/attachments/#{store.id}",
+      preview_url:     previewable_attachment?(store) ? "#{Rails.configuration.api_path}/dom_servis/dispatch/jobs/#{record.id}/attachments/#{store.id}?view=preview&disposition=inline" : nil,
     }
   end
 
@@ -124,7 +124,7 @@ class DomServis::Dispatch::AttachmentsController < DomServis::Dispatch::BaseCont
 
   def normalized_attachment_kind(raw_kind)
     kind = raw_kind.to_s.presence || 'other'
-    raise Exceptions::UnprocessableEntity, 'Invalid dispatch attachment kind.' if !DomServis::DispatchJob::ATTACHMENT_KINDS.include?(kind)
+    raise Exceptions::UnprocessableEntity, __('Invalid dispatch attachment kind.') if DomServis::DispatchJob::ATTACHMENT_KINDS.exclude?(kind)
 
     kind
   end
@@ -132,20 +132,20 @@ class DomServis::Dispatch::AttachmentsController < DomServis::Dispatch::BaseCont
   def ensure_attachment_upload_allowed!(record, kind)
     return true if dispatcher_access?
 
-    if current_user.permissions?('dom_servis.master') && record.assignee_id == current_user.id
-      return true if %w[completion_act diagnostic_photo other].include?(kind)
+    if current_user.permissions?('dom_servis.master') && record.assignee_id == current_user.id && %w[completion_act diagnostic_photo other].include?(kind)
+      return true
     end
 
     raise Exceptions::Forbidden, "Attachment kind '#{kind}' is not allowed for the current role."
   end
 
-  def ensure_attachment_delete_allowed!(record, store)
+  def ensure_attachment_delete_allowed!(_record, store)
     return true if dispatcher_access?
 
     raise Exceptions::Forbidden, "Attachment '#{store.id}' cannot be removed by the current role."
   end
 
-  def attachment_deletable?(record, _store)
+  def attachment_deletable?(_record, _store)
     return true if dispatcher_access?
 
     false

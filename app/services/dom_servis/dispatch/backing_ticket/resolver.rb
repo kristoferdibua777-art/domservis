@@ -4,10 +4,10 @@ class DomServis::Dispatch::BackingTicket::Resolver
   DEFAULT_CUSTOMER_EMAIL = 'dispatch-board@dom-servis.example'.freeze
 
   PRIORITY_MATCHERS = {
-    'low'      => [/low/i, /\b1\b/],
-    'medium'   => [/normal/i, /medium/i, /\b2\b/],
-    'high'     => [/high/i, /\b3\b/],
-    'critical' => [/critical/i, /urgent/i, /\b4\b/],
+    'low'      => [%r{low}i, %r{\b1\b}],
+    'medium'   => [%r{normal}i, %r{medium}i, %r{\b2\b}],
+    'high'     => [%r{high}i, %r{\b3\b}],
+    'critical' => [%r{critical}i, %r{urgent}i, %r{\b4\b}],
   }.freeze
 
   def initialize(dispatch_job:, operator: nil)
@@ -26,7 +26,7 @@ class DomServis::Dispatch::BackingTicket::Resolver
         *accessible_active_groups,
       ].compact.uniq
 
-      candidate_groups.find { |group| accessible_group?(group) } || raise('No accessible ticket group available for Dom-Servis backing tickets.')
+      candidate_groups.find { |group| accessible_group?(group) } || raise(__('No accessible ticket group available for Dom-Servis backing tickets.'))
     end
   end
 
@@ -50,7 +50,7 @@ class DomServis::Dispatch::BackingTicket::Resolver
   def article_user
     return operator if operator&.permissions?('ticket.agent')
 
-    @article_user ||= User.order(:id).detect { |user| user.permissions?('ticket.agent') } || raise('No ticket agent user available for Dom-Servis backing ticket articles.')
+    @article_user ||= User.reorder(:id).detect { |user| user.permissions?('ticket.agent') } || raise(__('No ticket agent user available for Dom-Servis backing ticket articles.'))
   end
 
   def ticket_state
@@ -75,7 +75,14 @@ class DomServis::Dispatch::BackingTicket::Resolver
 
       matchers.each do |matcher|
         match = priorities.find { |priority| priority.name.to_s.match?(matcher) }
-        return match if match
+        # `return` here would return from the whole #ticket_priority method,
+        # bypassing the `@ticket_priority ||= begin ... end` assignment
+        # around this block and silently defeating the memoization on every
+        # call that finds a match. `break` exits just this `.each` loop and
+        # lets execution fall through to (and be captured by) the fallback
+        # line below, exactly like the previous `return` did for a match,
+        # while actually getting memoized.
+        break match if match
       end
 
       Ticket::Priority.find_by(default_create: true) || priorities.first

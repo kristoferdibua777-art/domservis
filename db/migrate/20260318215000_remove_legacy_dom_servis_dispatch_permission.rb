@@ -1,7 +1,7 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class RemoveLegacyDomServisDispatchPermission < ActiveRecord::Migration[7.2]
-  LEGACY_PERMISSION = 'admin.dom_servis_dispatch'
+  LEGACY_PERMISSION = 'admin.dom_servis_dispatch'.freeze
 
   def up
     permission = Permission.find_by(name: LEGACY_PERMISSION)

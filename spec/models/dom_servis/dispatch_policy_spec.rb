@@ -3,7 +3,21 @@
 require 'rails_helper'
 
 RSpec.describe DomServis::DispatchPolicy, type: :model do
-  let(:admin) { create(:admin) }
+  # Zammad's built-in 'Admin' role does not by itself carry
+  # 'dom_servis.admin' - db/migrate/20260318214000_create_dom_servis_admin_permission.rb
+  # grants that permission only to the dedicated 'Dom-Servis Admin' overlay
+  # role, by design (DomServis admin access is opt-in, the same way
+  # `master_user` below explicitly opts into 'Dom-Servis Master'). Without
+  # assigning the overlay role here, DomServis::DispatchPolicy.role_key_for
+  # falls through to its 'master' default for this user, and the
+  # action_allowed?/status_allowed? expectations below - which assume the
+  # 'admin' role matrix - would not match the role actually resolved.
+  let(:admin) do
+    create(:admin).tap do |user|
+      admin_role = Role.find_by(name: 'Dom-Servis Admin')
+      user.roles << admin_role if admin_role && !user.roles.exists?(admin_role.id)
+    end
+  end
   let(:master_user) do
     create(:agent).tap do |user|
       master_role = Role.find_by(name: 'Dom-Servis Master')

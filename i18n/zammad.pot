@@ -638,6 +638,10 @@ msgstr ""
 msgid "AI"
 msgstr ""
 
+#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2465
+msgid "AI / разбор"
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/_ai/ai_agent.coffee:6
 #: app/assets/javascripts/app/controllers/_application_controller/_modal_generic_history.coffee:42
 #: app/assets/javascripts/app/controllers/_ui_element/_application_action.coffee:79
@@ -841,6 +845,18 @@ msgstr ""
 #: app/frontend/apps/desktop/components/CommonTicketLabel/CommonTicketLabel.vue:44
 #: app/frontend/apps/desktop/components/UserTaskbarTabs/UserTaskbarTabForbidden.vue:36
 msgid "Access denied"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_role_catalog.rb:25
+msgid "Access the Dom-Servis administrative workspace and dispatch policy controls."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_role_catalog.rb:33
+msgid "Access the Dom-Servis dispatcher workspace."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_role_catalog.rb:41
+msgid "Access the Dom-Servis master workspace."
 msgstr ""
 
 #: db/seeds/permissions.rb:351
@@ -1074,6 +1090,10 @@ msgstr ""
 msgid "Active Agents"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:101
+msgid "Actively being worked on."
+msgstr ""
+
 #: app/assets/javascripts/app/views/time_accounting/accounted_time.jst.eco:16
 msgid "Activity"
 msgstr ""
@@ -1228,12 +1248,17 @@ msgstr ""
 msgid "Add all values"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:92
+msgid "Add attachment"
+msgstr ""
+
 #: app/frontend/apps/desktop/components/Form/fields/FieldEditor/useEditorActions.ts:251
 #: app/frontend/apps/mobile/components/Form/fields/FieldEditor/useEditorActions.ts:248
 msgid "Add bullet list"
 msgstr ""
 
 #: app/frontend/shared/entities/ticket-article/action/plugins/facebook.ts:44
+#: app/models/dom_servis/dispatch_policy.rb:91
 msgid "Add comment"
 msgstr ""
 
@@ -1284,6 +1309,10 @@ msgstr ""
 
 #: app/frontend/shared/entities/ticket-article/action/plugins/note.ts:15
 msgid "Add note"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:91
+msgid "Add or update an operational comment on the job."
 msgstr ""
 
 #: app/assets/javascripts/app/lib/mixins/richtext_bubble_menu.coffee:151
@@ -1355,6 +1384,10 @@ msgstr ""
 
 #: db/seeds/settings.rb:507
 msgid "Address of the proxy server for http and https resources."
+msgstr ""
+
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:223
+msgid "Address to be confirmed"
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/_default_navbar.coffee:13
@@ -1461,7 +1494,7 @@ msgid "Agent idle timeout"
 msgstr ""
 
 #: app/models/role.rb:151
-#: app/models/user.rb:760
+#: app/models/user.rb:759
 msgid "Agent limit exceeded, please check your account settings."
 msgstr ""
 
@@ -2036,8 +2069,28 @@ msgstr ""
 msgid "Assign follow-ups"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:82
+msgid "Assign master"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:82
+msgid "Assign or reassign a job through the dedicated operational action."
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/_integration/ldap.coffee:600
 msgid "Assign signup roles"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_role_catalog.rb:6
+msgid "Assign together with Admin. Grants the Dom-Servis administrative workspace and dispatch policy controls."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_role_catalog.rb:10
+msgid "Assign together with Agent. Grants the Dom-Servis dispatcher workspace and dispatcher actions."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_role_catalog.rb:14
+msgid "Assign together with Agent. Grants the Dom-Servis master workspace and master actions."
 msgstr ""
 
 #: db/seeds/object_manager_attributes.rb:1838
@@ -2052,6 +2105,14 @@ msgstr ""
 #: app/assets/javascripts/app/views/ticket_zoom/sidebar_git_issue.jst.eco:24
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarExternalReferences/TicketSidebarExternalIssueTracker/IssueTrackerList/IssueTrackerItem.vue:77
 msgid "Assignee"
+msgstr ""
+
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:64
+msgid "Assignee must be a Dom-Servis master."
+msgstr ""
+
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:63
+msgid "Assignee must be an active user."
 msgstr ""
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarExternalReferences/TicketSidebarExternalIssueTracker/IssueTrackerList/IssueTrackerItem.vue:77
@@ -2072,7 +2133,7 @@ msgstr ""
 msgid "Assignment timeout in minutes if assigned agent is not working on it. Ticket will be shown as unassigend."
 msgstr ""
 
-#: app/models/user.rb:662
+#: app/models/user.rb:661
 msgid "At least one identifier (firstname, lastname, phone, mobile or email) for user is required."
 msgstr ""
 
@@ -2085,7 +2146,7 @@ msgid "At least one object must be selected."
 msgstr ""
 
 #: app/models/role.rb:128
-#: app/models/user.rb:739
+#: app/models/user.rb:738
 msgid "At least one user needs to have admin permissions."
 msgstr ""
 
@@ -2099,6 +2160,10 @@ msgstr ""
 
 #: app/frontend/shared/components/Form/fields/FieldFile/FieldFileInput.vue:184
 msgid "Attach files"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:92
+msgid "Attach files, photos or evidence to the job."
 msgstr ""
 
 #: app/assets/javascripts/app/views/generic/attachments.jst.eco:4
@@ -2471,6 +2536,10 @@ msgstr ""
 #: app/assets/javascripts/app/controllers/import_otrs.coffee:154
 #: app/assets/javascripts/app/controllers/import_zendesk.coffee:156
 msgid "Background process did not start or has not finished! Please contact your support."
+msgstr ""
+
+#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:1441
+msgid "Backing Ticket"
 msgstr ""
 
 #: app/models/report.rb:38
@@ -2890,6 +2959,26 @@ msgstr ""
 msgid "Cancel Upload"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:70
+msgid "Cancel an active or pending job."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:70
+msgid "Cancel job"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:138
+msgid "Cancelled at"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:103
+msgid "Cancelled before completion."
+msgstr ""
+
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:65
+msgid "Cannot assign a finished dispatch job."
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/knowledge_base/delete_action.coffee:8
 msgid "Cannot delete category"
 msgstr ""
@@ -3000,6 +3089,10 @@ msgstr ""
 msgid "Change personal account password."
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:81
+msgid "Change priority"
+msgstr ""
+
 #: app/frontend/apps/desktop/components/Form/fields/FieldEditor/useEditorActions.ts:186
 #: app/frontend/apps/mobile/components/Form/fields/FieldEditor/useEditorActions.ts:183
 msgid "Change text color"
@@ -3027,6 +3120,10 @@ msgstr ""
 
 #: app/frontend/shared/components/Form/fields/FieldEditor/features/color-picker/colors/colors-base.ts:7
 msgid "Change text color to red (%s)"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:81
+msgid "Change the visual and operational priority of a job."
 msgstr ""
 
 #: app/assets/javascripts/app/lib/mixins/destination_group_email_address.coffee:36
@@ -3272,6 +3369,14 @@ msgstr ""
 msgid "City"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:66
+msgid "Claim a shared pool job."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:100
+msgid "Claimed by a worker but not yet started."
+msgstr ""
+
 #: db/seeds/schedulers.rb:169
 msgid "Clean up 'Cti::Log'."
 msgstr ""
@@ -3393,10 +3498,12 @@ msgid "Client Secret"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:8
+#: app/models/dom_servis/dispatch_policy.rb:127
 msgid "Client name"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:9
+#: app/models/dom_servis/dispatch_policy.rb:128
 msgid "Client phone"
 msgstr ""
 
@@ -3475,6 +3582,10 @@ msgstr ""
 msgid "Close tab on ticket close"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:71
+msgid "Close the job on our board and hand it off to a partner service."
+msgstr ""
+
 #: app/frontend/shared/components/Form/fields/FieldDate/useDateTime.ts:51
 msgid "Close the time picker"
 msgstr ""
@@ -3497,6 +3608,10 @@ msgstr ""
 #: app/assets/javascripts/app/controllers/widget/ticket_stats.coffee:130
 #: app/assets/javascripts/app/controllers/widget/user.coffee:80
 msgid "Closed Tickets"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:104
+msgid "Closed on the Dom-Servis board after handoff to a partner service."
 msgstr ""
 
 #: app/frontend/apps/desktop/pages/organization/components/OrganizationRelatedTickets.vue:29
@@ -3567,6 +3682,14 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/data_privacy/index.jst.eco:29
 msgid "Completed Tasks"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:102
+msgid "Completed and closed for the operational workflow."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:137
+msgid "Completed at"
 msgstr ""
 
 #: public/assets/chat/views/chat.eco:24
@@ -3758,7 +3881,7 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/widget/two_factor_login/help_text.jst.eco:8
 #: app/frontend/apps/desktop/pages/authentication/views/Login.vue:303
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:170
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:171
 msgid "Contact the administrator if you have any problems logging in."
 msgstr ""
 
@@ -3767,6 +3890,10 @@ msgstr ""
 #: app/assets/javascripts/app/views/integration/placetel.jst.eco:34
 #: lib/excel_sheet/ai/analytics/with_usage.rb:36
 msgid "Content"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:89
+msgid "Content and evidence"
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/idoit_object_selector.coffee:42
@@ -3829,7 +3956,7 @@ msgid "Continue session"
 msgstr ""
 
 #: app/frontend/apps/mobile/pages/account/views/AccountOverview.vue:150
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:173
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:174
 msgid "Continue to desktop"
 msgstr ""
 
@@ -3854,6 +3981,10 @@ msgstr ""
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarSummary/TicketSidebarSummary.vue:83
 msgid "Conversation summary"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:77
+msgid "Coordination actions"
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/_application_controller/_base.coffee:125
@@ -4121,6 +4252,10 @@ msgstr ""
 msgid "Create and set up Knowledge Base."
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:64
+msgid "Create job"
+msgstr ""
+
 #: app/assets/javascripts/app/views/signup.jst.eco:8
 #: app/frontend/apps/desktop/pages/authentication/views/Signup.vue:146
 msgid "Create my account"
@@ -4284,6 +4419,14 @@ msgstr ""
 msgid "Created by"
 msgstr ""
 
+#: app/services/dom_servis/dispatch/backing_ticket/mapper.rb:56
+msgid "Created from Dom-Servis dispatch board."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:44
+msgid "Creates, edits, reschedules and coordinates jobs across the board."
+msgstr ""
+
 #: app/frontend/apps/desktop/pages/ticket/views/TicketCreate.vue:24
 #: app/frontend/apps/mobile/pages/ticket/views/TicketCreate.vue:449
 msgid "Creating new tickets via web is disabled."
@@ -4433,6 +4576,10 @@ msgstr ""
 msgid "Customer Sentiment"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:139
+msgid "Customer account"
+msgstr ""
+
 #: app/models/system_report/plugin/entities/user.rb:4
 msgid "Customer and agent ratio (role based user counts)"
 msgstr ""
@@ -4560,6 +4707,10 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:55
 msgid "Deadline warning"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:110
+msgid "Deadline warning minutes"
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/_ui_element/basedate.coffee:161
@@ -4986,7 +5137,6 @@ msgstr ""
 msgid "Defines if tickets should be closed if service is recovered."
 msgstr ""
 
-#: db/migrate/20260513121000_add_dom_servis_form_intake_settings.rb:9
 #: db/seeds/settings.rb:3102
 msgid "Defines if web form tickets should be promoted to Dom-Servis dispatch jobs."
 msgstr ""
@@ -5360,7 +5510,6 @@ msgstr ""
 msgid "Defines which parameters are allowed to be submitted via the form API."
 msgstr ""
 
-#: db/migrate/20260513121000_add_dom_servis_form_intake_settings.rb:35
 #: db/seeds/settings.rb:3128
 msgid "Defines which partner organization owns tickets promoted from the web form."
 msgstr ""
@@ -5448,6 +5597,10 @@ msgstr ""
 msgid "Delete User"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:84
+msgid "Delete a dispatch job from the board."
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/knowledge_base/delete_action.coffee:9
 msgid "Delete all child categories and answers, then try again."
 msgstr ""
@@ -5474,6 +5627,10 @@ msgstr ""
 
 #: app/assets/javascripts/app/controllers/_ui_element/object_perform_action.coffee:111
 msgid "Delete immediately"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:84
+msgid "Delete job"
 msgstr ""
 
 #: app/frontend/apps/desktop/components/CommonConfirmationDialog/CommonConfirmationDialog.vue:41
@@ -5850,6 +6007,10 @@ msgstr ""
 msgid "Dispatch admin"
 msgstr ""
 
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:392
+msgid "Dispatch assignee can only be changed through the assign action."
+msgstr ""
+
 #: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:79
 msgid "Dispatch job tags reuse the global Zammad tag namespace. Create new tag names only in Manage > Tags, then dispatchers can assign them on jobs and the same tags will be mirrored into backing tickets."
 msgstr ""
@@ -5951,9 +6112,93 @@ msgstr ""
 msgid "Document file"
 msgstr ""
 
-#: db/migrate/20260513121000_add_dom_servis_form_intake_settings.rb:32
+#: app/models/dom_servis/dispatch_role_catalog.rb:5
+msgid "Dom-Servis Admin"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_role_catalog.rb:9
+msgid "Dom-Servis Dispatcher"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_role_catalog.rb:13
+msgid "Dom-Servis Master"
+msgstr ""
+
+#: app/services/dom_servis/notifications/web_push_sender.rb:80
+msgid "Dom-Servis Web Push VAPID keys are not configured. Run `rake dom_servis:webpush:generate_keys`."
+msgstr ""
+
+#: app/controllers/dispatch_board_controller.rb:39
+msgid "Dom-Servis dispatch board for masters and dispatchers."
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/mapper.rb:60
+msgid "Dom-Servis dispatch job created"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/mapper.rb:89
+msgid "Dom-Servis dispatch job updated"
+msgstr ""
+
+#: app/services/dom_servis/intake/dispatch_job_creator.rb:33
+msgid "Dom-Servis intake payload is missing dispatch attributes."
+msgstr ""
+
+#: app/services/dom_servis/intake/dispatch_job_creator.rb:38
+msgid "Dom-Servis intake payload requires a channel key."
+msgstr ""
+
+#: app/services/dom_servis/intake/dispatch_job_creator.rb:39
+msgid "Dom-Servis intake payload requires a partner organization."
+msgstr ""
+
+#: app/services/dom_servis/intake/dispatch_job_creator.rb:37
+msgid "Dom-Servis intake payload requires a request source."
+msgstr ""
+
+#: app/services/dom_servis/intake/dispatch_job_creator.rb:36
+msgid "Dom-Servis intake payload requires a source reference."
+msgstr ""
+
+#: app/services/dom_servis/intake/dispatch_job_creator.rb:34
+msgid "Dom-Servis intake payload requires a source."
+msgstr ""
+
+#: app/services/dom_servis/intake/dispatch_job_creator.rb:44
+msgid "Dom-Servis intake payload requires address."
+msgstr ""
+
+#: app/services/dom_servis/intake/dispatch_job_creator.rb:43
+msgid "Dom-Servis intake payload requires service type."
+msgstr ""
+
+#: app/services/dom_servis/intake/dispatch_job_creator.rb:116
+msgid "Dom-Servis intake requires a valid request source."
+msgstr ""
+
+#: app/services/dom_servis/intake/dispatch_job_creator.rb:120
+msgid "Dom-Servis intake requires an available ticket agent user."
+msgstr ""
+
 #: db/seeds/settings.rb:3125
 msgid "Dom-Servis partner organization"
+msgstr ""
+
+#: app/models/dom_servis/request_source.rb:151
+msgid "Dom-Servis request source is not allowed from this domain."
+msgstr ""
+
+#: app/models/dom_servis/request_source.rb:149
+msgid "Dom-Servis request source is not configured for Zammad forms."
+msgstr ""
+
+#: app/models/dom_servis/request_source.rb:148
+#: app/services/dom_servis/intake/dispatch_job_creator.rb:40
+msgid "Dom-Servis request source is paused."
+msgstr ""
+
+#: app/models/dom_servis/request_source.rb:150
+msgid "Dom-Servis request source requires a partner organization."
 msgstr ""
 
 #: db/seeds/object_manager_attributes.rb:1833
@@ -6163,6 +6408,10 @@ msgstr ""
 msgid "Edit Organization"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:83
+msgid "Edit all fields"
+msgstr ""
+
 #: app/frontend/apps/desktop/entities/two-factor-configuration/plugins/authenticator-app.ts:20
 msgid "Edit authenticator app"
 msgstr ""
@@ -6367,7 +6616,7 @@ msgstr ""
 msgid "Email address"
 msgstr ""
 
-#: app/models/user.rb:672
+#: app/models/user.rb:671
 msgid "Email address '%{email}' is already used for another user."
 msgstr ""
 
@@ -6454,7 +6703,6 @@ msgstr ""
 msgid "Enable Chat"
 msgstr ""
 
-#: db/migrate/20260513121000_add_dom_servis_form_intake_settings.rb:6
 #: db/seeds/settings.rb:3099
 msgid "Enable Dom-Servis intake bridge"
 msgstr ""
@@ -7091,6 +7339,10 @@ msgstr ""
 msgid "Expires at"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:65
+msgid "Expose a newly created job to the shared master pool."
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/search.coffee:57
 msgid "Extended Search"
 msgstr ""
@@ -7666,6 +7918,10 @@ msgstr ""
 msgid "Gateway"
 msgstr ""
 
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:336
+msgid "General Service"
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/ticket_zoom.coffee:136
 #: app/assets/javascripts/app/lib/app_post/ajax.coffee:91
 msgid "General communication error, maybe internet is not available!"
@@ -7845,7 +8101,7 @@ msgstr ""
 #: app/frontend/apps/desktop/components/TwoFactor/TwoFactorConfigurationWizard.vue:62
 #: app/frontend/apps/desktop/pages/guided-setup/components/GuidedSetupActionFooter.vue:85
 #: app/frontend/apps/mobile/components/CommonBackButton/CommonBackButton.vue:41
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:98
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:99
 msgid "Go back"
 msgstr ""
 
@@ -8096,7 +8352,7 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/widget/two_factor_login/help_text.jst.eco:3
 #: app/frontend/apps/desktop/pages/authentication/views/Login.vue:269
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:141
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:142
 msgid "Having problems?"
 msgstr ""
 
@@ -8337,6 +8593,10 @@ msgstr ""
 msgid "How many escalated tickets do you have open? (Mr. Bubbles gets grumpy if you have too many…)"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:111
+msgid "How many minutes before the visit deadline a pool job should turn red on the board."
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/_dashboard/stats/ticket_channel_distribution.coffee:27
 msgid "How many of your tickets are coming from email, phone, or Facebook? (Shows percentages for both inbound and outbound tickets.)"
 msgstr ""
@@ -8457,7 +8717,7 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/login.jst.eco:105
 #: app/frontend/apps/desktop/pages/authentication/views/Login.vue:290
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:158
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:159
 msgid "If you have problems with the third-party login you can request a one-time password login as an admin."
 msgstr ""
 
@@ -8633,6 +8893,11 @@ msgstr ""
 
 #: app/assets/javascripts/app/controllers/_integration/ldap.coffee:7
 msgid "In order to be able to influence the desired behavior in this regard, you can influence the order of the LDAP sources via drag & drop."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:101
+#: app/services/dom_servis/dispatch/backing_ticket/mapper.rb:218
+msgid "In progress"
 msgstr ""
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingOutOfOffice.vue:73
@@ -8967,6 +9232,10 @@ msgstr ""
 msgid "Invalid GitLab issue link format"
 msgstr ""
 
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:59
+msgid "Invalid assignee."
+msgstr ""
+
 #: app/services/service/system/run_auto_wizard.rb:11
 msgid "Invalid auto wizard file."
 msgstr ""
@@ -8979,7 +9248,23 @@ msgstr ""
 msgid "Invalid client_id received!"
 msgstr ""
 
-#: app/models/user.rb:611
+#: app/controllers/dom_servis/dispatch/attachments_controller.rb:127
+msgid "Invalid dispatch attachment kind."
+msgstr ""
+
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:202
+msgid "Invalid dispatch job priority."
+msgstr ""
+
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:151
+msgid "Invalid dispatch job status."
+msgstr ""
+
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:178
+msgid "Invalid dispatch visit day."
+msgstr ""
+
+#: app/models/user.rb:610
 msgid "Invalid email '%{email}'"
 msgstr ""
 
@@ -9182,9 +9467,21 @@ msgstr ""
 msgid "January"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:119
+msgid "Job code"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:147
+msgid "Job content"
+msgstr ""
+
 #: app/assets/javascripts/app/views/integration/exchange_last_import.jst.eco:9
 #: app/assets/javascripts/app/views/integration/ldap_last_import.jst.eco:9
 msgid "Job is waiting to get started…"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:62
+msgid "Job lifecycle actions"
 msgstr ""
 
 #: app/assets/javascripts/app/views/channel/chat.jst.eco:59
@@ -9480,6 +9777,10 @@ msgstr ""
 msgid "Leave program"
 msgstr ""
 
+#: app/models/dom_servis/request_source.rb:193
+msgid "Legacy Zammad Form"
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/_ai/_feature_base.coffee:53
 #: app/assets/javascripts/app/controllers/_ai/ai_agent.coffee:66
 #: app/assets/javascripts/app/controllers/_ai/text_tool.coffee:25
@@ -9648,6 +9949,10 @@ msgstr ""
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSetting/plugins/linkedAccounts.ts:8
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingLinkedAccounts.vue:47
 msgid "Linked accounts"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:134
+msgid "Linked ticket"
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/_profile/linked_accounts.coffee:76
@@ -10197,6 +10502,10 @@ msgstr ""
 msgid "March"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:69
+msgid "Mark a job as completed."
+msgstr ""
+
 #: app/assets/javascripts/app/views/widget/online_notification.jst.eco:4
 #: app/frontend/apps/mobile/pages/online-notification/views/NotificationsList.vue:99
 msgid "Mark all as read"
@@ -10624,7 +10933,7 @@ msgstr ""
 msgid "More information can be found here."
 msgstr ""
 
-#: app/models/user.rb:691
+#: app/models/user.rb:690
 msgid "More than 250 secondary organizations are not allowed."
 msgstr ""
 
@@ -10637,12 +10946,32 @@ msgstr ""
 msgid "Most recent activity"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:80
+msgid "Move a job across weeks."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:68
+msgid "Move a job into active execution."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:79
+msgid "Move a job to another weekday inside the dispatch board."
+msgstr ""
+
 #: app/assets/javascripts/app/views/settings/storage_provider.jst.eco:17
 msgid "Move all from \"%s\" to \"%s\":"
 msgstr ""
 
 #: app/frontend/shared/form/i18n/locales.ts:53
 msgid "Move down"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:79
+msgid "Move job day"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:80
+msgid "Move job week"
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/_plugin/keyboard_shortcuts.coffee:341
@@ -11214,6 +11543,14 @@ msgstr ""
 msgid "No Thanks!"
 msgstr ""
 
+#: app/services/dom_servis/dispatch/backing_ticket/resolver.rb:29
+msgid "No accessible ticket group available for Dom-Servis backing tickets."
+msgstr ""
+
+#: app/controllers/dom_servis/push_subscriptions_controller.rb:58
+msgid "No active push subscriptions found for your user."
+msgstr ""
+
 #: app/frontend/shared/entities/ticket-article/action/plugins/whatsapp.ts:112
 msgid "No additional text can be sent with this media type. Please remove the text."
 msgstr ""
@@ -11311,6 +11648,10 @@ msgstr ""
 
 #: app/services/service/system/import/check_status.rb:44
 msgid "No import in progress."
+msgstr ""
+
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:216
+msgid "No input submitted."
 msgstr ""
 
 #: app/frontend/apps/desktop/components/CommonPopoverMenu/CommonPopoverMenu.vue:159
@@ -11423,6 +11764,10 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/widget/template.jst.eco:14
 msgid "No template created yet."
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/resolver.rb:53
+msgid "No ticket agent user available for Dom-Servis backing ticket articles."
 msgstr ""
 
 #: app/frontend/apps/desktop/pages/ticket-overviews/components/TicketList.vue:436
@@ -11928,8 +12273,16 @@ msgstr ""
 msgid "Open and closed tickets ratio (ticket counts based on state)"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:64
+msgid "Open and submit a new dispatch job into the board."
+msgstr ""
+
 #: app/frontend/apps/desktop/pages/ticket/components/TicketDetailView/TicketDetailTopBar/TopBarHeader/TicketInformation/TicketInformationBadgeList/ChecklistBadgeList.vue:31
 msgid "Open checklist"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:83
+msgid "Open full payload editing for job data."
 msgstr ""
 
 #: app/assets/javascripts/app/models/public_link.coffee:10
@@ -12350,8 +12703,16 @@ msgstr ""
 msgid "Owner"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:48
+msgid "Owner / Admin"
+msgstr ""
+
 #: app/assets/javascripts/app/views/data_privacy/preview.jst.eco:11
 msgid "Owner tickets of the user will not get deleted. The owner will be mapped to the system user (ID 1)."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:55
+msgid "Owns the dispatch policy, dashboards and administrative control of the module."
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/_integration/pgp.coffee:3
@@ -13169,6 +13530,10 @@ msgstr ""
 msgid "Publish Article"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:65
+msgid "Publish to pool"
+msgstr ""
+
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:21
 msgid "Published"
 msgstr ""
@@ -13178,11 +13543,28 @@ msgid "Published %s"
 msgstr ""
 
 #: app/assets/javascripts/app/views/popover/kb_generic.jst.eco:15
+#: app/models/dom_servis/dispatch_policy.rb:135
 msgid "Published at"
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/ticket_zoom/highlighter.coffee:28
 msgid "Purple"
+msgstr ""
+
+#: app/controllers/dom_servis/push_subscriptions_controller.rb:89
+msgid "Push subscription auth key is required."
+msgstr ""
+
+#: app/controllers/dom_servis/push_subscriptions_controller.rb:87
+msgid "Push subscription endpoint is required."
+msgstr ""
+
+#: app/controllers/dom_servis/push_subscriptions_controller.rb:88
+msgid "Push subscription p256dh key is required."
+msgstr ""
+
+#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2506
+msgid "Push-уведомления не настроены администратором (нет VAPID ключа)."
 msgstr ""
 
 #: app/assets/javascripts/app/views/maintenance.jst.eco:27
@@ -13363,7 +13745,7 @@ msgid "References - Search for follow-up also in In-Reply-To or References heade
 msgstr ""
 
 #: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:8
-#: app/frontend/apps/mobile/pages/dom-servis/views/DomServisDispatch.vue:437
+#: app/frontend/apps/mobile/pages/dom-servis/views/DomServisDispatch.vue:446
 msgid "Refresh"
 msgstr ""
 
@@ -13415,6 +13797,10 @@ msgstr ""
 
 #: app/frontend/apps/desktop/pages/guided-setup/views/GuidedSetupAutomated/GuidedSetupAutomatedRun.vue:70
 msgid "Relax, your system is being set up…"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:67
+msgid "Release to pool"
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/_plugin/maintenance.coffee:115
@@ -13496,6 +13882,10 @@ msgstr ""
 msgid "Remove all values"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:93
+msgid "Remove attachment"
+msgstr ""
+
 #: app/frontend/apps/desktop/entities/two-factor-configuration/plugins/authenticator-app.ts:22
 msgid "Remove authenticator app"
 msgstr ""
@@ -13503,6 +13893,10 @@ msgstr ""
 #: app/assets/javascripts/app/controllers/ticket_zoom/sidebar_checklist.coffee:38
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarChecklist/TicketSidebarChecklistContent.vue:379
 msgid "Remove checklist"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:93
+msgid "Remove files from the job payload."
 msgstr ""
 
 #: app/assets/javascripts/app/lib/mixins/richtext_bubble_menu.coffee:121
@@ -13575,6 +13969,14 @@ msgstr ""
 
 #: app/assets/javascripts/app/controllers/knowledge_base/feed_dialog.coffee:9
 msgid "Renew Access Token"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:72
+msgid "Reopen a completed or cancelled job."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:72
+msgid "Reopen job"
 msgstr ""
 
 #: app/models/report.rb:52
@@ -13673,7 +14075,7 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/login.jst.eco:106
 #: app/frontend/apps/desktop/pages/authentication/views/Login.vue:295
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:163
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:164
 msgid "Request the password login here."
 msgstr ""
 
@@ -13846,6 +14248,10 @@ msgstr ""
 
 #: lib/whatsapp/retry/media.rb:67
 msgid "Retrying to download the sent media via WhatsApp failed."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:67
+msgid "Return an owned job back into the pool."
 msgstr ""
 
 #: db/seeds/ai/text_tools.rb:33
@@ -14429,11 +14835,11 @@ msgstr ""
 msgid "Secondary organizations"
 msgstr ""
 
-#: app/models/user.rb:679
+#: app/models/user.rb:678
 msgid "Secondary organizations are only allowed when the primary organization is given."
 msgstr ""
 
-#: app/models/user.rb:685
+#: app/models/user.rb:684
 msgid "Secondary organizations cannot include the primary organization."
 msgstr ""
 
@@ -14815,6 +15221,7 @@ msgid "Service overloaded - please try again later"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:6
+#: app/models/dom_servis/dispatch_policy.rb:129
 msgid "Service type"
 msgstr ""
 
@@ -14894,8 +15301,16 @@ msgstr ""
 msgid "Set default for new tickets"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:69
+msgid "Set done"
+msgstr ""
+
 #: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:56
 msgid "Set how many minutes before the visit deadline a pool job should turn red on the board."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:68
+msgid "Set in progress"
 msgstr ""
 
 #: app/assets/javascripts/app/views/integration/cti.jst.eco:65
@@ -15045,6 +15460,10 @@ msgstr ""
 #: app/assets/javascripts/app/models/organization.coffee:7
 #: db/seeds/object_manager_attributes.rb:1786
 msgid "Shared organization"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:99
+msgid "Shared pool state before a master claims the job."
 msgstr ""
 
 #: app/assets/javascripts/app/views/ticket_zoom/attribute_bar.jst.eco:28
@@ -15897,6 +16316,10 @@ msgstr ""
 msgid "System information"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_job.rb:274
+msgid "System organization for direct Dom-Servis retail jobs."
+msgstr ""
+
 #: app/models/knowledge_base.rb:19
 msgid "System supports only one locale for knowledge base. Upgrade your plan to use more locales."
 msgstr ""
@@ -15959,8 +16382,20 @@ msgstr ""
 msgid "Take Reply-To header as sender/from of email."
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:66
+msgid "Take job"
+msgstr ""
+
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:22
 msgid "Taken"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:136
+msgid "Taken at"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:33
+msgid "Takes jobs from the shared pool and moves owned jobs through the master workflow."
 msgstr ""
 
 #: app/assets/javascripts/app/views/knowledge_base/public_menu_form_item.jst.eco:16
@@ -17107,7 +17542,7 @@ msgid "The server settings could not be automatically detected. Please configure
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/login.coffee:30
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:43
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:44
 msgid "The session is no longer valid. Please log in again."
 msgstr ""
 
@@ -18668,8 +19103,17 @@ msgstr ""
 msgid "Transfer conversation to another chat:"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:71
+msgid "Transfer to partner"
+msgstr ""
+
 #: app/frontend/apps/desktop/composables/dragAndDrop/useAccessibleDragAndDrop.ts:59
 msgid "Transferred %s from user taskbar list %s at position %s."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:104
+#: app/services/dom_servis/dispatch/backing_ticket/mapper.rb:224
+msgid "Transferred to partner"
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/_ui_element/object_manager_attribute.coffee:219
@@ -18752,7 +19196,7 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/widget/two_factor_login/help_text.jst.eco:4
 #: app/frontend/apps/desktop/pages/authentication/views/Login.vue:271
-#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:146
+#: app/frontend/apps/mobile/pages/authentication/views/Login.vue:147
 #: app/frontend/shared/composables/authentication/useLoginTwoFactor.ts:96
 msgid "Try another method"
 msgstr ""
@@ -18988,12 +19432,20 @@ msgstr ""
 msgid "Unknown"
 msgstr ""
 
+#: app/models/dom_servis/request_source.rb:207
+msgid "Unknown Dom-Servis request source."
+msgstr ""
+
 #: lib/password_policy/backend.rb:15
 msgid "Unknown error"
 msgstr ""
 
 #: app/models/failed_email.rb:7
 msgid "Unknown error: Could not create a ticket from this email."
+msgstr ""
+
+#: app/controllers/dom_servis/push_subscriptions_controller.rb:45
+msgid "Unknown push subscription."
 msgstr ""
 
 #: app/assets/javascripts/app/views/widget/two_factor_configuration/authenticator_app.jst.eco:5
@@ -19025,7 +19477,7 @@ msgstr ""
 msgid "Unread notification"
 msgstr ""
 
-#: app/frontend/apps/mobile/components/layout/LayoutBottomNavigation.vue:55
+#: app/frontend/apps/mobile/components/layout/LayoutBottomNavigation.vue:56
 msgid "Unread notifications"
 msgstr ""
 
@@ -19785,10 +20237,16 @@ msgid "Visible to readers & editors"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:11
+#: app/models/dom_servis/dispatch_policy.rb:124
 msgid "Visit date"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:123
+msgid "Visit day"
+msgstr ""
+
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:12
+#: app/models/dom_servis/dispatch_policy.rb:125
 msgid "Visit time"
 msgstr ""
 
@@ -19868,6 +20326,10 @@ msgstr ""
 #: app/assets/javascripts/app/views/channel/sms_account_overview.jst.eco:42
 #: db/seeds/permissions.rb:89
 msgid "Webhook"
+msgstr ""
+
+#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2464
+msgid "Webhook / API"
 msgstr ""
 
 #: app/models/channel/driver/sms/message_bird.rb:90
@@ -20082,6 +20544,7 @@ msgid "Woo hoo! Your password has been changed!"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:20
+#: app/models/dom_servis/dispatch_policy.rb:132
 msgid "Work tags"
 msgstr ""
 
@@ -21453,7 +21916,7 @@ msgstr ""
 msgid "is the wrong length (should be 1 character)"
 msgstr ""
 
-#: app/models/user.rb:876
+#: app/models/user.rb:875
 msgid "is too long"
 msgstr ""
 

@@ -23,7 +23,19 @@ class DomServis::Dispatch::BackingTicket::Create
         sync_ticket_tags!(ticket, resolver)
 
         create_article!(resolver, mapper, ticket, mapper.creation_article)
+        # rubocop:disable Rails/SkipsModelValidations -- deliberate: this is
+        # an internal bookkeeping link (dispatch_job -> the ticket just
+        # created above), not a user-facing edit. Using update! here would
+        # re-run DispatchJob's before_validation chain (apply_defaults,
+        # assign_job_code, normalize_work_tags, normalize_intake_metadata,
+        # sync_lifecycle_timestamps) even though none of those fields are
+        # changing, risking an unintended side effect from one of those
+        # callbacks on an already-persisted, already-valid record. No
+        # after_save/after_update callback exists on DispatchJob, so
+        # skipping validations here does not skip any notification or
+        # other side effect.
         dispatch_job.update_column(:ticket_id, ticket.id)
+        # rubocop:enable Rails/SkipsModelValidations
 
         ticket
       end
@@ -32,7 +44,7 @@ class DomServis::Dispatch::BackingTicket::Create
 
   private
 
-  def create_article!(resolver, mapper, ticket, article)
+  def create_article!(resolver, _mapper, ticket, article)
     return if article.blank?
 
     Service::Ticket::Article::Create

@@ -184,6 +184,15 @@ Rails/ApplicationRecord:
   Exclude:
     - 'app/models/application_model.rb'
     - 'app/models/active_job_lock.rb'
+    # Dom-Servis: these migrations deliberately define local model shims
+    # subclassing ActiveRecord::Base directly (not ApplicationRecord), per
+    # the standard Rails migration convention of not depending on
+    # application model classes that may be renamed, removed or changed
+    # after the migration is written. Subclassing ApplicationRecord here
+    # would couple old migrations to current app code and could break
+    # replaying them against a fresh database in the future.
+    - 'db/migrate/20260318160000_add_board_fields_to_dom_servis_dispatch_jobs.rb'
+    - 'db/migrate/20260321193000_add_organization_to_dom_servis_dispatch_jobs.rb'
 
 Rails/BulkChangeTable:
   Description: 'Check whether alter queries are combinable.'
