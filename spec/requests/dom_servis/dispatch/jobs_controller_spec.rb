@@ -3,9 +3,7 @@
 require 'rails_helper'
 require 'models/contexts/factory_context'
 
-RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, type: :request, current_user_id: 1 do
-  include_context 'factory'
-
+RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, current_user_id: 1, type: :request do
   # The 'factory' shared context (spec/models/contexts/factory_context.rb)
   # adds a bare `it 'saves successfully' do expect(subject).to be_persisted
   # end` and relies on the describing spec to define what `subject` is. This
@@ -17,6 +15,8 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
   # this shared context (e.g. spec/models/knowledge_base/locale_spec.rb's
   # `subject { create(:knowledge_base_locale) }`).
   subject { job }
+
+  include_context 'factory'
 
   before do
     Organization.find_or_create_by!(name: 'Частный заказ')
