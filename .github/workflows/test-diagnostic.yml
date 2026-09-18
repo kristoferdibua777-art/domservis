@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/rubocop-baseline
+  pull_request:
   workflow_dispatch:
 
 permissions:
