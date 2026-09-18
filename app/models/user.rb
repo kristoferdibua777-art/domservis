@@ -1141,6 +1141,12 @@ raise 'At least one user need to have admin permissions'
 
   def dom_servis_ticket_group_create_access?
     return false if !active?
+    return true if groups.any?(&:active?)
+
+    pending_group_ids = Array.wrap(group_access_buffer).filter_map do |entry|
+      entry[:group_id] if entry[:access].to_s.in?(%w[create full])
+    end
+    return true if Group.exists?(id: pending_group_ids, active: true)
 
     RoleGroup.eager_load(:group).exists?(
       role_id: role_ids,
