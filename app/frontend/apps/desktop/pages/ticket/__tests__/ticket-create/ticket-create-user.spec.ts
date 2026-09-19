@@ -3,6 +3,7 @@
 import { within } from '@testing-library/vue'
 
 import FormUpdaterUser from '#tests/graphql/factories/types/FormUpdaterUser.ts'
+import { cleanup } from '#tests/support/components/renderComponent.ts'
 import { diagnosticTicketCreateUserLog } from '#tests/support/diagnostic-ticket-create-user.ts'
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
 import { waitUntil } from '#tests/support/vitest-wrapper.ts'
@@ -28,6 +29,10 @@ const waitForFormUpdaterQueryCallCount = (expectedCount: number) =>
 
 describe('ticket create view - user create action', () => {
   beforeEach(async () => {
+    // Full-suite workers keep rendered wrappers because VTL auto-cleanup is disabled.
+    // Remove wrappers left by earlier files before exercising this stateful flyout flow.
+    cleanup()
+
     // The global test flyout host is intentionally mounted once per worker.
     // Ensure stale overlays from earlier files cannot leak into this suite.
     await destroyComponent('flyout')
