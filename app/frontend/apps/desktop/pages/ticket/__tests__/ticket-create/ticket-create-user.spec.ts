@@ -7,6 +7,7 @@ import { diagnosticTicketCreateUserLog } from '#tests/support/diagnostic-ticket-
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
 import { waitUntil } from '#tests/support/vitest-wrapper.ts'
 
+import { destroyComponent } from '#shared/components/DynamicInitializer/manage.ts'
 import {
   mockFormUpdaterQuery,
   waitForFormUpdaterQueryCalls,
@@ -14,6 +15,8 @@ import {
 import { mockObjectManagerFrontendAttributesQuery } from '#shared/entities/object-attributes/graphql/queries/objectManagerFrontendAttributes.mocks.ts'
 import { waitForUserAddMutationCalls } from '#shared/entities/user/graphql/mutations/add.mocks.ts'
 import { convertToGraphQLId } from '#shared/graphql/utils.ts'
+
+import { getOpenedFlyouts } from '#desktop/components/CommonFlyout/useFlyout.ts'
 
 import { handleMockFormUpdaterQuery, visitCreateView } from '../support/ticket-create-helpers.ts'
 
@@ -24,7 +27,12 @@ const waitForFormUpdaterQueryCallCount = (expectedCount: number) =>
   })
 
 describe('ticket create view - user create action', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // The global test flyout host is intentionally mounted once per worker.
+    // Ensure stale overlays from earlier files cannot leak into this suite.
+    await destroyComponent('flyout')
+    getOpenedFlyouts().clear()
+
     // Main form
     handleMockFormUpdaterQuery()
   })
