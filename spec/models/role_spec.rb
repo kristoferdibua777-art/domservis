@@ -20,8 +20,15 @@ RSpec.describe Role do
 
   describe 'Default state' do
     describe 'of whole table:' do
-      it 'has three records ("Admin", "Agent", and "Customer")' do
-        expect(described_class.pluck(:name)).to match_array(%w[Admin Agent Customer])
+      it 'has the core and Dom-Servis overlay roles' do
+        expect(described_class.pluck(:name)).to match_array([
+                                                          'Admin',
+                                                          'Agent',
+                                                          'Customer',
+                                                          'Dom-Servis Admin',
+                                                          'Dom-Servis Dispatcher',
+                                                          'Dom-Servis Master',
+                                                        ])
       end
     end
 
@@ -246,7 +253,7 @@ RSpec.describe Role do
 
     context 'when given the name of a child permission' do
       let(:permission) { 'user_preferences.language' }
-      let(:result) { described_class.all }
+      let(:result) { described_class.where(name: %w[Admin Agent Customer]) }
 
       it 'returns an array of roles with either that permission or an ancestor' do
         expect(described_class.with_permissions(permission)).to match_array(result)
