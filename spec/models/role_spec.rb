@@ -21,14 +21,14 @@ RSpec.describe Role do
   describe 'Default state' do
     describe 'of whole table:' do
       it 'has the core and Dom-Servis overlay roles' do
-        expect(described_class.pluck(:name)).to match_array([
-                                                          'Admin',
-                                                          'Agent',
-                                                          'Customer',
-                                                          'Dom-Servis Admin',
-                                                          'Dom-Servis Dispatcher',
-                                                          'Dom-Servis Master',
-                                                        ])
+        expect(described_class.pluck(:name)).to contain_exactly(
+          'Admin',
+          'Agent',
+          'Customer',
+          'Dom-Servis Admin',
+          'Dom-Servis Dispatcher',
+          'Dom-Servis Master',
+        )
       end
     end
 
@@ -110,7 +110,7 @@ RSpec.describe Role do
 
           expect { role.permissions << permission }
             .to raise_error(%r{conflicts with})
-            .and not_change { role.permissions.count }
+            .and not_change(described_class, :count)
         end
       end
 
