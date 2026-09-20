@@ -150,7 +150,7 @@ class BackgroundServices
       return
     end
 
-    if config.service.skip?(manager: self)
+    if service_config.service.skip?(manager: self)
       Rails.logger.info { "Skipping service #{service_config.service.service_name}." }
       return
     end
@@ -183,7 +183,7 @@ class BackgroundServices
       Thread.current.abort_on_exception = true
       Thread.current.name = "service #{service.service_name}"
 
-      Thread.current.abort_on_exception = true
+      Rails.logger.info { "Starting thread for service #{service.service_name} in the main process." }
       service.new(manager: self).run
     rescue ActiveRecord::ActiveRecordError => e
       raise e if !self.class.tolerate_error?(e)
