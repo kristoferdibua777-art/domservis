@@ -102,7 +102,12 @@ class BackgroundServices
       end
 
       loop do
-        watcher.execute_if_updated
+        begin
+          watcher.execute_if_updated
+        rescue Errno::ENOENT
+          # A watched file can disappear between the update check and its mtime lookup.
+          # Retry on the next interval instead of terminating the background worker thread.
+        end
         interruptible_sleep FILE_WATCHING_INTERVAL
       end
     end
@@ -110,7 +115,7 @@ class BackgroundServices
 
   def install_signal_trap
     Signal.trap('TERM') { handle_signal('TERM') }
-    Signal.trap('INT')  { handle_signal('INT')  }
+    Signal.trap('INT')  { handle_signal('INT') }
   end
 
   def handle_signal(signal)
@@ -145,7 +150,7 @@ class BackgroundServices
       return
     end
 
-    if service_config.service.skip?(manager: self)
+    if config.service.skip?(manager: self)
       Rails.logger.info { "Skipping service #{service_config.service.service_name}." }
       return
     end
@@ -178,7 +183,7 @@ class BackgroundServices
       Thread.current.abort_on_exception = true
       Thread.current.name = "service #{service.service_name}"
 
-      Rails.logger.info { "Starting thread for service #{service.service_name} in the main process." }
+      Thread.current.abort_on_exception = true
       service.new(manager: self).run
     rescue ActiveRecord::ActiveRecordError => e
       raise e if !self.class.tolerate_error?(e)
