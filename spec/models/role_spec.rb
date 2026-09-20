@@ -110,7 +110,7 @@ RSpec.describe Role do
 
           expect { role.permissions << permission }
             .to raise_error(%r{conflicts with})
-            .and not_change(described_class, :count)
+            .and not_change { role.permissions.count }
         end
       end
 
