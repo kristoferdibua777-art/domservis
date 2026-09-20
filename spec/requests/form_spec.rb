@@ -419,6 +419,9 @@ RSpec.describe 'Form', type: :request do
     context 'when two partners use the same transport', db_strategy: :reset do
       let(:fingerprint_a)  { SecureRandom.hex(40) }
       let(:fingerprint_b)  { SecureRandom.hex(40) }
+      let(:group)          { create(:group, name: '000 Partner Transport Group') }
+      let(:partner_org)    { create(:organization, name: 'Dom-Servis Partner A Org') }
+      let(:forged_org)     { create(:organization, name: 'Dom-Servis Partner B Org') }
       let(:request_source_a) do
         DomServis::RequestSource.create!(
           name:               'Partner A Form',
