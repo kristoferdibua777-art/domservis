@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { initializePiniaStore } from '#tests/support/components/renderComponent.ts'
@@ -63,6 +63,15 @@ describe('Ui beta timed feedback', () => {
     localStorage.setItem('beta-ui-feedback-consent', 'true')
 
     resetMilestones()
+  })
+
+  // Without this, fake timers installed by beforeEach above stay active
+  // after the file finishes. Full-suite Vitest runs reuse workers across
+  // spec files, so a later file in the same worker that relies on real
+  // timers (e.g. setTimeout-based `waitUntil` polling in async GraphQL-mock
+  // tests) could silently hang.
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('opens feedback dialog and marks milestone when eligible navigation occurs', async () => {
