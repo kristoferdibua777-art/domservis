@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - fix/rubocop-baseline
+      # Temporarily added so this branch can pull a fresh translation-catalog
+      # patch the same way fix/rubocop-baseline does, without a workflow_dispatch
+      # button available (this workflow file doesn't exist on the default branch
+      # yet, so GitHub's UI won't render a manual "Run workflow" control for it).
+      # Safe to remove once fix/ci-vitest-state's catalog is back in sync.
+      - fix/ci-vitest-state
   workflow_dispatch:
 
 jobs:
