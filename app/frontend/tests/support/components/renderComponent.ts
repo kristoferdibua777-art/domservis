@@ -529,15 +529,25 @@ const renderComponent = <Props>(
     async debounced(cb, ms) {
       vi.useFakeTimers()
 
-      await cb()
+      // `cb()` runs arbitrary caller code (form interactions, assertions, …).
+      // If it throws, the `vi.useRealTimers()` restore below was previously
+      // skipped entirely, leaving fake timers active for the rest of the
+      // worker process - full-suite runs reuse workers across spec files,
+      // so a single throwing `debounced()` call anywhere could silently
+      // freeze every later test's real setTimeout-based waits (e.g.
+      // FormKit's commit debounce, `waitUntil` polling) for the rest of
+      // the run, while the same file still passes fine in isolation.
+      try {
+        await cb()
 
-      if (ms) {
-        vi.advanceTimersByTime(ms)
-      } else {
-        vi.runAllTimers()
+        if (ms) {
+          vi.advanceTimersByTime(ms)
+        } else {
+          vi.runAllTimers()
+        }
+      } finally {
+        vi.useRealTimers()
       }
-
-      vi.useRealTimers()
 
       await waitForNextTick()
       await nextTick()
