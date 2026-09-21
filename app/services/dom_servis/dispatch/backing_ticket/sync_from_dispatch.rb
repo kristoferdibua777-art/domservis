@@ -24,6 +24,7 @@ class DomServis::Dispatch::BackingTicket::SyncFromDispatch
       Transaction.execute do
         ticket.screen = 'edit' if ticket.respond_to?(:screen=)
         ticket.update!(update_data) if update_data.present?
+        reassert_dispatch_organization!(ticket)
         ticket.tag_update(dispatch_job.work_tags, resolver.actor_user.id) if tags_changed
 
         if article.present?
@@ -38,6 +39,19 @@ class DomServis::Dispatch::BackingTicket::SyncFromDispatch
   end
 
   private
+
+  # rubocop:disable Rails/SkipsModelValidations -- see the identical method in
+  # DomServis::Dispatch::BackingTicket::Create for the full rationale: the
+  # shared dispatch-board customer belongs to no organization, so Zammad's
+  # own check_default_organization callback resets organization_id back to
+  # nil on every ticket.update! that touches it, not just at creation time.
+  def reassert_dispatch_organization!(ticket)
+    return if dispatch_job.organization_id.blank?
+    return if ticket.organization_id == dispatch_job.organization_id
+
+    ticket.update_column(:organization_id, dispatch_job.organization_id)
+  end
+  # rubocop:enable Rails/SkipsModelValidations
 
   def filter_unchanged(ticket, attributes)
     attributes.each_with_object({}) do |(key, value), memo|

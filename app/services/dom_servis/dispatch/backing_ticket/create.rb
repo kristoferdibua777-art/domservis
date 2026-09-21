@@ -20,6 +20,7 @@ class DomServis::Dispatch::BackingTicket::Create
         ticket = Ticket.new(mapper.create_attributes)
         ticket.screen = 'create_middle' if ticket.respond_to?(:screen=)
         ticket.save!
+        reassert_dispatch_organization!(ticket)
         sync_ticket_tags!(ticket, resolver)
 
         create_article!(resolver, mapper, ticket, mapper.creation_article)
@@ -55,4 +56,22 @@ class DomServis::Dispatch::BackingTicket::Create
   def sync_ticket_tags!(ticket, resolver)
     ticket.tag_update(dispatch_job.work_tags, resolver.actor_user.id)
   end
+
+  # rubocop:disable Rails/SkipsModelValidations -- deliberate, same rationale
+  # as dispatch_job.update_column(:ticket_id, ...) above: Ticket#check_defaults
+  # (a before_create/before_update callback) calls check_default_organization,
+  # which resets organization_id back to the customer's own organization
+  # whenever it is not among the customer's known organizations. The shared
+  # Dom-Servis dispatch-board customer (Resolver#customer) intentionally
+  # belongs to no organization at all, since it is reused across every
+  # partner, so that callback silently wipes out the partner organization_id
+  # already set by Mapper#create_attributes on every single create. Reassert
+  # it directly after Zammad's own callback has run.
+  def reassert_dispatch_organization!(ticket)
+    return if dispatch_job.organization_id.blank?
+    return if ticket.organization_id == dispatch_job.organization_id
+
+    ticket.update_column(:organization_id, dispatch_job.organization_id)
+  end
+  # rubocop:enable Rails/SkipsModelValidations
 end
