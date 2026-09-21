@@ -33,6 +33,15 @@ vi.hoisted(() => {
 })
 
 describe('TicketLiveUsers', () => {
+  // `vi.useFakeTimers()` above is installed once at module-hoist time and was
+  // never uninstalled. Full-suite Vitest runs reuse workers across spec
+  // files, so leaving fake timers active here could silently break any
+  // later file in the same worker that relies on real timers (e.g.
+  // setTimeout-based `waitUntil` polling in async GraphQL-mock tests).
+  afterAll(() => {
+    vi.useRealTimers()
+  })
+
   beforeEach(() => {
     mockUserQuery({
       user: {
