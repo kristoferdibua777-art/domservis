@@ -272,6 +272,11 @@ RSpec.describe 'Form', type: :request do
       let(:group)        { create(:group, name: '000 Intake Bridge Group') }
       let(:partner_org)  { create(:organization, name: 'Dom-Servis Partner Org') }
       let(:forged_org)   { create(:organization, name: 'Forged Org') }
+      # DomServis::Intake::DispatchJobCreator#actor_user looks up any user
+      # with the ticket.agent permission to attribute the dispatch job to;
+      # without one present it raises "Dom-Servis intake requires an
+      # available ticket agent user."
+      let!(:agent)       { create(:agent, groups: [group]) }
 
       before do
         Setting.set('form_ticket_create', true)
@@ -422,6 +427,10 @@ RSpec.describe 'Form', type: :request do
       let(:group)          { create(:group, name: '000 Partner Transport Group') }
       let(:partner_org)    { create(:organization, name: 'Dom-Servis Partner A Org') }
       let(:forged_org)     { create(:organization, name: 'Dom-Servis Partner B Org') }
+      # See the 'Dom-Servis intake bridge' context above: DispatchJobCreator
+      # needs an existing ticket.agent user, and RequestSource itself (via
+      # HasDefaultModelUserRelations) requires created_by/updated_by.
+      let!(:agent)         { create(:agent, groups: [group]) }
       let(:request_source_a) do
         DomServis::RequestSource.create!(
           name:               'Partner A Form',
@@ -431,6 +440,8 @@ RSpec.describe 'Form', type: :request do
           status:             'active',
           allowed_domains:    ['partner-a.example.com'],
           privacy_policy_url: 'https://partner-a.example.com/privacy',
+          created_by:         agent,
+          updated_by:         agent,
         )
       end
       let(:request_source_b) do
@@ -441,6 +452,8 @@ RSpec.describe 'Form', type: :request do
           transport_kind:  'zammad_form',
           status:          'active',
           allowed_domains: ['partner-b.example.com'],
+          created_by:      agent,
+          updated_by:      agent,
         )
       end
 
