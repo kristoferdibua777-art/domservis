@@ -272,6 +272,11 @@ RSpec.describe 'Form', type: :request do
       let(:group)        { create(:group, name: '000 Intake Bridge Group') }
       let(:partner_org)  { create(:organization, name: 'Dom-Servis Partner Org') }
       let(:forged_org)   { create(:organization, name: 'Forged Org') }
+      # DomServis::Intake::DispatchJobCreator#actor_user looks up any user
+      # with the ticket.agent permission to attribute the dispatch job to;
+      # without one present it raises "Dom-Servis intake requires an
+      # available ticket agent user."
+      let!(:agent)       { create(:agent, groups: [group]) }
 
       before do
         # DomServis::Intake::DispatchJobCreator#actor_user looks up any user
