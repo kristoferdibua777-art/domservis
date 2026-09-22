@@ -256,6 +256,28 @@ beforeEach((context) => {
   }
 })
 
+// This setup file re-runs once per spec file (Vitest's default `isolate:
+// true` gives every file a fresh module registry, including this file), so
+// an `afterAll` registered here fires once per file, after all of that
+// file's own tests finish - not once per test and not once for the whole
+// run. That makes it a safe global safety net: even if some spec's own
+// vi.useFakeTimers()/vi.useRealTimers() pair is missing a try/finally or an
+// afterEach/afterAll and a thrown error skips the restore, fake timers can
+// never stay installed past the end of the file that installed them.
+// vi.useFakeTimers() is process-global, not scoped per spec file, and
+// full-suite runs reuse workers across files, so a leftover fake clock
+// previously starved later files' real-timer-based waits (e.g. debounced
+// GraphQL calls, `waitUntil` polling) until their 30s test timeout - this is
+// the suspected root cause of several intermittent full-suite-only Vitest
+// hangs. Deliberately `afterAll`, not `afterEach`: several files install
+// fake time once for the whole file (`vi.useFakeTimers().setSystemTime(...)`
+// at module scope) and rely on it staying fake across multiple tests: an
+// `afterEach` here would reset that after the first test and break every
+// later one in the same file. A no-op when timers are already real.
+afterAll(() => {
+  vi.useRealTimers()
+})
+
 afterEach((context) => {
   // we don't import it from `renderComponent`, because renderComponent may not be called
   // and it doesn't make sense to import everything from it

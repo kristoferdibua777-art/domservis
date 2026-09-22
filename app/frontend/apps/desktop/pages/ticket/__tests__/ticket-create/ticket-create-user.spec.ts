@@ -29,6 +29,17 @@ const waitForFormUpdaterQueryCallCount = (expectedCount: number) =>
 
 describe('ticket create view - user create action', () => {
   beforeEach(async () => {
+    // Defends against fake timers left installed by an earlier file in the
+    // same full-suite worker (vi.useFakeTimers()/vi.useRealTimers() is
+    // process-global, not scoped per spec file). This file never installs
+    // fake timers itself, but both its tests type into the email field and
+    // then wait for a debounced 3rd FormUpdater call - if fake timers leaked
+    // in, that debounce's setTimeout never fires (nothing here advances
+    // fake time) and the wait hangs for the full 30s test timeout, which
+    // matches the intermittent full-suite-only failures seen in CI. A no-op
+    // if timers are already real.
+    vi.useRealTimers()
+
     // Full-suite workers keep rendered wrappers because VTL auto-cleanup is disabled.
     // Remove wrappers left by earlier files before exercising this stateful flyout flow.
     cleanup()
