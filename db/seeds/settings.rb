@@ -3147,6 +3147,30 @@ Setting.create_if_not_exists(
 )
 
 Setting.create_if_not_exists(
+  title:       __('Dom-Servis backing ticket group'),
+  name:        'dom_servis_dispatch_backing_ticket_group_id',
+  area:        'DomServis::Dispatch',
+  description: __('Defines which group backing tickets created from the Dom-Servis dispatch board are filed under. Falls back to an operator-accessible group when unset or when the configured group is not accessible.'),
+  options:     {
+    form: [
+      {
+        display:  '',
+        null:     true,
+        name:     'dom_servis_dispatch_backing_ticket_group_id',
+        tag:      'tree_select',
+        multiple: false,
+        relation: 'Group',
+      },
+    ],
+  },
+  state:       nil,
+  preferences: {
+    permission: ['dom_servis.admin'],
+  },
+  frontend:    false,
+)
+
+Setting.create_if_not_exists(
   title:       __('Limit tickets by IP per hour'),
   name:        'form_ticket_create_by_ip_per_hour',
   area:        'Form::Base',
