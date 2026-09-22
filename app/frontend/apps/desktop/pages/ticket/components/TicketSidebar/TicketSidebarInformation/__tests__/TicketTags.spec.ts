@@ -171,10 +171,18 @@ describe('TicketTags', () => {
 
     vi.useFakeTimers()
 
-    await view.events.type(view.getByRole('searchbox'), 'tag new')
+    // If typing or the timer flush below throws, `vi.useRealTimers()` must
+    // still run - full-suite Vitest runs reuse workers across spec files,
+    // so leaving fake timers active here would silently hang any later file
+    // in the same worker that relies on real timers (e.g. setTimeout-based
+    // `waitUntil` polling in async GraphQL-mock tests).
+    try {
+      await view.events.type(view.getByRole('searchbox'), 'tag new')
 
-    await vi.runAllTimersAsync()
-    vi.useRealTimers()
+      await vi.runAllTimersAsync()
+    } finally {
+      vi.useRealTimers()
+    }
 
     mockTagAssignmentAddMutation({
       tagAssignmentAdd: {

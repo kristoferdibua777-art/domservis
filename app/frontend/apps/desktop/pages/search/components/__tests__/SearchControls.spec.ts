@@ -36,33 +36,41 @@ describe('SearchControls', () => {
 
   it('updates the search term when input changes', async () => {
     vi.useFakeTimers()
-    const search = ref('old search term')
-    const selectedEntity = ref('Ticket')
 
-    const wrapper = renderComponent(SearchControls, {
-      props: {
-        searchTabs: [
-          { label: 'Organization', key: 'Organization', count: 1 },
-          { label: 'Ticket', key: 'Ticket', count: 22 },
-          { label: 'User', key: 'User', count: 23 },
-        ],
-      },
-      vModel: {
-        search,
-        selectedEntity,
-      },
-    })
+    // If anything below throws (including the assertion), `vi.useRealTimers()`
+    // must still run - full-suite Vitest runs reuse workers across spec
+    // files, so leaving fake timers active here would silently hang any
+    // later file in the same worker that relies on real timers (e.g.
+    // setTimeout-based `waitUntil` polling in async GraphQL-mock tests).
+    try {
+      const search = ref('old search term')
+      const selectedEntity = ref('Ticket')
 
-    const input = wrapper.getByRole('searchbox', { name: 'Search…' })
+      const wrapper = renderComponent(SearchControls, {
+        props: {
+          searchTabs: [
+            { label: 'Organization', key: 'Organization', count: 1 },
+            { label: 'Ticket', key: 'Ticket', count: 22 },
+            { label: 'User', key: 'User', count: 23 },
+          ],
+        },
+        vModel: {
+          search,
+          selectedEntity,
+        },
+      })
 
-    await wrapper.events.clear(input)
-    await wrapper.events.type(input, 'new search term')
+      const input = wrapper.getByRole('searchbox', { name: 'Search…' })
 
-    await vi.advanceTimersToNextTimerAsync()
+      await wrapper.events.clear(input)
+      await wrapper.events.type(input, 'new search term')
 
-    expect(search.value).toBe('new search term')
+      await vi.advanceTimersToNextTimerAsync()
 
-    vi.useRealTimers()
+      expect(search.value).toBe('new search term')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('changes the active tab when a tab is clicked', async () => {

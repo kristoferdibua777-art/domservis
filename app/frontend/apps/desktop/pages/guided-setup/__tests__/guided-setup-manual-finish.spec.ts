@@ -49,10 +49,20 @@ describe('guided setup manual finish', () => {
     it('redirects to home screen after a timeout', async () => {
       vi.useFakeTimers()
 
-      const view = await visitView('/guided-setup/manual/finish')
+      // If visiting the view or the timer flush below throws,
+      // `vi.useRealTimers()` must still run - full-suite Vitest runs reuse
+      // workers across spec files, so leaving fake timers active here would
+      // silently hang any later file in the same worker that relies on real
+      // timers (e.g. setTimeout-based `waitUntil` polling in async
+      // GraphQL-mock tests).
+      let view: Awaited<ReturnType<typeof visitView>>
+      try {
+        view = await visitView('/guided-setup/manual/finish')
 
-      await vi.runAllTimersAsync()
-      vi.useRealTimers()
+        await vi.runAllTimersAsync()
+      } finally {
+        vi.useRealTimers()
+      }
 
       await waitFor(() => {
         expect(view, 'correctly redirects to home screen').toHaveCurrentUrl('/')
