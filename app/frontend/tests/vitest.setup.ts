@@ -256,11 +256,11 @@ beforeEach((context) => {
   }
 })
 
-afterEach((context) => {
+afterEach(async (context) => {
   // we don't import it from `renderComponent`, because renderComponent may not be called
   // and it doesn't make sense to import everything from it
   if ('cleanupComponents' in globalThis) {
-    globalThis.cleanupComponents()
+    await globalThis.cleanupComponents()
   }
 
   if (context.skipConsole !== true) {
@@ -307,5 +307,5 @@ declare module 'vitest' {
 }
 
 declare global {
-  function cleanupComponents(): void
+  function cleanupComponents(): Promise<void>
 }

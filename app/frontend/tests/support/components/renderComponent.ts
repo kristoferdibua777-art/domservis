@@ -319,7 +319,15 @@ export const cleanup = () => {
   cleanupStores()
 }
 
-globalThis.cleanupComponents = cleanup
+const cleanupAfterEach = async () => {
+  cleanup()
+
+  // Some components perform async teardown from onUnmounted hooks.
+  // Wait for Vue's pending teardown tick before the next test starts.
+  await nextTick()
+}
+
+globalThis.cleanupComponents = cleanupAfterEach
 
 let dialogMounted = false
 
