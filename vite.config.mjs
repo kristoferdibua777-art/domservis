@@ -163,28 +163,27 @@ export default defineConfig(({ mode, command }) => {
       css: false,
       testTimeout: isEnvBooleanSet(process.env.CI) ? 30_000 : 5_000,
       unstubGlobals: true,
-      // Diagnostic logging captured a dozen unrelated spec files completing
-      // in the gap between two log lines from the same file in
+      // NOTE on the intermittent full-suite-only timeout in
       // apps/desktop/pages/ticket/__tests__/ticket-create/
-      // ticket-create-user.spec.ts, proving Vitest interleaves multiple
-      // spec files' async execution within a single worker process.
-      // tests/graphql/builders/mocks.ts's mockedApolloClient (and its
-      // mockCalls/mockDefaults maps) are module-level singletons reused by
-      // every spec file that lands in the same worker, so one file's
-      // afterEach clearing them mid-flight while a different, still-
-      // awaiting file's GraphQL mock call is in flight is a real race -
-      // a plausible root cause for that file's intermittent
-      // full-suite-only timeouts. (An earlier attempt at fixing this used
-      // `maxConcurrency: 1`, which turned out to be the wrong lever - that
-      // option only throttles tests explicitly marked `.concurrent`, not
-      // file-level scheduling, and did not stop the race.) fileParallelism
-      // is the option that actually controls whether test *files* run in
-      // parallel; disabling it forces the whole run down to a single
-      // worker, which removes the race but sacrifices cross-process
-      // parallelism too - there's no known way to keep multi-process
-      // parallelism while forcing strictly-sequential file handling within
-      // each worker.
-      fileParallelism: false,
+      // ticket-create-user.spec.ts (see also the several "restore real
+      // timers" commits and the temporary test-diagnostic.yml workflow
+      // elsewhere in this branch's history): diagnostic logging confirmed
+      // `fileParallelism: false` here makes it disappear (532/532 Vitest
+      // files passed cleanly), consistent with the suspected cause - Vitest
+      // running multiple spec files' async execution interleaved within a
+      // worker, racing over tests/graphql/builders/mocks.ts's
+      // mockedApolloClient/mockCalls/mockDefaults module-level singletons,
+      // which every spec file in that worker shares.
+      // Deliberately NOT applying it here: it forces the whole 532-file
+      // suite onto a single worker, which turned a ~25min CI job into
+      // ~1h50m in testing - and at that length, something in the
+      // surrounding CI/container environment started sending an unrelated,
+      // previously-stable RSpec example (package_spec.rb's package
+      // install/uninstall, which starts a real Puma server) a SIGTERM
+      // ("Gracefully stopping..."), failing it too. A real fix needs the
+      // shared mock singletons above scoped per-test instead of
+      // per-worker-process; that's a larger, riskier change to
+      // tests/graphql/builders/mocks.ts than is safe to make blind.
       onConsoleLog(log) {
         if (
           log.includes('Not implemented: navigation') ||

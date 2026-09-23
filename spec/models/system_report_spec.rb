@@ -238,6 +238,7 @@ RSpec.describe SystemReport, current_user_id: 1, type: :model do
           'form_allowed_params',
           'dom_servis_form_intake_enabled',
           'dom_servis_form_organization_id',
+          'dom_servis_dispatch_backing_ticket_group_id',
         ]
       end
 
