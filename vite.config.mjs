@@ -163,6 +163,22 @@ export default defineConfig(({ mode, command }) => {
       css: false,
       testTimeout: isEnvBooleanSet(process.env.CI) ? 30_000 : 5_000,
       unstubGlobals: true,
+      // Vitest's default maxConcurrency (5) lets several spec files run
+      // interleaved within the same worker process via async scheduling,
+      // not just across separate worker processes. tests/graphql/builders/
+      // mocks.ts's mockedApolloClient (and its mockCalls/mockDefaults maps)
+      // are module-level singletons reused by every spec file that lands in
+      // the same worker, so one file's afterEach clearing them mid-flight
+      // while another interleaved file is still awaiting a GraphQL mock
+      // call is a real race - diagnostic logging captured over a dozen
+      // unrelated spec files completing in the gap between two log lines
+      // from the same file in apps/desktop/pages/ticket/__tests__/
+      // ticket-create/ticket-create-user.spec.ts, matching its intermittent
+      // full-suite-only timeouts. Restricting to 1 keeps files running one
+      // at a time per worker (separate worker *processes* still run fully
+      // in parallel with each other), removing the interleaving without
+      // losing cross-process parallelism.
+      maxConcurrency: 1,
       onConsoleLog(log) {
         if (
           log.includes('Not implemented: navigation') ||
