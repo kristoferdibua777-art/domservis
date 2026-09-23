@@ -179,16 +179,25 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
       expect(job.reload).to have_attributes(status: 'taken', assignee_id: master_user.id)
     end
 
-    it 'treats taking an own job again as a no-op', :aggregate_failures do
+    it 'does not let a master take a job that already left the pool', :aggregate_failures do
       own_job = create_dispatch_job(status: 'in_progress', assignee: master_user)
 
       post "/api/v1/dom_servis/dispatch/jobs/#{own_job.id}/take", as: :json
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:forbidden)
       expect(own_job.reload.status).to eq('in_progress')
     end
 
     context 'when logged in as a dispatcher', authenticated_as: :dispatcher_user do
+      it 'treats taking an own job again as a no-op', :aggregate_failures do
+        own_job = create_dispatch_job(status: 'in_progress', assignee: dispatcher_user)
+
+        post "/api/v1/dom_servis/dispatch/jobs/#{own_job.id}/take", as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(own_job.reload).to have_attributes(status: 'in_progress', assignee_id: dispatcher_user.id)
+      end
+
       it 'does not take a job outside the pool', :aggregate_failures do
         cancelled_job = create_dispatch_job(status: 'cancelled')
 
