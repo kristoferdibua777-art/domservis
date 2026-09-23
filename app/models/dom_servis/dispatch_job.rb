@@ -5,7 +5,7 @@ class DomServis::DispatchJob < ApplicationModel
 
   self.table_name = 'dom_servis_dispatch_jobs'
 
-  STATUSES   = %w[pool taken in_progress done cancelled transferred_to_partner].freeze
+  STATUSES   = DomServis::DispatchWorkflow::STATUSES
   PRIORITIES = %w[low medium high critical].freeze
   SOURCES    = %w[manual form email webhook ai].freeze
   VISIT_DAYS = %w[mon tue wed thu fri sat sun].freeze
@@ -39,6 +39,8 @@ class DomServis::DispatchJob < ApplicationModel
   validates :visit_day, inclusion: { in: VISIT_DAYS }
   validates :service_type, presence: true
   validates :address, presence: true
+  validate :status_transition_allowed, on: :update, if: :will_save_change_to_status?
+  validate :assignee_matches_status, if: -> { new_record? || will_save_change_to_status? || will_save_change_to_assignee_id? }
 
   attachments_cleanup!
 
@@ -215,13 +217,29 @@ class DomServis::DispatchJob < ApplicationModel
     self.intake_payload = intake_payload.presence || {}
   end
 
+  def status_transition_allowed
+    return if DomServis::DispatchWorkflow.transition_allowed?(status_in_database, status)
+
+    errors.add(:status, "cannot change from '#{status_in_database}' to '#{status}'")
+  end
+
+  def assignee_matches_status
+    if DomServis::DispatchWorkflow.assignee_forbidden?(status) && assignee_id.present?
+      errors.add(:assignee_id, "must be empty while the job is in '#{status}'")
+    elsif DomServis::DispatchWorkflow.assignee_required?(status) && assignee_id.blank?
+      errors.add(:assignee_id, "is required while the job is in '#{status}'")
+    end
+  end
+
   def sync_lifecycle_timestamps
     self.taken_at = nil if status == 'pool'
-    self.completed_at = nil if status != 'done'
+    self.completed_at = nil if %w[done closed].exclude?(status)
+    self.closed_at = nil if status != 'closed'
     self.cancelled_at = nil if status != 'cancelled'
 
     self.taken_at ||= Time.zone.now if %w[taken in_progress done].include?(status) && assignee_id.present?
     self.completed_at ||= Time.zone.now if status == 'done'
+    self.closed_at ||= Time.zone.now if status == 'closed'
     self.cancelled_at ||= Time.zone.now if status == 'cancelled'
   end
 

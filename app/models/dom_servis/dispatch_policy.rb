@@ -14,6 +14,7 @@ class DomServis::DispatchPolicy
     published_at
     taken_at
     completed_at
+    closed_at
     cancelled_at
   ].freeze
 
@@ -66,7 +67,8 @@ class DomServis::DispatchPolicy
         { key: 'take_job',              label: __('Take job'),              description: __('Claim a shared pool job.') },
         { key: 'release_to_pool',       label: __('Release to pool'),       description: __('Return an owned job back into the pool.') },
         { key: 'set_status_in_progress', label: __('Set in progress'),      description: __('Move a job into active execution.') },
-        { key: 'set_status_done',       label: __('Set done'),              description: __('Mark a job as completed.') },
+        { key: 'set_status_done',       label: __('Set done'),              description: __('Mark the work on site as finished.') },
+        { key: 'close_job',             label: __('Close job'),             description: __('Close a finished job after checking the result, payment or documents.') },
         { key: 'cancel_job',            label: __('Cancel job'),            description: __('Cancel an active or pending job.') },
         { key: 'transfer_to_partner',   label: __('Transfer to partner'),   description: __('Close the job on our board and hand it off to a partner service.') },
         { key: 'reopen_job',            label: __('Reopen job'),            description: __('Reopen a completed or cancelled job.') },
@@ -95,14 +97,7 @@ class DomServis::DispatchPolicy
     },
   ].freeze
 
-  STATUS_REGISTRY = [
-    { key: 'pool',        label: 'Pool',        description: __('Shared pool state before a master claims the job.') },
-    { key: 'taken',       label: 'Taken',       description: __('Claimed by a worker but not yet started.') },
-    { key: 'in_progress', label: __('In progress'), description: __('Actively being worked on.') },
-    { key: 'done',        label: 'Done',        description: __('Completed and closed for the operational workflow.') },
-    { key: 'cancelled',   label: 'Cancelled',   description: __('Cancelled before completion.') },
-    { key: 'transferred_to_partner', label: __('Transferred to partner'), description: __('Closed on the Dom-Servis board after handoff to a partner service.') },
-  ].freeze
+  STATUS_REGISTRY = DomServis::DispatchWorkflow::STATUS_REGISTRY.map { |status| status.slice(:key, :label, :description) }.freeze
 
   SETTINGS_REGISTRY = [
     {
@@ -135,6 +130,7 @@ class DomServis::DispatchPolicy
     'published_at'    => { label: __('Published at'),  group: 'lifecycle',    source: 'db' },
     'taken_at'        => { label: __('Taken at'),      group: 'lifecycle',    source: 'db' },
     'completed_at'    => { label: __('Completed at'),  group: 'lifecycle',    source: 'db' },
+    'closed_at'       => { label: __('Closed at'),     group: 'lifecycle',    source: 'db' },
     'cancelled_at'    => { label: __('Cancelled at'),  group: 'lifecycle',    source: 'db' },
     'organization_id' => { label: __('Customer account'), group: 'customer', source: 'db' },
     'attachments'     => { label: 'Attachments', group: 'attachments', source: 'virtual' },
@@ -369,6 +365,7 @@ class DomServis::DispatchPolicy
           release_to_pool
           set_status_in_progress
           set_status_done
+          close_job
           cancel_job
           transfer_to_partner
           reopen_job
@@ -389,6 +386,7 @@ class DomServis::DispatchPolicy
           release_to_pool
           set_status_in_progress
           set_status_done
+          close_job
           cancel_job
           transfer_to_partner
           reopen_job
@@ -410,8 +408,8 @@ class DomServis::DispatchPolicy
     def status_default(status_key, role_key)
       matrix = {
         'master'     => %w[in_progress done],
-        'dispatcher' => %w[pool taken in_progress done cancelled transferred_to_partner],
-        'admin'      => %w[pool taken in_progress done cancelled transferred_to_partner],
+        'dispatcher' => %w[pool taken in_progress done closed cancelled transferred_to_partner],
+        'admin'      => %w[pool taken in_progress done closed cancelled transferred_to_partner],
       }
 
       matrix.fetch(role_key, []).include?(status_key)

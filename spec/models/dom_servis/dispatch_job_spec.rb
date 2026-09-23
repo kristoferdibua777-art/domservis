@@ -67,6 +67,42 @@ RSpec.describe DomServis::DispatchJob, current_user_id: 1, type: :model do
                                                       ))
   end
 
+  describe 'status workflow' do
+    before do
+      allow(DomServis::Notifications::Dispatcher).to receive(:new).and_return(instance_double(DomServis::Notifications::Dispatcher, deliver: nil))
+    end
+
+    it 'does not keep a master on a pool job', :aggregate_failures do
+      job = described_class.new(dispatch_job_attrs.merge(assignee_id: 1))
+
+      expect(job).not_to be_valid
+      expect(job.errors[:assignee_id]).to be_present
+    end
+
+    it 'requires a master for a taken job', :aggregate_failures do
+      job = described_class.new(dispatch_job_attrs.merge(status: 'taken'))
+
+      expect(job).not_to be_valid
+      expect(job.errors[:assignee_id]).to be_present
+    end
+
+    it 'rejects status changes outside the workflow graph' do
+      job = described_class.create!(dispatch_job_attrs)
+
+      expect { job.update!(status: 'done', assignee_id: 1) }.to raise_error(ActiveRecord::RecordInvalid, %r{cannot change from 'pool' to 'done'})
+    end
+
+    it 'keeps the completion time and stamps the closing time when a done job is closed' do
+      job = described_class.create!(dispatch_job_attrs.merge(status: 'in_progress', assignee_id: 1))
+      job.update!(status: 'done')
+      completed_at = job.reload.completed_at
+
+      job.update!(status: 'closed')
+
+      expect(job.reload).to have_attributes(completed_at: completed_at, closed_at: be_present, assignee_id: 1)
+    end
+  end
+
   it 'sends an authenticated push after destroy commit' do
     job = described_class.create!(dispatch_job_attrs)
     job_id = job.id

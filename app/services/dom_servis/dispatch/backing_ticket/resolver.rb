@@ -55,13 +55,13 @@ class DomServis::Dispatch::BackingTicket::Resolver
 
   def ticket_state
     @ticket_state ||= begin
-      case dispatch_job.status
-      when 'pool'
+      case DomServis::DispatchWorkflow.ticket_state_type(dispatch_job.status)
+      when 'new'
         state_for_type('new') || Ticket::State.find_by(default_create: true) || Ticket::State.active.first
-      when 'taken', 'in_progress'
+      when 'open'
         state_for_type('open') || Ticket::State.by_category(:open).active.first
-      when 'done', 'cancelled', 'transferred_to_partner'
-        Ticket::State.by_category(:closed).active.first
+      when 'closed'
+        state_for_type('closed') || Ticket::State.by_category(:closed).active.first
       else
         Ticket::State.find_by(default_create: true) || Ticket::State.active.first
       end
