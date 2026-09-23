@@ -11,6 +11,13 @@ class DomServis::DispatchJob < ApplicationModel
   VISIT_DAYS = %w[mon tue wed thu fri sat sun].freeze
   ATTACHMENT_KINDS = %w[intake_attachment route_info completion_act diagnostic_photo other].freeze
 
+  # timestamp => [status that stamps it, statuses that keep it]
+  LIFECYCLE_TIMESTAMPS = {
+    completed_at: ['done', %w[done closed]],
+    closed_at:    ['closed', %w[closed]],
+    cancelled_at: ['cancelled', %w[cancelled]],
+  }.freeze
+
   VISIT_DAY_LABELS = {
     'mon' => 'Пн',
     'tue' => 'Вт',
@@ -233,14 +240,15 @@ class DomServis::DispatchJob < ApplicationModel
 
   def sync_lifecycle_timestamps
     self.taken_at = nil if status == 'pool'
-    self.completed_at = nil if %w[done closed].exclude?(status)
-    self.closed_at = nil if status != 'closed'
-    self.cancelled_at = nil if status != 'cancelled'
-
     self.taken_at ||= Time.zone.now if %w[taken in_progress done].include?(status) && assignee_id.present?
-    self.completed_at ||= Time.zone.now if status == 'done'
-    self.closed_at ||= Time.zone.now if status == 'closed'
-    self.cancelled_at ||= Time.zone.now if status == 'cancelled'
+
+    LIFECYCLE_TIMESTAMPS.each do |attribute, (stamped_in, kept_in)|
+      if kept_in.exclude?(status)
+        self[attribute] = nil
+      elsif status == stamped_in
+        self[attribute] ||= Time.zone.now
+      end
+    end
   end
 
   def infer_visit_day

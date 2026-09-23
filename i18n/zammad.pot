@@ -16335,7 +16335,7 @@ msgstr ""
 msgid "System information"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_job.rb:292
+#: app/models/dom_servis/dispatch_job.rb:299
 msgid "System organization for direct Dom-Servis retail jobs."
 msgstr ""
 
