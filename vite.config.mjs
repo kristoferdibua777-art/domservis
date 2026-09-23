@@ -163,22 +163,28 @@ export default defineConfig(({ mode, command }) => {
       css: false,
       testTimeout: isEnvBooleanSet(process.env.CI) ? 30_000 : 5_000,
       unstubGlobals: true,
-      // Vitest's default maxConcurrency (5) lets several spec files run
-      // interleaved within the same worker process via async scheduling,
-      // not just across separate worker processes. tests/graphql/builders/
-      // mocks.ts's mockedApolloClient (and its mockCalls/mockDefaults maps)
-      // are module-level singletons reused by every spec file that lands in
-      // the same worker, so one file's afterEach clearing them mid-flight
-      // while another interleaved file is still awaiting a GraphQL mock
-      // call is a real race - diagnostic logging captured over a dozen
-      // unrelated spec files completing in the gap between two log lines
-      // from the same file in apps/desktop/pages/ticket/__tests__/
-      // ticket-create/ticket-create-user.spec.ts, matching its intermittent
-      // full-suite-only timeouts. Restricting to 1 keeps files running one
-      // at a time per worker (separate worker *processes* still run fully
-      // in parallel with each other), removing the interleaving without
-      // losing cross-process parallelism.
-      maxConcurrency: 1,
+      // Diagnostic logging captured a dozen unrelated spec files completing
+      // in the gap between two log lines from the same file in
+      // apps/desktop/pages/ticket/__tests__/ticket-create/
+      // ticket-create-user.spec.ts, proving Vitest interleaves multiple
+      // spec files' async execution within a single worker process.
+      // tests/graphql/builders/mocks.ts's mockedApolloClient (and its
+      // mockCalls/mockDefaults maps) are module-level singletons reused by
+      // every spec file that lands in the same worker, so one file's
+      // afterEach clearing them mid-flight while a different, still-
+      // awaiting file's GraphQL mock call is in flight is a real race -
+      // a plausible root cause for that file's intermittent
+      // full-suite-only timeouts. (An earlier attempt at fixing this used
+      // `maxConcurrency: 1`, which turned out to be the wrong lever - that
+      // option only throttles tests explicitly marked `.concurrent`, not
+      // file-level scheduling, and did not stop the race.) fileParallelism
+      // is the option that actually controls whether test *files* run in
+      // parallel; disabling it forces the whole run down to a single
+      // worker, which removes the race but sacrifices cross-process
+      // parallelism too - there's no known way to keep multi-process
+      // parallelism while forcing strictly-sequential file handling within
+      // each worker.
+      fileParallelism: false,
       onConsoleLog(log) {
         if (
           log.includes('Not implemented: navigation') ||
