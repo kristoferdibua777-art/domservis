@@ -162,11 +162,64 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
       expect(closed_job.reload.assignee_id).to eq(master_user.id)
     end
 
+    context 'when logged in as a dispatcher', authenticated_as: :dispatcher_user do
+      it 'assigns a master', :aggregate_failures do
+        post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/assign", params: { assignee_id: master_user.id }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(job.reload).to have_attributes(status: 'taken', assignee_id: master_user.id)
+        expect(job.events.last).to have_attributes(event_type: 'assigned', actor_user_id: dispatcher_user.id)
+      end
+    end
+
     context 'when logged in as a master', authenticated_as: -> { master_user } do
-      it 'does not allow assigning other masters' do
+      it 'does not allow assigning other masters', :aggregate_failures do
         post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/assign", params: { assignee_id: other_master_user.id }, as: :json
 
         expect(response).to have_http_status(:forbidden)
+        expect(job.reload).to have_attributes(status: 'pool', assignee_id: nil)
+      end
+    end
+  end
+
+  describe 'POST /api/v1/dom_servis/dispatch/jobs/:id/move_day' do
+    context 'when logged in as a dispatcher', authenticated_as: :dispatcher_user do
+      it 'moves the job to another day of the week', :aggregate_failures do
+        post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/move_day", params: { visit_day: 'wed', visit_date: '2026-03-25' }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(job.reload).to have_attributes(visit_day: 'wed', visit_date: '2026-03-25')
+        expect(job.events.last).to have_attributes(event_type: 'moved_weekday', actor_user_id: dispatcher_user.id)
+      end
+    end
+
+    context 'when logged in as a master', authenticated_as: -> { master_user } do
+      it 'does not move the job', :aggregate_failures do
+        post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/move_day", params: { visit_day: 'wed', visit_date: '2026-03-25' }, as: :json
+
+        expect(response).to have_http_status(:forbidden)
+        expect(job.reload).to have_attributes(visit_day: 'mon', visit_date: '2026-03-23')
+      end
+    end
+  end
+
+  describe 'POST /api/v1/dom_servis/dispatch/jobs/:id/change_priority' do
+    context 'when logged in as a dispatcher', authenticated_as: :dispatcher_user do
+      it 'changes the priority', :aggregate_failures do
+        post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/change_priority", params: { priority: 'high' }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(job.reload.priority).to eq('high')
+        expect(job.events.last).to have_attributes(event_type: 'priority_changed', actor_user_id: dispatcher_user.id)
+      end
+    end
+
+    context 'when logged in as a master', authenticated_as: -> { master_user } do
+      it 'does not change the priority', :aggregate_failures do
+        post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/change_priority", params: { priority: 'high' }, as: :json
+
+        expect(response).to have_http_status(:forbidden)
+        expect(job.reload.priority).to eq('medium')
       end
     end
   end
