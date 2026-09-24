@@ -394,6 +394,12 @@ class MockLink extends ApolloLink {
       // other query/mutation/subscription.
       const isDiagnosedFormUpdaterCall =
         diagnosticTicketCreateUserEnabled() && definition.name?.value === 'formUpdater'
+      const isDiagnosedUserAddCall =
+        diagnosticTicketCreateUserEnabled() && definition.name?.value === 'userAdd'
+
+      if (isDiagnosedUserAddCall) {
+        diagnosticTicketCreateUserLog('graphql:userAdd:request-received')
+      }
 
       if (isDiagnosedFormUpdaterCall) {
         const formUpdaterVariables = variables as DiagnosticFormUpdaterVariables

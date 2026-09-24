@@ -3,7 +3,11 @@
 import { within } from '@testing-library/vue'
 
 import FormUpdaterUser from '#tests/graphql/factories/types/FormUpdaterUser.ts'
-import { diagnosticTicketCreateUserLog } from '#tests/support/diagnostic-ticket-create-user.ts'
+import {
+  diagnosticLogFlyoutForm,
+  diagnosticTicketCreateUserLog,
+  diagnosticWatchFlyoutForm,
+} from '#tests/support/diagnostic-ticket-create-user.ts'
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
 import { waitUntil } from '#tests/support/vitest-wrapper.ts'
 
@@ -114,9 +118,19 @@ describe('ticket create view - user create action', () => {
 
     expect(customerSwitch).not.toBeInTheDocument()
 
-    await view.events.click(within(flyout).getByRole('button', { name: 'Create' }))
+    const createButton = within(flyout).getByRole<HTMLButtonElement>('button', { name: 'Create' })
+
+    diagnosticLogFlyoutForm('test:before-create-click', createButton)
+
+    const stopFormWatch = diagnosticWatchFlyoutForm('test:waiting-for-userAdd', createButton)
+
+    await view.events.click(createButton)
+
+    diagnosticLogFlyoutForm('test:after-create-click', createButton)
 
     const calls = await waitForUserAddMutationCalls()
+
+    stopFormWatch()
 
     // Agent should create users without explicitly setting roleIds (defaults will apply on backend)
     expect(calls[0].variables.input).toMatchObject({
@@ -217,9 +231,19 @@ describe('ticket create view - user create action', () => {
 
     expect(callsAfterRoleToggle).toHaveLength(4) // ticket create + user edit x3
 
-    await view.events.click(within(flyout).getByRole('button', { name: 'Create' }))
+    const createButton = within(flyout).getByRole<HTMLButtonElement>('button', { name: 'Create' })
+
+    diagnosticLogFlyoutForm('test:before-create-click', createButton)
+
+    const stopFormWatch = diagnosticWatchFlyoutForm('test:waiting-for-userAdd', createButton)
+
+    await view.events.click(createButton)
+
+    diagnosticLogFlyoutForm('test:after-create-click', createButton)
 
     const calls = await waitForUserAddMutationCalls()
+
+    stopFormWatch()
 
     expect(calls[0].variables.input).toMatchObject({
       email: 'foo@customer.com',
