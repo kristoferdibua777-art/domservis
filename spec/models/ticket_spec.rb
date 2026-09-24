@@ -1390,6 +1390,7 @@ RSpec.describe Ticket, type: :model do
 
       it 'destroys all related dependencies', current_user_id: 1 do
         refs_known = {
+          'DomServis::DispatchJob'  => { 'ticket_id' => 0 },
           'Ticket::Article'         => { 'ticket_id' => 1 },
           'Ticket::TimeAccounting'  => { 'ticket_id' => 1 },
           'Ticket::SharedDraftZoom' => { 'ticket_id' => 0 },
