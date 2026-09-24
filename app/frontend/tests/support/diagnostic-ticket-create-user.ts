@@ -58,6 +58,7 @@ const diagnosticFlyoutFormState = (submitButton: HTMLButtonElement) => {
 
   const blocking = messageKeys(node, true)
   let email: Record<string, unknown> | undefined
+  let firstname: unknown
 
   node.walk((child) => {
     messageKeys(child, true).forEach((key) => blocking.push(`${child.name}:${key}`))
@@ -71,11 +72,14 @@ const diagnosticFlyoutFormState = (submitButton: HTMLButtonElement) => {
         messages: messageKeys(child, false),
       }
     }
+
+    if (child.name === 'firstname') firstname = child.value
   })
 
   return {
     formId,
     email,
+    firstname,
     buttonDisabled: submitButton.disabled,
     formMessages: messageKeys(node, false),
     blocking,
@@ -141,6 +145,25 @@ export const diagnosticTraceFormField = (input: HTMLElement, label: string) => {
   ]
 
   onTestFinished(() => receipts.forEach((receipt) => node.off(receipt)))
+}
+
+// Logs every focus change while the test runs, to see whether focus leaves the
+// field the test is typing into.
+export const diagnosticTraceFocus = () => {
+  if (!enabled) return
+
+  const listener = (event: FocusEvent) => {
+    const target = event.target instanceof HTMLElement ? event.target : undefined
+
+    diagnosticTicketCreateUserLog('focus:focusin', {
+      tag: target?.tagName,
+      name: target?.getAttribute('name'),
+      id: target?.id,
+    })
+  }
+
+  document.addEventListener('focusin', listener)
+  onTestFinished(() => document.removeEventListener('focusin', listener))
 }
 
 // Logs the form state every few seconds until stopped, so a hang shows what

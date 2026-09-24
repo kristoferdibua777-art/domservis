@@ -6,6 +6,7 @@ import FormUpdaterUser from '#tests/graphql/factories/types/FormUpdaterUser.ts'
 import {
   diagnosticLogFlyoutForm,
   diagnosticTicketCreateUserLog,
+  diagnosticTraceFocus,
   diagnosticTraceFormField,
   diagnosticWatchFlyoutForm,
 } from '#tests/support/diagnostic-ticket-create-user.ts'
@@ -98,6 +99,7 @@ describe('ticket create view - user create action', () => {
     const emailField = await within(flyout).findByLabelText('Email')
 
     diagnosticTraceFormField(emailField, 'email')
+    diagnosticTraceFocus()
 
     diagnosticTicketCreateUserLog('test:before-email-typing')
 
@@ -199,6 +201,7 @@ describe('ticket create view - user create action', () => {
     const emailField = await within(flyout).findByLabelText('Email')
 
     diagnosticTraceFormField(emailField, 'email')
+    diagnosticTraceFocus()
 
     diagnosticTicketCreateUserLog('test:before-email-typing')
 
