@@ -43,8 +43,8 @@ msgstr "Активные"
 msgid "Done"
 msgstr "Завершённые"
 
-msgid "Loading dispatch registry and current policy..."
-msgstr "Загрузка реестра диспетчеризации и текущей политики..."
+msgid "Loading dispatch registry and current policy…"
+msgstr "Загрузка реестра диспетчеризации и текущей политики…"
 
 msgid "This screen is the workflow policy layer of Dom-Servis. It does not replace Zammad role assignment."
 msgstr "Этот экран управляет правилами работы диспетчеризации Дом-Сервис. Он не заменяет назначение ролей в Zammad."
