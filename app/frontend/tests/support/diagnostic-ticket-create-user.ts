@@ -94,6 +94,55 @@ export const diagnosticLogFlyoutForm = (label: string, submitButton: HTMLButtonE
   diagnosticTicketCreateUserLog(label, diagnosticFlyoutFormState(submitButton))
 }
 
+// Traces one field while the test types into it: every committed value, every
+// validation rule message added or removed, and validation prop changes, so a
+// stale `rule_*` blocking message can be matched to the value it came from.
+export const diagnosticTraceFormField = (input: HTMLElement, label: string) => {
+  if (!enabled) return
+
+  const formElement = input.closest('form')
+  const formNode = formElement?.id ? getNode(formElement.id) : undefined
+  let found = getNode(input.id)
+
+  formNode?.walk((child) => {
+    if (!found && child.props.id === input.id) found = child
+  })
+
+  if (!found) {
+    diagnosticTicketCreateUserLog(`field:${label}:node-missing`, { inputId: input.id })
+    return
+  }
+
+  const node = found
+  const receipts = [
+    node.on('commit', ({ payload }) => {
+      diagnosticTicketCreateUserLog(`field:${label}:commit`, { value: payload })
+    }),
+    node.on('message-added', ({ payload }) => {
+      if (!String(payload?.key).startsWith('rule_')) return
+
+      diagnosticTicketCreateUserLog(`field:${label}:message-added`, {
+        key: payload.key,
+        blocking: payload.blocking,
+        value: node.value,
+      })
+    }),
+    node.on('message-removed', ({ payload }) => {
+      if (!String(payload?.key).startsWith('rule_')) return
+
+      diagnosticTicketCreateUserLog(`field:${label}:message-removed`, {
+        key: payload.key,
+        value: node.value,
+      })
+    }),
+    node.on('prop:validation', ({ payload }) => {
+      diagnosticTicketCreateUserLog(`field:${label}:prop-validation`, { validation: payload })
+    }),
+  ]
+
+  onTestFinished(() => receipts.forEach((receipt) => node.off(receipt)))
+}
+
 // Logs the form state every few seconds until stopped, so a hang shows what
 // the form was waiting for. Also stopped when the test finishes or times out.
 export const diagnosticWatchFlyoutForm = (label: string, submitButton: HTMLButtonElement) => {
