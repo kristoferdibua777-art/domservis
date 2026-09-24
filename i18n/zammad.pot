@@ -10019,7 +10019,7 @@ msgid "Loading content"
 msgstr ""
 
 #: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:41
-msgid "Loading dispatch registry and current policy..."
+msgid "Loading dispatch registry and current policy…"
 msgstr ""
 
 #: app/views/init/spinner-loading.html.erb:264

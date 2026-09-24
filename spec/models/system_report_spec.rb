@@ -236,6 +236,8 @@ RSpec.describe SystemReport, current_user_id: 1, type: :model do
           'ui_desktop_beta_switch_admin_menu',
           'ui_desktop_beta_switch_role_ids',
           'form_allowed_params',
+          'dom_servis_form_intake_enabled',
+          'dom_servis_form_organization_id',
         ]
       end
 
