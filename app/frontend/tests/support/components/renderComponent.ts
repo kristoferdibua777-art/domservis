@@ -25,6 +25,10 @@ import { provideIcons } from '#shared/components/CommonIcon/useIcons.ts'
 import CommonLabel from '#shared/components/CommonLabel/CommonLabel.vue'
 import CommonLink from '#shared/components/CommonLink/CommonLink.vue'
 import DynamicInitializer from '#shared/components/DynamicInitializer/DynamicInitializer.vue'
+import {
+  getFieldLinkClasses,
+  initializeFieldLinkClasses,
+} from '#shared/components/Form/initializeFieldLinkClasses.ts'
 import { initializeAppName } from '#shared/composables/useAppName.ts'
 import { imageViewerOptions } from '#shared/composables/useImageViewer.ts'
 import {
@@ -284,6 +288,18 @@ const initializeForm = () => {
 
   plugins.push([formPlugin, buildFormKitPluginConfig(undefined, formFields)])
   defaultWrapperOptions.shallow = false
+
+  // The apps add the "formkit-link" class to field links in initializeFormFields()
+  // (see main.ts), which is not called here. useFormBlock() relies on that class to
+  // ignore clicks on a field link, so without it a click on e.g. "Create new customer"
+  // counts as a click on the field and opens its dropdown half a second later,
+  // stealing the focus from whatever the test is typing into by then.
+  const fieldLinkClasses = getFieldLinkClasses()
+
+  initializeFieldLinkClasses({
+    ...fieldLinkClasses,
+    container: `formkit-link ${fieldLinkClasses.container}`,
+  })
 
   formInitialized = true
 }

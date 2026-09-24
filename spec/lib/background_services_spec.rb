@@ -184,7 +184,7 @@ RSpec.describe BackgroundServices do
     end
   end
 
-  describe '#restart_on_file_change' do
+  describe '#restart_on_file_change', ensure_threads_exited: true do
     let(:config) { described_class::ServiceConfig.new(service: SampleService, disabled: false, workers: 0, worker_threads: 1) }
 
     before do
