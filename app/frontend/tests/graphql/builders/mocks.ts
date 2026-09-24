@@ -68,6 +68,7 @@ interface DiagnosticFormUpdaterVariables {
     requestId?: unknown
     changedField?: {
       name?: unknown
+      newValue?: unknown
     }
   }
 }
@@ -409,6 +410,7 @@ class MockLink extends ApolloLink {
           metaReset: formUpdaterVariables?.meta?.reset,
           metaRequestId: formUpdaterVariables?.meta?.requestId,
           changedFieldName: formUpdaterVariables?.meta?.changedField?.name,
+          changedFieldNewValue: formUpdaterVariables?.meta?.changedField?.newValue,
         })
       }
 

@@ -57,13 +57,25 @@ const diagnosticFlyoutFormState = (submitButton: HTMLButtonElement) => {
   if (!node) return { formId, node: 'missing' }
 
   const blocking = messageKeys(node, true)
+  let email: Record<string, unknown> | undefined
 
   node.walk((child) => {
     messageKeys(child, true).forEach((key) => blocking.push(`${child.name}:${key}`))
+
+    if (child.name === 'email') {
+      const input = document.getElementById(String(child.props.id))
+
+      email = {
+        value: child.value,
+        domValue: input instanceof HTMLInputElement ? input.value : undefined,
+        messages: messageKeys(child, false),
+      }
+    }
   })
 
   return {
     formId,
+    email,
     buttonDisabled: submitButton.disabled,
     formMessages: messageKeys(node, false),
     blocking,

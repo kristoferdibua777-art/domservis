@@ -100,7 +100,9 @@ describe('ticket create view - user create action', () => {
 
     await view.events.type(emailField, 'foo@customer.com')
 
-    diagnosticTicketCreateUserLog('test:after-email-typing')
+    diagnosticTicketCreateUserLog('test:after-email-typing', {
+      value: (emailField as HTMLInputElement).value,
+    })
 
     diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-3')
 
@@ -197,7 +199,9 @@ describe('ticket create view - user create action', () => {
 
     await view.events.type(emailField, 'foo@customer.com')
 
-    diagnosticTicketCreateUserLog('test:after-email-typing')
+    diagnosticTicketCreateUserLog('test:after-email-typing', {
+      value: (emailField as HTMLInputElement).value,
+    })
 
     diagnosticTicketCreateUserLog('test:before-waitForFormUpdaterQueryCalls-length-3')
 
