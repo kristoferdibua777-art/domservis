@@ -102,7 +102,12 @@ class BackgroundServices
       end
 
       loop do
-        watcher.execute_if_updated
+        begin
+          watcher.execute_if_updated
+        rescue Errno::ENOENT
+          # A watched file can disappear between the update check and its mtime lookup.
+          # Retry on the next interval instead of terminating the background worker thread.
+        end
         interruptible_sleep FILE_WATCHING_INTERVAL
       end
     end
@@ -110,7 +115,7 @@ class BackgroundServices
 
   def install_signal_trap
     Signal.trap('TERM') { handle_signal('TERM') }
-    Signal.trap('INT')  { handle_signal('INT')  }
+    Signal.trap('INT')  { handle_signal('INT') }
   end
 
   def handle_signal(signal)

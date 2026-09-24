@@ -24,6 +24,15 @@ const renderDateTime = (props: Props, slots = {}) => {
 }
 
 describe('CommonDateTime.vue', () => {
+  // `vi.useFakeTimers()` above is installed once at module-hoist time and was
+  // never uninstalled. Full-suite Vitest runs reuse workers across spec
+  // files, so leaving fake timers active here could silently break any
+  // later file in the same worker that relies on real timers (e.g.
+  // setTimeout-based `waitUntil` polling in async GraphQL-mock tests).
+  afterAll(() => {
+    vi.useRealTimers()
+  })
+
   it('renders with type relative', async () => {
     const view = renderDateTime({ dateTime, type: 'relative' })
     expect(view.container).toHaveTextContent('1 day ago')

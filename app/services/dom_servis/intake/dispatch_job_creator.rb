@@ -64,7 +64,9 @@ class DomServis::Intake::DispatchJobCreator
       source_reference:   normalized_source_reference,
       organization_id:    request_source.organization_id,
       intake_channel_key: payload[:channel_key].presence,
-      intake_payload:     payload[:raw_payload].presence || {},
+      # request_source_id is already stored on its own dedicated column
+      # above; drop it here so it isn't duplicated inside intake_payload.
+      intake_payload:     payload[:raw_payload].presence&.except(:request_source_id) || {},
       ticket_id:          ticket&.id,
       created_by_id:      actor_user.id,
       updated_by_id:      actor_user.id,

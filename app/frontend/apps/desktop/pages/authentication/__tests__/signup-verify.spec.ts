@@ -59,10 +59,19 @@ describe('signup verify view', () => {
   it('redirects to dashboard screen when the verification was successful', async () => {
     vi.useFakeTimers()
 
-    await visitView('/signup/verify/123')
+    // If visiting the view or the timer flush below throws,
+    // `vi.useRealTimers()` must still run - full-suite Vitest runs reuse
+    // workers across spec files, so leaving fake timers active here would
+    // silently hang any later file in the same worker that relies on real
+    // timers (e.g. setTimeout-based `waitUntil` polling in async
+    // GraphQL-mock tests).
+    try {
+      await visitView('/signup/verify/123')
 
-    await vi.runAllTimersAsync()
-    vi.useRealTimers()
+      await vi.runAllTimersAsync()
+    } finally {
+      vi.useRealTimers()
+    }
 
     await waitFor(() => {
       const router = getTestRouter()

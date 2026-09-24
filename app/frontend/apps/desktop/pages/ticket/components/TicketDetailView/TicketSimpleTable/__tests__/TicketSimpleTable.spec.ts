@@ -12,6 +12,15 @@ describe('TicketSimpleData', () => {
     vi.useFakeTimers()
   })
 
+  // Without this, fake timers installed by beforeEach above stay active
+  // after the file finishes. Full-suite Vitest runs reuse workers across
+  // spec files, so a later file in the same worker that relies on real
+  // timers (e.g. setTimeout-based `waitUntil` polling in async GraphQL-mock
+  // tests) could silently hang.
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('displays a table with ticket data', () => {
     mockApplicationConfig({ ticket_hook: 'Ticket#' })
 

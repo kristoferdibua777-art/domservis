@@ -36,17 +36,27 @@ describe('guided setup automated run', () => {
     it('redirects to home screen after successful setup', async () => {
       vi.useFakeTimers()
 
-      const view = await visitView('/guided-setup/automated/run')
+      // If anything below throws (including the assertions),
+      // `vi.useRealTimers()` must still run - full-suite Vitest runs reuse
+      // workers across spec files, so leaving fake timers active here would
+      // silently hang any later file in the same worker that relies on real
+      // timers (e.g. setTimeout-based `waitUntil` polling in async
+      // GraphQL-mock tests).
+      let view: Awaited<ReturnType<typeof visitView>>
+      try {
+        view = await visitView('/guided-setup/automated/run')
 
-      expect(view.getByText('Automated setup')).toBeInTheDocument()
-      expect(view.getByIconName('spinner')).toBeInTheDocument()
+        expect(view.getByText('Automated setup')).toBeInTheDocument()
+        expect(view.getByIconName('spinner')).toBeInTheDocument()
 
-      expect(
-        view.getByText('The system was configured successfully. You are being redirected.'),
-      ).toBeInTheDocument()
+        expect(
+          view.getByText('The system was configured successfully. You are being redirected.'),
+        ).toBeInTheDocument()
 
-      await vi.runAllTimersAsync()
-      vi.useRealTimers()
+        await vi.runAllTimersAsync()
+      } finally {
+        vi.useRealTimers()
+      }
 
       await waitFor(() => {
         expect(view, 'correctly redirects to home screen').toHaveCurrentUrl('/')

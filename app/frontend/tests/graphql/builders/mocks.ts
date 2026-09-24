@@ -482,6 +482,20 @@ vi.mock('#shared/server/apollo/client.ts', () => {
   }
 })
 
-afterEach(() => {
-  mockedApolloClient.clearStore()
+afterEach(async () => {
+  // `clearStore()` returns a Promise. `mockedApolloClient` (created once at
+  // module load, see above) is shared across every spec file that runs in
+  // the same Vitest worker during a full-suite run. Previously this hook
+  // did not await that Promise, so Vitest could start the next test's
+  // `beforeEach`/setup (and, in files that call `visitView`, its own
+  // `await client.clearStore()` right after mounting - see visitView.ts)
+  // while this clearStore() call was still resolving in the background.
+  // Two overlapping `clearStore()` calls racing on the same shared
+  // ApolloClient/QueryManager is a plausible source of the intermittent
+  // full-suite-only hangs seen after this point (e.g. a mutation issued by
+  // the next test never resolving because the QueryManager is mid-reset).
+  // Awaiting here ensures the store is fully cleared before the next test
+  // begins, so no clearStore() call from a later test can overlap with
+  // this one.
+  await mockedApolloClient.clearStore()
 })

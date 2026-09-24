@@ -124,12 +124,20 @@ describe('Ticket detail view', () => {
 
       vi.useFakeTimers()
 
-      await view.events.click(view.getByTestId('article-bubble-body-1'))
+      // If the click or the timer flush below throws, `vi.useRealTimers()`
+      // must still run - full-suite Vitest runs reuse workers across spec
+      // files, so leaving fake timers active here would silently hang any
+      // later file in the same worker that relies on real timers (e.g.
+      // setTimeout-based `waitUntil` polling in async GraphQL-mock tests).
+      try {
+        await view.events.click(view.getByTestId('article-bubble-body-1'))
 
-      // NB: Click handler has a built-in timeout (200ms) in order to catch double click behavior.
-      //   Advance the timer manually so we speed up the test a bit.
-      await vi.runAllTimersAsync()
-      vi.useRealTimers()
+        // NB: Click handler has a built-in timeout (200ms) in order to catch double click behavior.
+        //   Advance the timer manually so we speed up the test a bit.
+        await vi.runAllTimersAsync()
+      } finally {
+        vi.useRealTimers()
+      }
 
       expect(view.queryByLabelText('Article meta information')).not.toBeInTheDocument()
     })

@@ -3,10 +3,12 @@
 import { within } from '@testing-library/vue'
 
 import FormUpdaterUser from '#tests/graphql/factories/types/FormUpdaterUser.ts'
+import { cleanup } from '#tests/support/components/renderComponent.ts'
 import { diagnosticTicketCreateUserLog } from '#tests/support/diagnostic-ticket-create-user.ts'
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
 import { waitUntil } from '#tests/support/vitest-wrapper.ts'
 
+import { destroyComponent } from '#shared/components/DynamicInitializer/manage.ts'
 import {
   mockFormUpdaterQuery,
   waitForFormUpdaterQueryCalls,
@@ -14,6 +16,8 @@ import {
 import { mockObjectManagerFrontendAttributesQuery } from '#shared/entities/object-attributes/graphql/queries/objectManagerFrontendAttributes.mocks.ts'
 import { waitForUserAddMutationCalls } from '#shared/entities/user/graphql/mutations/add.mocks.ts'
 import { convertToGraphQLId } from '#shared/graphql/utils.ts'
+
+import { getOpenedFlyouts } from '#desktop/components/CommonFlyout/useFlyout.ts'
 
 import { handleMockFormUpdaterQuery, visitCreateView } from '../support/ticket-create-helpers.ts'
 
@@ -24,7 +28,27 @@ const waitForFormUpdaterQueryCallCount = (expectedCount: number) =>
   })
 
 describe('ticket create view - user create action', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Defends against fake timers left installed by an earlier file in the
+    // same full-suite worker (vi.useFakeTimers()/vi.useRealTimers() is
+    // process-global, not scoped per spec file). This file never installs
+    // fake timers itself, but both its tests type into the email field and
+    // then wait for a debounced 3rd FormUpdater call - if fake timers leaked
+    // in, that debounce's setTimeout never fires (nothing here advances
+    // fake time) and the wait hangs for the full 30s test timeout, which
+    // matches the intermittent full-suite-only failures seen in CI. A no-op
+    // if timers are already real.
+    vi.useRealTimers()
+
+    // Full-suite workers keep rendered wrappers because VTL auto-cleanup is disabled.
+    // Remove wrappers left by earlier files before exercising this stateful flyout flow.
+    cleanup()
+
+    // The global test flyout host is intentionally mounted once per worker.
+    // Ensure stale overlays from earlier files cannot leak into this suite.
+    await destroyComponent('flyout')
+    getOpenedFlyouts().clear()
+
     // Main form
     handleMockFormUpdaterQuery()
   })
