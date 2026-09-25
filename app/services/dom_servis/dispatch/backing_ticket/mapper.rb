@@ -26,28 +26,30 @@ class DomServis::Dispatch::BackingTicket::Mapper
 
   attr_reader :dispatch_job, :resolver
 
+  # No organization_id here: Ticket#check_default_organization keeps a
+  # ticket's organization equal to its customer's, and the shared
+  # dispatch-board customer belongs to none. The partner organization stays
+  # on the DispatchJob and is written into the creation note.
   def create_attributes
     base_attributes.merge(
-      group_id:        resolver.group.id,
-      customer_id:     resolver.customer.id,
-      created_by_id:   resolver.actor_user&.id,
-      updated_by_id:   resolver.actor_user&.id,
-      organization_id: dispatch_job.organization_id,
-      owner_id:        dispatch_job.assignee_id,
-      state_id:        resolver.ticket_state&.id,
-      priority_id:     resolver.ticket_priority&.id,
-      title:           title,
+      group_id:      resolver.group.id,
+      customer_id:   resolver.customer.id,
+      created_by_id: resolver.actor_user&.id,
+      updated_by_id: resolver.actor_user&.id,
+      owner_id:      dispatch_job.assignee_id,
+      state_id:      resolver.ticket_state&.id,
+      priority_id:   resolver.ticket_priority&.id,
+      title:         title,
     )
   end
 
   def update_attributes
     base_attributes.merge(
-      updated_by_id:   resolver.actor_user&.id,
-      organization_id: dispatch_job.organization_id,
-      owner_id:        dispatch_job.assignee_id,
-      state_id:        resolver.ticket_state&.id,
-      priority_id:     resolver.ticket_priority&.id,
-      title:           title,
+      updated_by_id: resolver.actor_user&.id,
+      owner_id:      dispatch_job.assignee_id,
+      state_id:      resolver.ticket_state&.id,
+      priority_id:   resolver.ticket_priority&.id,
+      title:         title,
     )
   end
 
