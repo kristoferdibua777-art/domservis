@@ -185,18 +185,18 @@ RSpec.describe BackgroundServices do
   end
 
   describe '#restart_on_file_change', ensure_threads_exited: true do
-    let(:config) { described_class::ServiceConfig.new(service: SampleService, disabled: false, workers: 0, worker_threads: 1) }
-
     before do
-      stub_const("#{described_class}::FILE_WATCHING_INTERVAL", 0)
       allow(Process).to receive(:kill)
-      allow(Rails.application.config).to receive(:reloading_enabled?).and_return(true)
+      allow(Rails.application.config.file_watcher).to receive(:new).and_wrap_original do |original, *args, &block|
+        watcher = original.call(*args, &block)
+        # Change the file only after the real watcher has captured its baseline.
+        FileUtils.touch(file)
+        watcher
+      end
+      # Complete one real check, including the no-change path, before asserting.
+      allow(instance).to receive(:interruptible_sleep) { Thread.current.exit }
 
-      instance.run
-
-      FileUtils.touch(file)
-
-      sleep 0.1
+      instance.send(:restart_on_file_changes).value
     end
 
     context 'when backend file changes' do
