@@ -136,7 +136,7 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket.dom_servis_description).to eq('Updated completion details')
     expect(ticket.tag_list).to eq(%w[gas waiting-parts])
     expect(ticket.state.state_type.name).to eq('closed')
-    expect(ticket.articles.last.body).to include('Status: taken -> done.')
+    expect(ticket.articles.last.body).to include('Status: Taken -> Done.')
     expect(ticket.articles.last.body).to include('Current dispatch comment')
     expect(ticket.articles.last.body).to include('Updated completion details')
   end
