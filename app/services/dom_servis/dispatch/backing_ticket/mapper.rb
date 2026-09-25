@@ -211,22 +211,7 @@ class DomServis::Dispatch::BackingTicket::Mapper
   end
 
   def status_name(value)
-    case value.to_s
-    when 'pool'
-      'Pool'
-    when 'taken'
-      'Taken'
-    when 'in_progress'
-      __('In progress')
-    when 'done'
-      'Done'
-    when 'cancelled'
-      'Cancelled'
-    when 'transferred_to_partner'
-      __('Transferred to partner')
-    else
-      value_or_dash(value)
-    end
+    DomServis::DispatchWorkflow.label(value) || value_or_dash(value)
   end
 
   def dom_servis_job_code

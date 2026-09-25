@@ -99,6 +99,7 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
       .new(dispatch_job:, operator: dispatcher)
       .execute
 
+    dispatch_job.update!(status: 'in_progress', updated_by_id: dispatcher.id)
     dispatch_job.update!(
       status:        'done',
       priority:      'high',
@@ -115,7 +116,7 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
         dispatch_job: dispatch_job,
         operator:     dispatcher,
         changes:      {
-          'status_changed'      => { from: 'taken', to: 'done' },
+          'status_changed'      => { from: 'in_progress', to: 'done' },
           'priority_changed'    => { from: 'medium', to: 'high' },
           'moved_weekday'       => { from: 'mon', to: 'tue' },
           'tags_changed'        => { to: %w[gas waiting-parts] },
@@ -133,9 +134,29 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket.dom_servis_comment).to eq('Work completed successfully')
     expect(ticket.dom_servis_description).to eq('Updated completion details')
     expect(ticket.tag_list).to eq(%w[gas waiting-parts])
-    expect(ticket.state.state_type.name).to eq('closed')
-    expect(ticket.articles.last.body).to include('Status: Taken -> Done.')
+    expect(ticket.state.state_type.name).to eq('open')
+    expect(ticket.articles.last.body).to include('Status: In progress -> Done.')
     expect(ticket.articles.last.body).to include('Current dispatch comment')
     expect(ticket.articles.last.body).to include('Updated completion details')
+  end
+
+  it 'closes the backing ticket only when the dispatcher closes the job', :aggregate_failures do
+    ticket = DomServis::Dispatch::BackingTicket::Create
+      .new(dispatch_job:, operator: dispatcher)
+      .execute
+
+    dispatch_job.update!(status: 'in_progress', updated_by_id: dispatcher.id)
+    dispatch_job.update!(status: 'done', updated_by_id: dispatcher.id)
+    dispatch_job.update!(status: 'closed', updated_by_id: dispatcher.id)
+
+    DomServis::Dispatch::BackingTicket::SyncFromDispatch
+      .new(dispatch_job:, operator: dispatcher, changes: { 'status_changed' => { from: 'done', to: 'closed' } })
+      .execute
+
+    ticket.reload
+
+    expect(ticket.dom_servis_dispatch_status).to eq('closed')
+    expect(ticket.state.state_type.name).to eq('closed')
+    expect(ticket.articles.last.body).to include('Status: Done -> Closed.')
   end
 end

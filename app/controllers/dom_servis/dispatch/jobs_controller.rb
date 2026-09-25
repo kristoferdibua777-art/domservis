@@ -1,6 +1,10 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
+  # New jobs always start unassigned in the pool: the master is set through
+  # take/assign and the lifecycle timestamps are maintained by the model.
+  CREATE_FORBIDDEN_PARAMS = %i[assignee_id published_at taken_at completed_at closed_at cancelled_at].freeze
+
   def index
     model_index_render(dispatch_job_scope.ordered_recent, params)
   end
@@ -10,19 +14,20 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
   end
 
   def create
+    ensure_create_params_allowed!
     ensure_dispatch_tags_exist!(job_create_params[:work_tags])
 
     job = DomServis::DispatchJob.new(job_create_params)
     authorize job, :create?
     ensure_action_allowed!('create_job')
-    ensure_action_allowed!('publish_to_pool') if job.status == 'pool'
+    ensure_action_allowed!('publish_to_pool')
     ActiveRecord::Base.transaction do
       job.created_by = current_user
       job.updated_by = current_user
       job.save!
 
       create_event!(job, 'created', source: job.source)
-      create_event!(job, 'published') if job.status == 'pool'
+      create_event!(job, 'published')
       sync_backing_ticket!(job, strict: true, ensure_created: true)
     end
 
@@ -34,17 +39,9 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     authorize job, :update?
     ensure_action_allowed!('edit_all_fields')
     ensure_fields_editable!(job_update_params.keys)
-    ensure_update_actions_allowed!(job, job_update_params)
     ensure_dispatch_tags_exist!(job_update_params[:work_tags]) if job_update_params.key?(:work_tags)
 
-    tracked_changes = collect_tracked_changes(job, job_update_params)
-    job.update!(job_update_params.merge(updated_by_id: current_user.id))
-
-    tracked_changes.each do |event_type, meta|
-      create_event!(job, event_type, meta)
-    end
-
-    create_event!(job, 'updated') if tracked_changes.blank?
+    tracked_changes = job.with_lock { apply_update!(job, job_update_params) }
     sync_backing_ticket!(job, changes: tracked_changes)
 
     model_item_render(job)
@@ -62,15 +59,16 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     raise Exceptions::UnprocessableEntity, __('Invalid assignee.') if assignee.blank?
     raise Exceptions::UnprocessableEntity, __('Assignee must be an active user.') if assignee.active == false
     raise Exceptions::Forbidden, __('Assignee must be a Dom-Servis master.') if !assignee.permissions?('dom_servis.master')
-    raise Exceptions::UnprocessableEntity, __('Cannot assign a finished dispatch job.') if job.status.in?(%w[done cancelled transferred_to_partner])
 
-    previous_assignee_id = job.assignee_id
+    previous_assignee_id = nil
 
     job.with_lock do
+      raise Exceptions::UnprocessableEntity, __('Cannot assign a finished dispatch job.') if !DomServis::DispatchWorkflow.assignable?(job.status)
+
+      previous_assignee_id = job.assignee_id
       job.update!(
         assignee_id:   assignee.id,
         status:        job.status == 'pool' ? 'taken' : job.status,
-        taken_at:      job.taken_at || Time.zone.now,
         updated_by_id: current_user.id,
       )
 
@@ -97,6 +95,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     ensure_action_allowed!('take_job')
 
     conflict = nil
+    taken    = false
 
     job.with_lock do
       if job.assignee_id.present? && job.assignee_id != current_user.id
@@ -104,13 +103,17 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
         next
       end
 
+      # Taking a job that is already yours is a no-op.
+      next if job.assignee_id == current_user.id && job.status != 'pool'
+      raise Exceptions::UnprocessableEntity, __('Only pool jobs can be taken.') if job.status != 'pool'
+
       job.update!(
         assignee_id:   current_user.id,
-        status:        job.status == 'pool' ? 'taken' : job.status,
-        taken_at:      job.taken_at || Time.zone.now,
+        status:        'taken',
         updated_by_id: current_user.id,
       )
       create_event!(job, 'taken')
+      taken = true
     end
 
     if conflict
@@ -118,7 +121,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
       return
     end
 
-    sync_backing_ticket!(job, changes: { 'taken' => { to: current_user.id } })
+    sync_backing_ticket!(job, changes: { 'taken' => { to: current_user.id } }) if taken
 
     model_item_render(job)
   end
@@ -129,12 +132,9 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     ensure_action_allowed!('release_to_pool')
 
     job.with_lock do
-      job.update!(
-        assignee_id:   nil,
-        status:        'pool',
-        taken_at:      nil,
-        updated_by_id: current_user.id,
-      )
+      raise Exceptions::UnprocessableEntity, "A dispatch job in '#{job.status}' cannot be released to the pool." if !DomServis::DispatchWorkflow.releasable?(job.status)
+
+      job.update!(DomServis::DispatchWorkflow.transition_attributes('pool').merge(updated_by_id: current_user.id))
       create_event!(job, 'released')
     end
 
@@ -147,23 +147,21 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     job = dispatch_job_scope.find(params[:id])
     authorize job, :update_status?
 
-    status = params.require(:status).to_s
-    raise Exceptions::UnprocessableEntity, __('Invalid dispatch job status.') if DomServis::DispatchJob::STATUSES.exclude?(status)
-
-    ensure_status_allowed!(status)
-    ensure_action_allowed!('cancel_job') if status == 'cancelled'
-    ensure_action_allowed!('set_status_in_progress') if status == 'in_progress'
-    ensure_action_allowed!('set_status_done') if status == 'done'
-    ensure_action_allowed!('transfer_to_partner') if status == 'transferred_to_partner'
-    ensure_action_allowed!('reopen_job') if %w[pool taken].include?(status) && job.status.in?(%w[done cancelled])
+    status          = params.require(:status).to_s
+    previous_status = nil
+    changed         = false
 
     job.with_lock do
       previous_status = job.status
-      job.update!(status: status, updated_by_id: current_user.id)
+      updates         = status_transition_updates!(job, status)
+      next if updates.blank?
+
+      job.update!(updates.merge(updated_by_id: current_user.id))
       create_event!(job, 'status_changed', from: previous_status, to: status)
+      changed = true
     end
 
-    sync_backing_ticket!(job, changes: { 'status_changed' => { from: job.status_before_last_save, to: status } })
+    sync_backing_ticket!(job, changes: { 'status_changed' => { from: previous_status, to: status } }) if changed
 
     model_item_render(job)
   end
@@ -232,15 +230,57 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
   private
 
   def job_create_params
-    permitted_job_params.merge(
-      status:       permitted_job_params[:status].presence || 'pool',
-      source:       permitted_job_params[:source].presence || 'manual',
-      published_at: permitted_job_params[:published_at].presence || Time.zone.now,
+    permitted_job_params.except(*CREATE_FORBIDDEN_PARAMS).merge(
+      status: 'pool',
+      source: permitted_job_params[:source].presence || 'manual',
     )
+  end
+
+  def ensure_create_params_allowed!
+    raise Exceptions::UnprocessableEntity, __('New dispatch jobs always start in the pool.') if params[:status].present? && params[:status].to_s != 'pool'
+
+    forbidden = CREATE_FORBIDDEN_PARAMS.select { |key| params[key].present? }
+    return if forbidden.blank?
+
+    raise Exceptions::UnprocessableEntity, "Dispatch job create does not accept #{forbidden.join(', ')}. Assign a master through the assign action."
+  end
+
+  # Single entry point for status changes requested through /status and the
+  # generic update: checks the transition against DispatchWorkflow and the
+  # role policy, and returns the attributes to write ({} when nothing changes).
+  def status_transition_updates!(job, status)
+    status = status.to_s
+    raise Exceptions::UnprocessableEntity, __('Invalid dispatch job status.') if !DomServis::DispatchWorkflow.status?(status)
+    return {} if status == job.status
+    raise Exceptions::UnprocessableEntity, "Dispatch job cannot move from '#{job.status}' to '#{status}'." if !DomServis::DispatchWorkflow.transition_allowed?(job.status, status)
+
+    action_key = DomServis::DispatchWorkflow.action_for(job.status, status)
+    raise Exceptions::UnprocessableEntity, "Use the take or assign action to move a dispatch job to '#{status}'." if action_key.blank?
+
+    ensure_status_allowed!(status)
+    ensure_action_allowed!(action_key)
+
+    DomServis::DispatchWorkflow.transition_attributes(status)
   end
 
   def job_update_params
     permitted_job_params
+  end
+
+  def apply_update!(job, updates)
+    ensure_update_actions_allowed!(job, updates)
+    status_updates  = updates.key?(:status) ? status_transition_updates!(job, updates[:status]) : {}
+    tracked_changes = collect_tracked_changes(job, updates)
+
+    job.update!(updates.merge(status_updates).merge(updated_by_id: current_user.id))
+
+    tracked_changes.each do |event_type, meta|
+      create_event!(job, event_type, meta)
+    end
+
+    create_event!(job, 'updated') if tracked_changes.blank?
+
+    tracked_changes
   end
 
   def permitted_job_params
@@ -371,18 +411,6 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
   def ensure_update_actions_allowed!(job, updates)
     updates = updates.to_h.deep_symbolize_keys
     return if updates.blank?
-
-    if updates[:status].present? && updates[:status] != job.status
-      status = updates[:status].to_s
-
-      raise Exceptions::UnprocessableEntity, __('Invalid dispatch job status.') if DomServis::DispatchJob::STATUSES.exclude?(status)
-
-      ensure_status_allowed!(status)
-      ensure_action_allowed!('cancel_job') if status == 'cancelled'
-      ensure_action_allowed!('set_status_in_progress') if status == 'in_progress'
-      ensure_action_allowed!('set_status_done') if status == 'done'
-      ensure_action_allowed!('reopen_job') if %w[pool taken].include?(status) && job.status.in?(%w[done cancelled])
-    end
 
     if updates[:priority].present? && updates[:priority] != job.priority
       ensure_action_allowed!('change_priority')

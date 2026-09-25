@@ -37,7 +37,7 @@ class DomServis::Dispatch::AdminPoliciesController < DomServis::Dispatch::BaseCo
       total:  jobs.count,
       pool:   jobs.where(status: 'pool').count,
       active: jobs.where(status: %w[taken in_progress]).count,
-      done:   jobs.where(status: 'done').count,
+      done:   jobs.where(status: %w[done closed]).count,
     }
   end
 end

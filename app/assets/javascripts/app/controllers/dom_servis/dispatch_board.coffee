@@ -1039,7 +1039,7 @@ class App.DomServisDispatchBoard extends App.Controller
       active: _.filter(weekJobs, (job) -> job.status in ['taken', 'in_progress']).length
       mine: _.filter(weekJobs, (job) -> job.assignee_id is currentUserId).length
       mineActive: _.filter(weekJobs, (job) -> job.assignee_id is currentUserId && job.status in ['taken', 'in_progress']).length
-      done: _.filter(weekJobs, (job) -> job.status is 'done').length
+      done: _.filter(weekJobs, (job) -> job.status in ['done', 'closed']).length
       today: _.filter(weekJobs, (job) => @isToday(job)).length
       availableToday: _.filter(weekJobs, (job) => job.status is 'pool' && @isToday(job)).length
     }
@@ -1052,7 +1052,7 @@ class App.DomServisDispatchBoard extends App.Controller
       { id: 'pool', label: 'Пул', count: _.filter(weekJobs, (job) -> job.status is 'pool').length }
       { id: 'active', label: 'В работе', count: _.filter(weekJobs, (job) -> job.status in ['taken', 'in_progress']).length }
       { id: 'mine', label: 'Мои', count: _.filter(weekJobs, (job) -> job.assignee_id is App.User.current()?.id).length }
-      { id: 'done', label: 'Готово', count: _.filter(weekJobs, (job) -> job.status is 'done').length }
+      { id: 'done', label: 'Готово', count: _.filter(weekJobs, (job) -> job.status in ['done', 'closed']).length }
       { id: 'all', label: 'Все', count: _.size(weekJobs) }
     ].map (item) =>
       item.active = item.id is @statusFilter
@@ -1304,10 +1304,11 @@ class App.DomServisDispatchBoard extends App.Controller
         visibleTags: @tagBadgeItems(job.work_tags, 2)
         moreTagsCount: Math.max(@normalizeTags(job.work_tags).length - 2, 0)
         canTake: job.status is 'pool' && @actionAllowed('take_job')
-        canRelease: job.assignee_id? && canOperate && @actionAllowed('release_to_pool')
+        canRelease: job.status in ['taken', 'in_progress'] && job.assignee_id? && canOperate && @actionAllowed('release_to_pool')
         canStart: canOperate && job.status is 'taken' && @actionAllowed('set_status_in_progress') && @statusAllowed('in_progress')
-        canFinish: canOperate && job.status in ['taken', 'in_progress'] && @actionAllowed('set_status_done') && @statusAllowed('done')
+        canFinish: canOperate && job.status is 'in_progress' && @actionAllowed('set_status_done') && @statusAllowed('done')
         canCancel: dispatcherAccess && job.status in ['pool', 'taken', 'in_progress'] && @actionAllowed('cancel_job') && @statusAllowed('cancelled')
+        canClose: dispatcherAccess && job.status is 'done' && @actionAllowed('close_job') && @statusAllowed('closed')
         canEdit: @canOpenEdit(job)
         adminAccess: adminAccess
         masterAccess: masterAccess
@@ -1325,6 +1326,9 @@ class App.DomServisDispatchBoard extends App.Controller
 
     if card.canFinish
       return { label: 'Готово', buttonClass: 'btn--success', handlerClass: 'js-set-status', status: 'done' }
+
+    if card.canClose
+      return { label: 'Закрыть', buttonClass: 'btn--success', handlerClass: 'js-set-status', status: 'closed' }
 
     if card.canRelease
       return { label: 'В пул', buttonClass: 'btn--text', handlerClass: 'js-release-job' }
@@ -1358,7 +1362,7 @@ class App.DomServisDispatchBoard extends App.Controller
     canOperate = @dispatcherAccess() || job.assignee_id is currentUserId
     deadlineState = @jobDeadlineState(job)
     assignOptions = @masterAssigneeOptions()
-    canAssign = @dispatcherAccess() && @actionAllowed('change_assignee') && assignOptions.length > 0
+    canAssign = @dispatcherAccess() && @actionAllowed('change_assignee') && assignOptions.length > 0 && job.status in ['pool', 'taken', 'in_progress']
     canTransfer = @dispatcherAccess() && @actionAllowed('transfer_to_partner') && @statusAllowed('transferred_to_partner') && job.status in ['pool', 'taken', 'in_progress']
 
     {
@@ -1389,10 +1393,11 @@ class App.DomServisDispatchBoard extends App.Controller
       canAssign: canAssign
       canTransfer: canTransfer
       canTake: job.status is 'pool' && @actionAllowed('take_job')
-      canRelease: job.assignee_id? && canOperate && @actionAllowed('release_to_pool')
+      canRelease: job.status in ['taken', 'in_progress'] && job.assignee_id? && canOperate && @actionAllowed('release_to_pool')
       canStart: canOperate && job.status is 'taken' && @actionAllowed('set_status_in_progress') && @statusAllowed('in_progress')
-      canFinish: canOperate && job.status in ['taken', 'in_progress'] && @actionAllowed('set_status_done') && @statusAllowed('done')
+      canFinish: canOperate && job.status is 'in_progress' && @actionAllowed('set_status_done') && @statusAllowed('done')
       canCancel: @dispatcherAccess() && job.status in ['pool', 'taken', 'in_progress'] && @actionAllowed('cancel_job') && @statusAllowed('cancelled')
+      canClose: @dispatcherAccess() && job.status is 'done' && @actionAllowed('close_job') && @statusAllowed('closed')
     }
 
   buildDetailGroups: (job) ->
@@ -1631,6 +1636,9 @@ class App.DomServisDispatchBoard extends App.Controller
       completed_at:
         type: 'readonly'
         group: 'lifecycle'
+      closed_at:
+        type: 'readonly'
+        group: 'lifecycle'
       cancelled_at:
         type: 'readonly'
         group: 'lifecycle'
@@ -1674,6 +1682,7 @@ class App.DomServisDispatchBoard extends App.Controller
       taken_at: 'Взята'
       updated_at: 'Обновлена'
       completed_at: 'Завершена'
+      closed_at: 'Закрыта'
       cancelled_at: 'Отменена'
       organization_id: 'Заказчик'
       attachments: 'Вложения'
@@ -2010,7 +2019,7 @@ class App.DomServisDispatchBoard extends App.Controller
       when 'mine'
         _.filter(weekJobs, (job) -> job.assignee_id is currentUserId)
       when 'done'
-        _.filter(weekJobs, (job) -> job.status is 'done')
+        _.filter(weekJobs, (job) -> job.status in ['done', 'closed'])
       else
         _.filter(weekJobs, (job) -> job.status in ['pool', 'taken', 'in_progress'])
 
@@ -2431,6 +2440,7 @@ class App.DomServisDispatchBoard extends App.Controller
       when 'taken' then 'Взята'
       when 'in_progress' then 'В работе'
       when 'done' then 'Готово'
+      when 'closed' then 'Закрыта'
       when 'cancelled' then 'Отменена'
       when 'transferred_to_partner' then 'Передана партнёру'
       else 'В пуле'
