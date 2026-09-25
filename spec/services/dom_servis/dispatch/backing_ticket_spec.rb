@@ -49,7 +49,8 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket).to be_persisted
     expect(dispatch_job.reload.ticket_id).to eq(ticket.id)
     expect(ticket.group_id).to eq(group.id)
-    expect(ticket.organization_id).to eq(organization.id)
+    expect(ticket.organization_id).to be_nil
+    expect(dispatch_job.organization_id).to eq(organization.id)
     expect(ticket.owner_id).to eq(master.id)
     expect(ticket.title).to include(dispatch_job.job_code, 'Boiler repair', 'Lenina 10')
     expect(ticket.dom_servis_job_code).to eq(dispatch_job.job_code)
@@ -58,6 +59,7 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket.dom_servis_assignee_name).to eq(master.fullname)
     expect(ticket.tag_list).to eq(%w[boiler urgent])
     expect(ticket.articles.last.body).to include('Created from Dom-Servis dispatch board.')
+    expect(ticket.articles.last.body).to include("Organization: #{organization.name}")
     expect(ticket.articles.last.body).to include('Call before arrival')
   end
 
