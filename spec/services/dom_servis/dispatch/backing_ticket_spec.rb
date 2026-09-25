@@ -49,7 +49,8 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket).to be_persisted
     expect(dispatch_job.reload.ticket_id).to eq(ticket.id)
     expect(ticket.group_id).to eq(group.id)
-    expect(ticket.organization_id).to eq(organization.id)
+    expect(ticket.organization_id).to be_nil
+    expect(dispatch_job.organization_id).to eq(organization.id)
     expect(ticket.owner_id).to eq(master.id)
     expect(ticket.title).to include(dispatch_job.job_code, 'Boiler repair', 'Lenina 10')
     expect(ticket.dom_servis_job_code).to eq(dispatch_job.job_code)
@@ -58,16 +59,15 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket.dom_servis_assignee_name).to eq(master.fullname)
     expect(ticket.tag_list).to eq(%w[boiler urgent])
     expect(ticket.articles.last.body).to include('Created from Dom-Servis dispatch board.')
+    expect(ticket.articles.last.body).to include("Organization: #{organization.name}")
     expect(ticket.articles.last.body).to include('Call before arrival')
   end
 
-  it 'falls back to an operator-accessible group when the configured backing group is unavailable' do
+  it 'files the backing ticket under a group the operator can access' do
+    # Sorts first among the active groups, but the operator has no access to it.
+    create(:group, name: '000 Blocked Group')
     accessible_group = create(:group, name: '001 Accessible Group')
-    blocked_group    = create(:group, name: '999 Blocked Group')
     operator         = create(:agent, groups: [accessible_group])
-
-    previous_group_setting = Setting.get('dom_servis_dispatch_backing_ticket_group_id')
-    Setting.set('dom_servis_dispatch_backing_ticket_group_id', blocked_group.id, validate: false)
 
     fallback_job = DomServis::DispatchJob.create!(
       service_type: 'Washing machine repair',
@@ -92,8 +92,6 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket).to be_persisted
     expect(ticket.group_id).to eq(accessible_group.id)
     expect(fallback_job.reload.ticket_id).to eq(ticket.id)
-  ensure
-    Setting.set('dom_servis_dispatch_backing_ticket_group_id', previous_group_setting, validate: false)
   end
 
   it 'syncs key dispatch changes into the existing backing ticket and appends an internal note' do
@@ -136,7 +134,7 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket.dom_servis_description).to eq('Updated completion details')
     expect(ticket.tag_list).to eq(%w[gas waiting-parts])
     expect(ticket.state.state_type.name).to eq('closed')
-    expect(ticket.articles.last.body).to include('Status: taken -> done.')
+    expect(ticket.articles.last.body).to include('Status: Taken -> Done.')
     expect(ticket.articles.last.body).to include('Current dispatch comment')
     expect(ticket.articles.last.body).to include('Updated completion details')
   end

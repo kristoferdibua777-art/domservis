@@ -20,7 +20,6 @@ class DomServis::Dispatch::BackingTicket::Resolver
   def group
     @group ||= begin
       candidate_groups = [
-        configured_group,
         operator_group,
         assignee_group,
         *accessible_active_groups,
@@ -90,13 +89,6 @@ class DomServis::Dispatch::BackingTicket::Resolver
   end
 
   private
-
-  def configured_group
-    group_id = Setting.get('dom_servis_dispatch_backing_ticket_group_id').presence
-    return if group_id.blank?
-
-    Group.find_by(id: group_id)
-  end
 
   def operator_group
     return if operator.blank?
