@@ -61,13 +61,11 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket.articles.last.body).to include('Call before arrival')
   end
 
-  it 'falls back to an operator-accessible group when the configured backing group is unavailable' do
+  it 'files the backing ticket under a group the operator can access' do
+    # Sorts first among the active groups, but the operator has no access to it.
+    create(:group, name: '000 Blocked Group')
     accessible_group = create(:group, name: '001 Accessible Group')
-    blocked_group    = create(:group, name: '999 Blocked Group')
     operator         = create(:agent, groups: [accessible_group])
-
-    previous_group_setting = Setting.get('dom_servis_dispatch_backing_ticket_group_id')
-    Setting.set('dom_servis_dispatch_backing_ticket_group_id', blocked_group.id, validate: false)
 
     fallback_job = DomServis::DispatchJob.create!(
       service_type: 'Washing machine repair',
@@ -92,8 +90,6 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket).to be_persisted
     expect(ticket.group_id).to eq(accessible_group.id)
     expect(fallback_job.reload.ticket_id).to eq(ticket.id)
-  ensure
-    Setting.set('dom_servis_dispatch_backing_ticket_group_id', previous_group_setting, validate: false)
   end
 
   it 'syncs key dispatch changes into the existing backing ticket and appends an internal note' do
