@@ -38,7 +38,7 @@ class DomServis::Dispatch::BackingTicket::Resolver
   end
 
   def shared_customer
-    @customer ||= begin
+    @shared_customer ||= begin
       email = Setting.get('dom_servis_dispatch_ticket_customer_email').presence || DEFAULT_CUSTOMER_EMAIL
       User.find_by(email: email.downcase) || User.create!(
         firstname: 'Dom-Servis',

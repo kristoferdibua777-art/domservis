@@ -5,14 +5,13 @@ class DomServis::Dispatch::ClientResolver
   MAX_PHONE_DIGITS = 15
 
   def self.normalize_phone(value)
-    raw_phone = value.to_s.strip
-    international_prefix = raw_phone.start_with?('+', '00')
-    digits = raw_phone.gsub(/\D/, '')
-    return if digits.blank?
+    raw_phone = value.to_s.strip.delete(' ()-')
+    return if !raw_phone.match?(%r{\A(?:\+|00)?[1-9][0-9]*\z})
 
-    digits = digits.delete_prefix('00')
+    international_prefix = raw_phone.start_with?('+', '00')
+    digits = raw_phone.delete_prefix('+').delete_prefix('00')
     digits = "7#{digits}" if digits.length == 10 && !international_prefix
-    digits = "7#{digits[1..]}" if digits.length == 11 && digits.start_with?('8')
+    digits = "7#{digits[1..]}" if digits.length == 11 && digits.start_with?('8') && !international_prefix
     return if !digits.length.between?(MIN_PHONE_DIGITS, MAX_PHONE_DIGITS)
 
     "+#{digits}"
@@ -80,8 +79,9 @@ class DomServis::Dispatch::ClientResolver
   end
 
   def customer_role
-    @customer_role ||= Role.find_by(name: 'Customer') ||
-      raise(Exceptions::UnprocessableEntity, __('Customer role is not configured.'))
+    @customer_role ||= begin
+      Role.find_by(name: 'Customer') || raise(Exceptions::UnprocessableEntity, __('Customer role is not configured.'))
+    end
   end
 
   def normalized_name
