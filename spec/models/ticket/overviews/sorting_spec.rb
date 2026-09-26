@@ -93,7 +93,12 @@ RSpec.describe 'Ticket::Overviews > Sorting' do # rubocop:disable RSpec/Describe
       groups = create_list(:group, 10).tap { |gs| gs.each { |g| g.update!(name: Faker::App.unique.name) } }
       user.update!(group_ids: Group.pluck(:id))
 
-      create_list(:ticket, 10).tap { |tickets| tickets.each_with_index { |t, idx| t.update!(group_id: groups[idx].id) } }
+      create_list(:ticket, 10).tap do |tickets|
+        tickets.each_with_index do |ticket, idx|
+          ticket.update!(group_id: groups[idx].id)
+          ticket.customer.update!(firstname: format('Customer %02d', idx), lastname: format('Sort %02d', idx))
+        end
+      end
     end
 
     context 'when ascending' do
