@@ -38,9 +38,9 @@ flowchart LR
 
 | Объект | Ответственность |
 | --- | --- |
-| DispatchJob | Статус, исполнитель, планирование, клиент, адрес, услуга, теги и метаданные приёма |
+| DispatchJob | Статус, исполнитель, планирование, адрес, услуга, теги, метаданные приёма, снимок клиента |
 | DispatchEvent | История действий над заявкой |
-| Ticket | Связанная история и представление для инструментов Zammad |
+| Ticket | Номер заявки, клиент, переписка; проекция операционных полей для инструментов Zammad |
 | User / Role | Сотрудники и глобальные разрешения |
 | Group | Доступ к тикетным очередям; не готовая территориальная фильтрация доски |
 | Organization | Заказчик или партнёр; не основная граница доступа к заявке |
@@ -51,6 +51,42 @@ DispatchJob — оперативный источник истины.
 Проекция DispatchJob → Ticket выполняется выделенными сервисами.
 Свободной двусторонней синхронизации нет.
 
+### Правило владения полями
+
+Каждое поле заявки записывается в одном месте; вторая сторона — только проекция.
+
+| Данные | Владелец | Проекция |
+| --- | --- | --- |
+| Номер заявки для людей | Ticket.number | job_code — совместимость, новые функции на нём не строить |
+| Идентичность клиента | Ticket.customer, Ticket.organization | снимок в DispatchJob |
+| Переписка | статьи Ticket | — |
+| Статус | DispatchJob.status | Ticket.state, dom_servis_dispatch_status |
+| Мастер | DispatchJob.assignee | Ticket.owner, dom_servis_assignee_name |
+| Дата, время, адрес, услуга, описание, источник, приоритет, комментарий диспетчера | DispatchJob | колонки dom_servis_* |
+
+DispatchJob.id — внутренний технический идентификатор.
+
+### Модель статусов
+
+Статусы, переходы, требуемые действия политики и проекция в Ticket.state описаны в одном месте —
+[DispatchWorkflow](../../app/models/dom_servis/dispatch_workflow.rb).
+Модель DispatchJob проверяет переход и инвариант мастера при каждом сохранении.
+
+```text
+pool ──take/assign──▶ taken ──▶ in_progress ──▶ done ──close──▶ closed
+taken | in_progress ──release──▶ pool
+pool | taken | in_progress ──▶ cancelled | transferred_to_partner
+done | closed | cancelled ──reopen──▶ pool
+```
+
+- done — мастер закончил работу на объекте; closed — диспетчер закрыл заявку после проверки.
+- pool — мастера нет; taken, in_progress, done — мастер обязателен.
+- Вход в taken — только через take/assign; transferred_to_partner — конечный статус.
+- /status и generic update используют одну проверку перехода и действий политики.
+- Ticket.state: pool → new; taken, in_progress, done → open; closed, cancelled, transferred_to_partner → closed.
+- Миграция статуса closed переводит прежние done в closed. Если есть заявки, нарушающие инвариант мастера,
+  она останавливается до изменений и перечисляет их id; такие данные исправляются отдельно, вручную.
+
 ## Основные потоки
 
 ### Ручное создание
@@ -59,10 +95,14 @@ DispatchJob — оперативный источник истины.
 проверяет права и теги, сохраняет заявку, записывает события и создаёт backing ticket в транзакции.
 Не заменяйте этот сценарий голым DispatchJob.create!: вызов модели не воспроизводит весь workflow.
 
+Создание всегда даёт заявку в pool без мастера: assignee_id, отметки времени жизненного цикла
+и статус, отличный от pool, отклоняются с 422.
+
 ### Взятие и назначение
 
-- take использует блокировку записи; при конфликте исполнителя возвращает 409.
-- assign проверяет активного мастера и запрет назначения закрытой заявки.
+- take использует блокировку записи; при конфликте исполнителя возвращает 409; взять можно только заявку из pool.
+- assign проверяет активного мастера; назначать можно в pool, taken и in_progress.
+- release возвращает в pool только taken и in_progress; завершённые заявки возвращаются через reopen.
 - Назначение из pool переводит в taken.
 - Изменение исполнителя через generic update запрещено.
 - После операции синхронизируются связанные сведения тикета.
@@ -108,6 +148,7 @@ DispatchEscalationJob проверяет, остаётся ли новая за�
 | Оформление и mobile shell | [dom_servis_dispatch.css](../../app/assets/stylesheets/addons/dom_servis_dispatch.css) |
 | Административный UI | [dispatch.coffee](../../app/assets/javascripts/app/controllers/dom_servis/dispatch.coffee) |
 | Данные заявки | [dispatch_job.rb](../../app/models/dom_servis/dispatch_job.rb) |
+| Статусы и переходы | [dispatch_workflow.rb](../../app/models/dom_servis/dispatch_workflow.rb) |
 | Операции API | [jobs_controller.rb](../../app/controllers/dom_servis/dispatch/jobs_controller.rb) |
 | Матрицы действий/полей | [dispatch_policy.rb](../../app/models/dom_servis/dispatch_policy.rb) |
 | Доступ к записям | [dispatch_job_policy.rb](../../app/policies/dom_servis/dispatch_job_policy.rb) |
@@ -145,5 +186,6 @@ Vue mobile-компонент существует, но его
 - Изменения User, FormController, shared UI и seeds считать интеграционными точками,
   которые требуют проверки при обновлении upstream.
 - Не создавать второй независимый источник статусов в Ticket или frontend store.
+- Новые статусы и переходы добавлять только в DispatchWorkflow, вместе с тестами графа.
 
 [К началу документации](../../developer.md)

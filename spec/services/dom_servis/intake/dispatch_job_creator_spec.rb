@@ -141,7 +141,7 @@ RSpec.describe DomServis::Intake::DispatchJobCreator, current_user_id: 1 do
     expect(job.source).to eq('ai')
     expect(job.source_reference).to eq('ai-request-001')
     expect(job.intake_channel_key).to eq('ai_service')
-    expect(job.intake_payload).to eq({ 'input' => 'Boiler leak in apartment 42' })
+    expect(job.intake_payload).to eq({ 'input' => 'Boiler leak in apartment 42', 'request_source_id' => request_source_2.id })
     expect(job.organization_id).to eq(partner_org_2.id)
     expect(job.request_source_id).to eq(request_source_2.id)
     expect(job.service_type).to eq('Boiler repair')

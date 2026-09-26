@@ -638,7 +638,7 @@ msgstr ""
 msgid "AI"
 msgstr ""
 
-#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2465
+#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2475
 msgid "AI / разбор"
 msgstr ""
 
@@ -1090,7 +1090,7 @@ msgstr ""
 msgid "Active Agents"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:101
+#: app/models/dom_servis/dispatch_workflow.rb:16
 msgid "Actively being worked on."
 msgstr ""
 
@@ -1248,7 +1248,7 @@ msgstr ""
 msgid "Add all values"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:92
+#: app/models/dom_servis/dispatch_policy.rb:94
 msgid "Add attachment"
 msgstr ""
 
@@ -1258,7 +1258,7 @@ msgid "Add bullet list"
 msgstr ""
 
 #: app/frontend/shared/entities/ticket-article/action/plugins/facebook.ts:44
-#: app/models/dom_servis/dispatch_policy.rb:91
+#: app/models/dom_servis/dispatch_policy.rb:93
 msgid "Add comment"
 msgstr ""
 
@@ -1311,7 +1311,7 @@ msgstr ""
 msgid "Add note"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:91
+#: app/models/dom_servis/dispatch_policy.rb:93
 msgid "Add or update an operational comment on the job."
 msgstr ""
 
@@ -1386,7 +1386,7 @@ msgstr ""
 msgid "Address of the proxy server for http and https resources."
 msgstr ""
 
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:223
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:220
 msgid "Address to be confirmed"
 msgstr ""
 
@@ -2069,11 +2069,11 @@ msgstr ""
 msgid "Assign follow-ups"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:82
+#: app/models/dom_servis/dispatch_policy.rb:84
 msgid "Assign master"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:82
+#: app/models/dom_servis/dispatch_policy.rb:84
 msgid "Assign or reassign a job through the dedicated operational action."
 msgstr ""
 
@@ -2107,11 +2107,11 @@ msgstr ""
 msgid "Assignee"
 msgstr ""
 
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:64
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:61
 msgid "Assignee must be a Dom-Servis master."
 msgstr ""
 
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:63
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:60
 msgid "Assignee must be an active user."
 msgstr ""
 
@@ -2162,7 +2162,7 @@ msgstr ""
 msgid "Attach files"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:92
+#: app/models/dom_servis/dispatch_policy.rb:94
 msgid "Attach files, photos or evidence to the job."
 msgstr ""
 
@@ -2538,7 +2538,7 @@ msgstr ""
 msgid "Background process did not start or has not finished! Please contact your support."
 msgstr ""
 
-#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:1441
+#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:1446
 msgid "Backing Ticket"
 msgstr ""
 
@@ -2959,23 +2959,23 @@ msgstr ""
 msgid "Cancel Upload"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:70
+#: app/models/dom_servis/dispatch_policy.rb:72
 msgid "Cancel an active or pending job."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:70
+#: app/models/dom_servis/dispatch_policy.rb:72
 msgid "Cancel job"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:138
+#: app/models/dom_servis/dispatch_policy.rb:134
 msgid "Cancelled at"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:103
+#: app/models/dom_servis/dispatch_workflow.rb:19
 msgid "Cancelled before completion."
 msgstr ""
 
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:65
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:66
 msgid "Cannot assign a finished dispatch job."
 msgstr ""
 
@@ -3089,7 +3089,7 @@ msgstr ""
 msgid "Change personal account password."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:81
+#: app/models/dom_servis/dispatch_policy.rb:83
 msgid "Change priority"
 msgstr ""
 
@@ -3122,7 +3122,7 @@ msgstr ""
 msgid "Change text color to red (%s)"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:81
+#: app/models/dom_servis/dispatch_policy.rb:83
 msgid "Change the visual and operational priority of a job."
 msgstr ""
 
@@ -3369,11 +3369,11 @@ msgstr ""
 msgid "City"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:66
+#: app/models/dom_servis/dispatch_policy.rb:67
 msgid "Claim a shared pool job."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:100
+#: app/models/dom_servis/dispatch_workflow.rb:15
 msgid "Claimed by a worker but not yet started."
 msgstr ""
 
@@ -3498,12 +3498,12 @@ msgid "Client Secret"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:8
-#: app/models/dom_servis/dispatch_policy.rb:127
+#: app/models/dom_servis/dispatch_policy.rb:122
 msgid "Client name"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:9
-#: app/models/dom_servis/dispatch_policy.rb:128
+#: app/models/dom_servis/dispatch_policy.rb:123
 msgid "Client phone"
 msgstr ""
 
@@ -3548,6 +3548,10 @@ msgstr ""
 msgid "Close In Min"
 msgstr ""
 
+#: app/models/dom_servis/dispatch_policy.rb:71
+msgid "Close a finished job after checking the result, payment or documents."
+msgstr ""
+
 #: db/seeds/schedulers.rb:97
 msgid "Close chat sessions where participants are offline."
 msgstr ""
@@ -3558,6 +3562,10 @@ msgstr ""
 
 #: app/frontend/apps/desktop/components/CommonDialog/CommonDialog.vue:163
 msgid "Close dialog"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:71
+msgid "Close job"
 msgstr ""
 
 #: app/frontend/shared/components/CommonNotifications/CommonNotificationsItem.vue:57
@@ -3582,7 +3590,7 @@ msgstr ""
 msgid "Close tab on ticket close"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:71
+#: app/models/dom_servis/dispatch_policy.rb:73
 msgid "Close the job on our board and hand it off to a partner service."
 msgstr ""
 
@@ -3610,7 +3618,15 @@ msgstr ""
 msgid "Closed Tickets"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:104
+#: app/models/dom_servis/dispatch_policy.rb:133
+msgid "Closed at"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_workflow.rb:18
+msgid "Closed by the dispatcher after checking the result, payment or documents."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_workflow.rb:20
 msgid "Closed on the Dom-Servis board after handoff to a partner service."
 msgstr ""
 
@@ -3684,11 +3700,7 @@ msgstr ""
 msgid "Completed Tasks"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:102
-msgid "Completed and closed for the operational workflow."
-msgstr ""
-
-#: app/models/dom_servis/dispatch_policy.rb:137
+#: app/models/dom_servis/dispatch_policy.rb:132
 msgid "Completed at"
 msgstr ""
 
@@ -3892,7 +3904,7 @@ msgstr ""
 msgid "Content"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:89
+#: app/models/dom_servis/dispatch_policy.rb:91
 msgid "Content and evidence"
 msgstr ""
 
@@ -3983,7 +3995,7 @@ msgstr ""
 msgid "Conversation summary"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:77
+#: app/models/dom_servis/dispatch_policy.rb:79
 msgid "Coordination actions"
 msgstr ""
 
@@ -4252,7 +4264,7 @@ msgstr ""
 msgid "Create and set up Knowledge Base."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:64
+#: app/models/dom_servis/dispatch_policy.rb:65
 msgid "Create job"
 msgstr ""
 
@@ -4423,7 +4435,7 @@ msgstr ""
 msgid "Created from Dom-Servis dispatch board."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:44
+#: app/models/dom_servis/dispatch_policy.rb:45
 msgid "Creates, edits, reschedules and coordinates jobs across the board."
 msgstr ""
 
@@ -4576,7 +4588,7 @@ msgstr ""
 msgid "Customer Sentiment"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:139
+#: app/models/dom_servis/dispatch_policy.rb:135
 msgid "Customer account"
 msgstr ""
 
@@ -4709,7 +4721,7 @@ msgstr ""
 msgid "Deadline warning"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:110
+#: app/models/dom_servis/dispatch_policy.rb:105
 msgid "Deadline warning minutes"
 msgstr ""
 
@@ -5597,7 +5609,7 @@ msgstr ""
 msgid "Delete User"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:84
+#: app/models/dom_servis/dispatch_policy.rb:86
 msgid "Delete a dispatch job from the board."
 msgstr ""
 
@@ -5629,7 +5641,7 @@ msgstr ""
 msgid "Delete immediately"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:84
+#: app/models/dom_servis/dispatch_policy.rb:86
 msgid "Delete job"
 msgstr ""
 
@@ -6007,7 +6019,7 @@ msgstr ""
 msgid "Dispatch admin"
 msgstr ""
 
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:392
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:418
 msgid "Dispatch assignee can only be changed through the assign action."
 msgstr ""
 
@@ -6408,7 +6420,7 @@ msgstr ""
 msgid "Edit Organization"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:83
+#: app/models/dom_servis/dispatch_policy.rb:85
 msgid "Edit all fields"
 msgstr ""
 
@@ -7339,7 +7351,7 @@ msgstr ""
 msgid "Expires at"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:65
+#: app/models/dom_servis/dispatch_policy.rb:66
 msgid "Expose a newly created job to the shared master pool."
 msgstr ""
 
@@ -7918,7 +7930,7 @@ msgstr ""
 msgid "Gateway"
 msgstr ""
 
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:336
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:374
 msgid "General Service"
 msgstr ""
 
@@ -8593,7 +8605,7 @@ msgstr ""
 msgid "How many escalated tickets do you have open? (Mr. Bubbles gets grumpy if you have too many…)"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:111
+#: app/models/dom_servis/dispatch_policy.rb:106
 msgid "How many minutes before the visit deadline a pool job should turn red on the board."
 msgstr ""
 
@@ -8895,8 +8907,7 @@ msgstr ""
 msgid "In order to be able to influence the desired behavior in this regard, you can influence the order of the LDAP sources via drag & drop."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:101
-#: app/services/dom_servis/dispatch/backing_ticket/mapper.rb:218
+#: app/models/dom_servis/dispatch_workflow.rb:16
 msgid "In progress"
 msgstr ""
 
@@ -9232,7 +9243,7 @@ msgstr ""
 msgid "Invalid GitLab issue link format"
 msgstr ""
 
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:59
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:56
 msgid "Invalid assignee."
 msgstr ""
 
@@ -9252,15 +9263,15 @@ msgstr ""
 msgid "Invalid dispatch attachment kind."
 msgstr ""
 
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:202
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:199
 msgid "Invalid dispatch job priority."
 msgstr ""
 
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:151
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:251
 msgid "Invalid dispatch job status."
 msgstr ""
 
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:178
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:175
 msgid "Invalid dispatch visit day."
 msgstr ""
 
@@ -9467,11 +9478,11 @@ msgstr ""
 msgid "January"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:119
+#: app/models/dom_servis/dispatch_policy.rb:114
 msgid "Job code"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:147
+#: app/models/dom_servis/dispatch_policy.rb:143
 msgid "Job content"
 msgstr ""
 
@@ -9480,7 +9491,7 @@ msgstr ""
 msgid "Job is waiting to get started…"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:62
+#: app/models/dom_servis/dispatch_policy.rb:63
 msgid "Job lifecycle actions"
 msgstr ""
 
@@ -9951,7 +9962,7 @@ msgstr ""
 msgid "Linked accounts"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:134
+#: app/models/dom_servis/dispatch_policy.rb:129
 msgid "Linked ticket"
 msgstr ""
 
@@ -10008,7 +10019,7 @@ msgid "Loading content"
 msgstr ""
 
 #: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:41
-msgid "Loading dispatch registry and current policy..."
+msgid "Loading dispatch registry and current policy…"
 msgstr ""
 
 #: app/views/init/spinner-loading.html.erb:264
@@ -10502,10 +10513,6 @@ msgstr ""
 msgid "March"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:69
-msgid "Mark a job as completed."
-msgstr ""
-
 #: app/assets/javascripts/app/views/widget/online_notification.jst.eco:4
 #: app/frontend/apps/mobile/pages/online-notification/views/NotificationsList.vue:99
 msgid "Mark all as read"
@@ -10514,6 +10521,10 @@ msgstr ""
 #: app/frontend/apps/desktop/components/layout/LayoutSidebar/LeftSidebar/LeftSidebarHeader/OnlineNotification/NotificationPopover/NotificationList/NotificationItem.vue:44
 #: app/frontend/apps/mobile/pages/online-notification/components/ActivityMessage.vue:34
 msgid "Mark as read"
+msgstr ""
+
+#: app/models/dom_servis/dispatch_policy.rb:70
+msgid "Mark the work on site as finished."
 msgstr ""
 
 #: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:138
@@ -10946,15 +10957,15 @@ msgstr ""
 msgid "Most recent activity"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:80
+#: app/models/dom_servis/dispatch_policy.rb:82
 msgid "Move a job across weeks."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:68
+#: app/models/dom_servis/dispatch_policy.rb:69
 msgid "Move a job into active execution."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:79
+#: app/models/dom_servis/dispatch_policy.rb:81
 msgid "Move a job to another weekday inside the dispatch board."
 msgstr ""
 
@@ -10966,11 +10977,11 @@ msgstr ""
 msgid "Move down"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:79
+#: app/models/dom_servis/dispatch_policy.rb:81
 msgid "Move job day"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:80
+#: app/models/dom_servis/dispatch_policy.rb:82
 msgid "Move job week"
 msgstr ""
 
@@ -11373,6 +11384,10 @@ msgstr ""
 msgid "New desktop BETA UI"
 msgstr ""
 
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:239
+msgid "New dispatch jobs always start in the pool."
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/_integration/clearbit.coffee:66
 msgid "New organizations are shared."
 msgstr ""
@@ -11650,7 +11665,7 @@ msgstr ""
 msgid "No import in progress."
 msgstr ""
 
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:216
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:213
 msgid "No input submitted."
 msgstr ""
 
@@ -12217,6 +12232,10 @@ msgstr ""
 msgid "Only packages from known, trusted, and verified sources should be installed."
 msgstr ""
 
+#: app/controllers/dom_servis/dispatch/jobs_controller.rb:107
+msgid "Only pool jobs can be taken."
+msgstr ""
+
 #: app/assets/javascripts/app/views/time_accounting/by_activity.jst.eco:37
 #: app/assets/javascripts/app/views/time_accounting/by_customer.jst.eco:23
 #: app/assets/javascripts/app/views/time_accounting/by_organization.jst.eco:21
@@ -12273,7 +12292,7 @@ msgstr ""
 msgid "Open and closed tickets ratio (ticket counts based on state)"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:64
+#: app/models/dom_servis/dispatch_policy.rb:65
 msgid "Open and submit a new dispatch job into the board."
 msgstr ""
 
@@ -12281,7 +12300,7 @@ msgstr ""
 msgid "Open checklist"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:83
+#: app/models/dom_servis/dispatch_policy.rb:85
 msgid "Open full payload editing for job data."
 msgstr ""
 
@@ -12703,7 +12722,7 @@ msgstr ""
 msgid "Owner"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:48
+#: app/models/dom_servis/dispatch_policy.rb:49
 msgid "Owner / Admin"
 msgstr ""
 
@@ -12711,7 +12730,7 @@ msgstr ""
 msgid "Owner tickets of the user will not get deleted. The owner will be mapped to the system user (ID 1)."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:55
+#: app/models/dom_servis/dispatch_policy.rb:56
 msgid "Owns the dispatch policy, dashboards and administrative control of the module."
 msgstr ""
 
@@ -13530,7 +13549,7 @@ msgstr ""
 msgid "Publish Article"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:65
+#: app/models/dom_servis/dispatch_policy.rb:66
 msgid "Publish to pool"
 msgstr ""
 
@@ -13543,7 +13562,7 @@ msgid "Published %s"
 msgstr ""
 
 #: app/assets/javascripts/app/views/popover/kb_generic.jst.eco:15
-#: app/models/dom_servis/dispatch_policy.rb:135
+#: app/models/dom_servis/dispatch_policy.rb:130
 msgid "Published at"
 msgstr ""
 
@@ -13563,7 +13582,7 @@ msgstr ""
 msgid "Push subscription p256dh key is required."
 msgstr ""
 
-#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2506
+#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2516
 msgid "Push-уведомления не настроены администратором (нет VAPID ключа)."
 msgstr ""
 
@@ -13799,7 +13818,7 @@ msgstr ""
 msgid "Relax, your system is being set up…"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:67
+#: app/models/dom_servis/dispatch_policy.rb:68
 msgid "Release to pool"
 msgstr ""
 
@@ -13882,7 +13901,7 @@ msgstr ""
 msgid "Remove all values"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:93
+#: app/models/dom_servis/dispatch_policy.rb:95
 msgid "Remove attachment"
 msgstr ""
 
@@ -13895,7 +13914,7 @@ msgstr ""
 msgid "Remove checklist"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:93
+#: app/models/dom_servis/dispatch_policy.rb:95
 msgid "Remove files from the job payload."
 msgstr ""
 
@@ -13971,11 +13990,11 @@ msgstr ""
 msgid "Renew Access Token"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:72
+#: app/models/dom_servis/dispatch_policy.rb:74
 msgid "Reopen a completed or cancelled job."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:72
+#: app/models/dom_servis/dispatch_policy.rb:74
 msgid "Reopen job"
 msgstr ""
 
@@ -14250,7 +14269,7 @@ msgstr ""
 msgid "Retrying to download the sent media via WhatsApp failed."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:67
+#: app/models/dom_servis/dispatch_policy.rb:68
 msgid "Return an owned job back into the pool."
 msgstr ""
 
@@ -15221,7 +15240,7 @@ msgid "Service overloaded - please try again later"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:6
-#: app/models/dom_servis/dispatch_policy.rb:129
+#: app/models/dom_servis/dispatch_policy.rb:124
 msgid "Service type"
 msgstr ""
 
@@ -15301,7 +15320,7 @@ msgstr ""
 msgid "Set default for new tickets"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:69
+#: app/models/dom_servis/dispatch_policy.rb:70
 msgid "Set done"
 msgstr ""
 
@@ -15309,7 +15328,7 @@ msgstr ""
 msgid "Set how many minutes before the visit deadline a pool job should turn red on the board."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:68
+#: app/models/dom_servis/dispatch_policy.rb:69
 msgid "Set in progress"
 msgstr ""
 
@@ -15462,7 +15481,7 @@ msgstr ""
 msgid "Shared organization"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:99
+#: app/models/dom_servis/dispatch_workflow.rb:14
 msgid "Shared pool state before a master claims the job."
 msgstr ""
 
@@ -16316,7 +16335,7 @@ msgstr ""
 msgid "System information"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_job.rb:274
+#: app/models/dom_servis/dispatch_job.rb:299
 msgid "System organization for direct Dom-Servis retail jobs."
 msgstr ""
 
@@ -16382,7 +16401,7 @@ msgstr ""
 msgid "Take Reply-To header as sender/from of email."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:66
+#: app/models/dom_servis/dispatch_policy.rb:67
 msgid "Take job"
 msgstr ""
 
@@ -16390,11 +16409,11 @@ msgstr ""
 msgid "Taken"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:136
+#: app/models/dom_servis/dispatch_policy.rb:131
 msgid "Taken at"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:33
+#: app/models/dom_servis/dispatch_policy.rb:34
 msgid "Takes jobs from the shared pool and moves owned jobs through the master workflow."
 msgstr ""
 
@@ -17160,6 +17179,10 @@ msgstr ""
 
 #: app/services/service/auth/verify_admin_token.rb:17
 msgid "The login is not possible."
+msgstr ""
+
+#: app/models/dom_servis/dispatch_workflow.rb:17
+msgid "The master finished the work on site; waiting for the dispatcher to close the job."
 msgstr ""
 
 #: app/frontend/shared/components/Form/fields/FieldDate/useDateTime.ts:104
@@ -19103,7 +19126,7 @@ msgstr ""
 msgid "Transfer conversation to another chat:"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:71
+#: app/models/dom_servis/dispatch_policy.rb:73
 msgid "Transfer to partner"
 msgstr ""
 
@@ -19111,8 +19134,7 @@ msgstr ""
 msgid "Transferred %s from user taskbar list %s at position %s."
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:104
-#: app/services/dom_servis/dispatch/backing_ticket/mapper.rb:224
+#: app/models/dom_servis/dispatch_workflow.rb:20
 msgid "Transferred to partner"
 msgstr ""
 
@@ -20237,16 +20259,16 @@ msgid "Visible to readers & editors"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:11
-#: app/models/dom_servis/dispatch_policy.rb:124
+#: app/models/dom_servis/dispatch_policy.rb:119
 msgid "Visit date"
 msgstr ""
 
-#: app/models/dom_servis/dispatch_policy.rb:123
+#: app/models/dom_servis/dispatch_policy.rb:118
 msgid "Visit day"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:12
-#: app/models/dom_servis/dispatch_policy.rb:125
+#: app/models/dom_servis/dispatch_policy.rb:120
 msgid "Visit time"
 msgstr ""
 
@@ -20328,7 +20350,7 @@ msgstr ""
 msgid "Webhook"
 msgstr ""
 
-#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2464
+#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2474
 msgid "Webhook / API"
 msgstr ""
 
@@ -20544,7 +20566,7 @@ msgid "Woo hoo! Your password has been changed!"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:20
-#: app/models/dom_servis/dispatch_policy.rb:132
+#: app/models/dom_servis/dispatch_policy.rb:127
 msgid "Work tags"
 msgstr ""
 
