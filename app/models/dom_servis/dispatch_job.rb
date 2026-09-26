@@ -5,11 +5,18 @@ class DomServis::DispatchJob < ApplicationModel
 
   self.table_name = 'dom_servis_dispatch_jobs'
 
-  STATUSES   = %w[pool taken in_progress done cancelled transferred_to_partner].freeze
+  STATUSES   = DomServis::DispatchWorkflow::STATUSES
   PRIORITIES = %w[low medium high critical].freeze
   SOURCES    = %w[manual form email webhook ai].freeze
   VISIT_DAYS = %w[mon tue wed thu fri sat sun].freeze
   ATTACHMENT_KINDS = %w[intake_attachment route_info completion_act diagnostic_photo other].freeze
+
+  # timestamp => [status that stamps it, statuses that keep it]
+  LIFECYCLE_TIMESTAMPS = {
+    completed_at: ['done', %w[done closed]],
+    closed_at:    ['closed', %w[closed]],
+    cancelled_at: ['cancelled', %w[cancelled]],
+  }.freeze
 
   VISIT_DAY_LABELS = {
     'mon' => 'Пн',
@@ -30,9 +37,8 @@ class DomServis::DispatchJob < ApplicationModel
 
   has_many :events,
            class_name: 'DomServis::DispatchEvent',
-           foreign_key: :dispatch_job_id,
            inverse_of: :dispatch_job,
-           dependent: :destroy
+           dependent:  :destroy
 
   validates :status, inclusion: { in: STATUSES }
   validates :priority, inclusion: { in: PRIORITIES }
@@ -40,6 +46,8 @@ class DomServis::DispatchJob < ApplicationModel
   validates :visit_day, inclusion: { in: VISIT_DAYS }
   validates :service_type, presence: true
   validates :address, presence: true
+  validate :status_transition_allowed, on: :update, if: :will_save_change_to_status?
+  validate :assignee_matches_status, if: -> { new_record? || will_save_change_to_status? || will_save_change_to_assignee_id? }
 
   attachments_cleanup!
 
@@ -82,8 +90,8 @@ class DomServis::DispatchJob < ApplicationModel
 
   def attributes_with_association_ids
     super.merge(
-      request_source_label: request_source&.display_name,
-      request_source_partner_key: request_source&.partner_key,
+      request_source_label:          request_source&.display_name,
+      request_source_partner_key:    request_source&.partner_key,
       request_source_transport_kind: request_source&.transport_kind,
     ).compact
   end
@@ -111,7 +119,7 @@ class DomServis::DispatchJob < ApplicationModel
           updated_at: updated_at,
         },
       },
-      type: 'authenticated',
+      type:    'authenticated',
     )
   end
 
@@ -216,14 +224,31 @@ class DomServis::DispatchJob < ApplicationModel
     self.intake_payload = intake_payload.presence || {}
   end
 
+  def status_transition_allowed
+    return if DomServis::DispatchWorkflow.transition_allowed?(status_in_database, status)
+
+    errors.add(:status, "cannot change from '#{status_in_database}' to '#{status}'")
+  end
+
+  def assignee_matches_status
+    if DomServis::DispatchWorkflow.assignee_forbidden?(status) && assignee_id.present?
+      errors.add(:assignee_id, "must be empty while the job is in '#{status}'")
+    elsif DomServis::DispatchWorkflow.assignee_required?(status) && assignee_id.blank?
+      errors.add(:assignee_id, "is required while the job is in '#{status}'")
+    end
+  end
+
   def sync_lifecycle_timestamps
     self.taken_at = nil if status == 'pool'
-    self.completed_at = nil if status != 'done'
-    self.cancelled_at = nil if status != 'cancelled'
-
     self.taken_at ||= Time.zone.now if %w[taken in_progress done].include?(status) && assignee_id.present?
-    self.completed_at ||= Time.zone.now if status == 'done'
-    self.cancelled_at ||= Time.zone.now if status == 'cancelled'
+
+    LIFECYCLE_TIMESTAMPS.each do |attribute, (stamped_in, kept_in)|
+      if kept_in.exclude?(status)
+        self[attribute] = nil
+      elsif status == stamped_in
+        self[attribute] ||= Time.zone.now
+      end
+    end
   end
 
   def infer_visit_day
@@ -268,13 +293,13 @@ class DomServis::DispatchJob < ApplicationModel
     private
 
     def create_private_organization
-      system_user = User.order(:id).first
+      system_user = User.reorder(:id).first
       return nil if !system_user
 
       Organization.create_with(
         active:        true,
         shared:        false,
-        note:          'System organization for direct Dom-Servis retail jobs.',
+        note:          __('System organization for direct Dom-Servis retail jobs.'),
         created_by_id: system_user.id,
         updated_by_id: system_user.id,
       ).find_or_create_by!(name: 'Частный заказ')

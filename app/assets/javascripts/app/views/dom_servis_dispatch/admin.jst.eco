@@ -38,7 +38,7 @@
   <div class="dom-servis-dispatch-admin__note">
     <% if @loading: %>
       <div class="spinner spinner--small"></div>
-      <span><%- @T('Loading dispatch registry and current policy...') %></span>
+      <span><%- @T('Loading dispatch registry and current policy…') %></span>
     <% else: %>
       <p><%- @T('This screen is the workflow policy layer of Dom-Servis. It does not replace Zammad role assignment.') %></p>
       <p><%- @T('Use it to define which role may press which button, set which status and edit which field on the dispatch board.') %></p>

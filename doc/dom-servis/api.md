@@ -89,6 +89,12 @@
 { "status": "in_progress" }
 ```
 
+Допустимые переходы статуса задаёт [DispatchWorkflow](../../app/models/dom_servis/dispatch_workflow.rb),
+модель описана в [архитектуре](architecture.md#модель-статусов).
+Недопустимый переход возвращает 422, отсутствие нужного действия или статуса в политике — 403.
+POST /jobs создаёт заявку только в pool: assignee_id, published_at, taken_at, completed_at, closed_at,
+cancelled_at и status, отличный от pool, дают 422. Мастер назначается через assign или take.
+
 Эти примеры не заменяют текущие strong params.
 Ответы generic CRUD формирует Zammad; нельзя считать, что для всех действий существует один response envelope.
 
@@ -135,9 +141,9 @@ HTTP success от /test подтверждает постановку в оче�
 Для диагностики сохраняйте HTTP status и тело, а не только сообщение UI.
 
 Нельзя менять assignee через generic update.
+Статус через generic update проходит ту же проверку перехода, что и /status.
 Взятие должно сохранять атомарность.
 Статус, доступ к полю и доступ к записи проверяются разными механизмами.
 Если меняется API, обновляйте целевые request-тесты и вызывающий legacy frontend.
 
 [К началу документации](../../developer.md)
-

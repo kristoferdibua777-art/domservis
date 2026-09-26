@@ -558,7 +558,7 @@
             <% if @detailEditing: %>
               <button class="btn js-close-edit">Отмена</button>
               <button class="btn btn--success js-save-edit"<%= ' disabled' if @editSaving %>>Сохранить</button>
-            <% else if @detailJob.canEdit || @detailJob.canTake || @detailJob.canStart || @detailJob.canFinish || @detailJob.canRelease || @detailJob.canCancel: %>
+            <% else if @detailJob.canEdit || @detailJob.canTake || @detailJob.canStart || @detailJob.canFinish || @detailJob.canClose || @detailJob.canRelease || @detailJob.canCancel: %>
               <% if @detailJob.canEdit: %>
                 <button class="btn btn--text js-open-edit js-no-detail" data-id="<%= @detailJob.id %>">Редактировать</button>
               <% end %>
@@ -570,6 +570,9 @@
               <% end %>
               <% if @detailJob.canFinish: %>
                 <button class="btn btn--success js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="done">Готово</button>
+              <% end %>
+              <% if @detailJob.canClose: %>
+                <button class="btn btn--success js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="closed">Закрыть</button>
               <% end %>
               <% if @detailJob.canRelease: %>
                 <button class="btn js-release-job js-no-detail" data-id="<%= @detailJob.id %>">В пул</button>

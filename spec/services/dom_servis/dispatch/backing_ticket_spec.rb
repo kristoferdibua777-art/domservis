@@ -2,8 +2,35 @@
 
 require 'rails_helper'
 
+# rubocop:disable RSpec/DescribeClass -- this is a multi-class integration
+# spec covering the whole backing-ticket bridge (Resolver, Mapper, Create,
+# and, further below, SyncFromDispatch as its own locally-shadowed
+# `described_class`), not a single unit under test, so there is no one
+# class this `describe` could name without misrepresenting its scope.
 RSpec.describe 'Dom-Servis backing ticket bridge' do
+  # rubocop:enable RSpec/DescribeClass
   let(:group)        { create(:group, name: '000 Bridge Group') }
+  let(:dispatch_job) do
+    DomServis::DispatchJob.create!(
+      service_type: 'Boiler repair',
+      address:      'Lenina 10',
+      client_name:  'Ivan Petrov',
+      client_phone: '+79001234567',
+      visit_day:    'mon',
+      visit_date:   '2026-03-23',
+      visit_time:   '10:00-12:00',
+      priority:     'medium',
+      organization: organization,
+      work_tags:    %w[boiler urgent],
+      description:  'Initial intake description',
+      comment:      'Call before arrival',
+      status:       'taken',
+      assignee:     master,
+      source:       'manual',
+      created_by:   dispatcher,
+      updated_by:   dispatcher,
+    )
+  end
   let(:dispatcher)   { create(:agent, groups: [group]) }
   let(:master)       { create(:agent, groups: [group]) }
   let(:organization) { create(:organization, name: 'Partner Org') }
@@ -14,28 +41,6 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     end
   end
 
-  let(:dispatch_job) do
-    DomServis::DispatchJob.create!(
-      service_type:    'Boiler repair',
-      address:         'Lenina 10',
-      client_name:     'Ivan Petrov',
-      client_phone:    '+79001234567',
-      visit_day:       'mon',
-      visit_date:      '2026-03-23',
-      visit_time:      '10:00-12:00',
-      priority:        'medium',
-      organization:    organization,
-      work_tags:       %w[boiler urgent],
-      description:     'Initial intake description',
-      comment:         'Call before arrival',
-      status:          'taken',
-      assignee:        master,
-      source:          'manual',
-      created_by:      dispatcher,
-      updated_by:      dispatcher,
-    )
-  end
-
   it 'creates and links a backing ticket with dispatch projection fields' do
     ticket = DomServis::Dispatch::BackingTicket::Create
       .new(dispatch_job:, operator: dispatcher)
@@ -44,7 +49,8 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket).to be_persisted
     expect(dispatch_job.reload.ticket_id).to eq(ticket.id)
     expect(ticket.group_id).to eq(group.id)
-    expect(ticket.organization_id).to eq(organization.id)
+    expect(ticket.organization_id).to be_nil
+    expect(dispatch_job.organization_id).to eq(organization.id)
     expect(ticket.owner_id).to eq(master.id)
     expect(ticket.title).to include(dispatch_job.job_code, 'Boiler repair', 'Lenina 10')
     expect(ticket.dom_servis_job_code).to eq(dispatch_job.job_code)
@@ -53,16 +59,15 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket.dom_servis_assignee_name).to eq(master.fullname)
     expect(ticket.tag_list).to eq(%w[boiler urgent])
     expect(ticket.articles.last.body).to include('Created from Dom-Servis dispatch board.')
+    expect(ticket.articles.last.body).to include("Organization: #{organization.name}")
     expect(ticket.articles.last.body).to include('Call before arrival')
   end
 
-  it 'falls back to an operator-accessible group when the configured backing group is unavailable' do
+  it 'files the backing ticket under a group the operator can access' do
+    # Sorts first among the active groups, but the operator has no access to it.
+    create(:group, name: '000 Blocked Group')
     accessible_group = create(:group, name: '001 Accessible Group')
-    blocked_group    = create(:group, name: '999 Blocked Group')
     operator         = create(:agent, groups: [accessible_group])
-
-    previous_group_setting = Setting.get('dom_servis_dispatch_backing_ticket_group_id')
-    Setting.set('dom_servis_dispatch_backing_ticket_group_id', blocked_group.id, validate: false)
 
     fallback_job = DomServis::DispatchJob.create!(
       service_type: 'Washing machine repair',
@@ -87,8 +92,6 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket).to be_persisted
     expect(ticket.group_id).to eq(accessible_group.id)
     expect(fallback_job.reload.ticket_id).to eq(ticket.id)
-  ensure
-    Setting.set('dom_servis_dispatch_backing_ticket_group_id', previous_group_setting, validate: false)
   end
 
   it 'syncs key dispatch changes into the existing backing ticket and appends an internal note' do
@@ -96,6 +99,7 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
       .new(dispatch_job:, operator: dispatcher)
       .execute
 
+    dispatch_job.update!(status: 'in_progress', updated_by_id: dispatcher.id)
     dispatch_job.update!(
       status:        'done',
       priority:      'high',
@@ -112,12 +116,12 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
         dispatch_job: dispatch_job,
         operator:     dispatcher,
         changes:      {
-          'status_changed'     => { from: 'taken', to: 'done' },
-          'priority_changed'   => { from: 'medium', to: 'high' },
-          'moved_weekday'      => { from: 'mon', to: 'tue' },
-          'tags_changed'       => { to: %w[gas waiting-parts] },
-          'comment_added'      => { comment: 'Work completed successfully' },
-          'description_updated'=> { description: 'Updated completion details' },
+          'status_changed'      => { from: 'in_progress', to: 'done' },
+          'priority_changed'    => { from: 'medium', to: 'high' },
+          'moved_weekday'       => { from: 'mon', to: 'tue' },
+          'tags_changed'        => { to: %w[gas waiting-parts] },
+          'comment_added'       => { comment: 'Work completed successfully' },
+          'description_updated' => { description: 'Updated completion details' },
         }
       )
       .execute
@@ -130,9 +134,29 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket.dom_servis_comment).to eq('Work completed successfully')
     expect(ticket.dom_servis_description).to eq('Updated completion details')
     expect(ticket.tag_list).to eq(%w[gas waiting-parts])
-    expect(ticket.state.state_type.name).to eq('closed')
-    expect(ticket.articles.last.body).to include('Status: taken -> done.')
+    expect(ticket.state.state_type.name).to eq('open')
+    expect(ticket.articles.last.body).to include('Status: In progress -> Done.')
     expect(ticket.articles.last.body).to include('Current dispatch comment')
     expect(ticket.articles.last.body).to include('Updated completion details')
+  end
+
+  it 'closes the backing ticket only when the dispatcher closes the job', :aggregate_failures do
+    ticket = DomServis::Dispatch::BackingTicket::Create
+      .new(dispatch_job:, operator: dispatcher)
+      .execute
+
+    dispatch_job.update!(status: 'in_progress', updated_by_id: dispatcher.id)
+    dispatch_job.update!(status: 'done', updated_by_id: dispatcher.id)
+    dispatch_job.update!(status: 'closed', updated_by_id: dispatcher.id)
+
+    DomServis::Dispatch::BackingTicket::SyncFromDispatch
+      .new(dispatch_job:, operator: dispatcher, changes: { 'status_changed' => { from: 'done', to: 'closed' } })
+      .execute
+
+    ticket.reload
+
+    expect(ticket.dom_servis_dispatch_status).to eq('closed')
+    expect(ticket.state.state_type.name).to eq('closed')
+    expect(ticket.articles.last.body).to include('Status: Done -> Closed.')
   end
 end

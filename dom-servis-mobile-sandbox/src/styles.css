@@ -1,6 +1,7 @@
 :root {
   color-scheme: dark;
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+
   --bg-0: #091018;
   --bg-1: #0d141d;
   --bg-2: #121a24;
@@ -156,7 +157,9 @@ button {
   background:
     linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 100% 34px, 34px 100%;
+  background-size:
+    100% 34px,
+    34px 100%;
   mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.56), transparent 92%);
 }
 
@@ -369,18 +372,24 @@ button {
 .dom-servis-dispatch-card::before,
 .dom-servis-sheet::before,
 .dom-servis-drawer::before {
-  content: "";
+  content: '';
   position: absolute;
   left: 14px;
   right: 14px;
   top: 0;
   height: 1px;
-  background: linear-gradient(90deg, rgba(255, 240, 220, 0.16), transparent 22%, transparent 78%, rgba(142, 171, 255, 0.12));
+  background: linear-gradient(
+    90deg,
+    rgba(255, 240, 220, 0.16),
+    transparent 22%,
+    transparent 78%,
+    rgba(142, 171, 255, 0.12)
+  );
 }
 
 .dom-servis-dispatch-board__mobile-stage::after,
 .dom-servis-dispatch-board__week-panel::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -524,7 +533,7 @@ button {
 }
 
 .dom-servis-dispatch-day-card::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -656,7 +665,7 @@ button {
 }
 
 .dom-servis-dispatch-card::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -819,8 +828,7 @@ button {
   inset: 0;
   z-index: 50;
   background:
-    radial-gradient(circle at top, rgba(255, 222, 184, 0.05), transparent 24%),
-    rgba(5, 8, 13, 0.7);
+    radial-gradient(circle at top, rgba(255, 222, 184, 0.05), transparent 24%), rgba(5, 8, 13, 0.7);
   backdrop-filter: blur(10px);
 }
 

@@ -26,38 +26,40 @@ class DomServis::Dispatch::BackingTicket::Mapper
 
   attr_reader :dispatch_job, :resolver
 
+  # No organization_id here: Ticket#check_default_organization keeps a
+  # ticket's organization equal to its customer's, and the shared
+  # dispatch-board customer belongs to none. The partner organization stays
+  # on the DispatchJob and is written into the creation note.
   def create_attributes
     base_attributes.merge(
-      group_id:        resolver.group.id,
-      customer_id:     resolver.customer.id,
-      created_by_id:   resolver.actor_user&.id,
-      updated_by_id:   resolver.actor_user&.id,
-      organization_id: dispatch_job.organization_id,
-      owner_id:        dispatch_job.assignee_id,
-      state_id:        resolver.ticket_state&.id,
-      priority_id:     resolver.ticket_priority&.id,
-      title:           title,
+      group_id:      resolver.group.id,
+      customer_id:   resolver.customer.id,
+      created_by_id: resolver.actor_user&.id,
+      updated_by_id: resolver.actor_user&.id,
+      owner_id:      dispatch_job.assignee_id,
+      state_id:      resolver.ticket_state&.id,
+      priority_id:   resolver.ticket_priority&.id,
+      title:         title,
     )
   end
 
   def update_attributes
     base_attributes.merge(
-      updated_by_id:   resolver.actor_user&.id,
-      organization_id: dispatch_job.organization_id,
-      owner_id:        dispatch_job.assignee_id,
-      state_id:        resolver.ticket_state&.id,
-      priority_id:     resolver.ticket_priority&.id,
-      title:           title,
+      updated_by_id: resolver.actor_user&.id,
+      owner_id:      dispatch_job.assignee_id,
+      state_id:      resolver.ticket_state&.id,
+      priority_id:   resolver.ticket_priority&.id,
+      title:         title,
     )
   end
 
   def creation_article
     {
-      body:     ["Created from Dom-Servis dispatch board.", snapshot_body].join("\n\n"),
+      body:     [__('Created from Dom-Servis dispatch board.'), snapshot_body].join("\n\n"),
       internal: true,
       sender:   'Agent',
       type:     'note',
-      subject:  'Dom-Servis dispatch job created',
+      subject:  __('Dom-Servis dispatch job created'),
     }
   end
 
@@ -86,15 +88,15 @@ class DomServis::Dispatch::BackingTicket::Mapper
       internal: true,
       sender:   'Agent',
       type:     'note',
-      subject:  'Dom-Servis dispatch job updated',
+      subject:  __('Dom-Servis dispatch job updated'),
     }
   end
 
   private
 
   def base_attributes
-    supported_custom_fields.each_with_object({}) do |field_name, memo|
-      memo[field_name] = send(field_name)
+    supported_custom_fields.index_with do |field_name|
+      send(field_name)
     end
   end
 
@@ -152,8 +154,6 @@ class DomServis::Dispatch::BackingTicket::Mapper
       ["- Assigned to #{user_name(meta['to'] || meta[:to])}."]
     when 'assignee_changed'
       ["- Assignee: #{user_name(meta['from'] || meta[:from])} -> #{user_name(meta['to'] || meta[:to])}."]
-    else
-      nil
     end
   end
 
@@ -207,26 +207,11 @@ class DomServis::Dispatch::BackingTicket::Mapper
   end
 
   def value_or_dash(value)
-    value.present? ? value : '-'
+    value.presence || '-'
   end
 
   def status_name(value)
-    case value.to_s
-    when 'pool'
-      'Pool'
-    when 'taken'
-      'Taken'
-    when 'in_progress'
-      'In progress'
-    when 'done'
-      'Done'
-    when 'cancelled'
-      'Cancelled'
-    when 'transferred_to_partner'
-      'Transferred to partner'
-    else
-      value_or_dash(value)
-    end
+    DomServis::DispatchWorkflow.label(value) || value_or_dash(value)
   end
 
   def dom_servis_job_code

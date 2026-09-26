@@ -104,8 +104,10 @@ RSpec.describe Models do
         references = described_class.references('Organization', organization.id, true)
 
         expect(references).to eq({
-                                   'Ticket' => { 'organization_id'=>0 },
-                                   'User'   => { 'organization_id'=>1 },
+                                   'DomServis::DispatchJob'   => { 'organization_id'=>0 },
+                                   'DomServis::RequestSource' => { 'organization_id'=>0 },
+                                   'Ticket'                   => { 'organization_id'=>0 },
+                                   'User'                     => { 'organization_id'=>1 },
                                  })
       end
 

@@ -18,6 +18,14 @@ class AddIntakeMetadataToDomServisDispatchJobs < ActiveRecord::Migration[7.2]
 
     remove_column :dom_servis_dispatch_jobs, :intake_payload
     remove_column :dom_servis_dispatch_jobs, :intake_channel_key
+    # rubocop:disable Zammad/ExistsResetColumnInformation -- this migration
+    # never instantiates or queries the DispatchJob model, in either `up`
+    # or `down`; it only issues raw add_column/remove_column/index DDL, so
+    # there is no cached column state anywhere in this file that needs
+    # resetting. Not adding an unused model shim here just to satisfy the
+    # cop (see 20260318160000 and 20260321193000 for the pattern used
+    # where a migration actually does read/write through the model).
     remove_column :dom_servis_dispatch_jobs, :source_reference
+    # rubocop:enable Zammad/ExistsResetColumnInformation
   end
 end

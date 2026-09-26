@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe DomServis::Intake::DispatchJobCreator do
+RSpec.describe DomServis::Intake::DispatchJobCreator, current_user_id: 1 do
   let(:group)         { create(:group, name: '000 Intake Group') }
   let(:dispatcher)    { create(:agent, groups: [group]) }
   let(:partner_org)   { create(:organization, name: 'Partner Org') }
@@ -10,69 +10,69 @@ RSpec.describe DomServis::Intake::DispatchJobCreator do
   let(:customer)      { create(:customer) }
   let(:request_source) do
     DomServis::RequestSource.create!(
-      name:           'Partner A Form',
-      partner_key:    'partner-a',
-      organization:   partner_org,
-      transport_kind: 'zammad_form',
-      status:         'active',
+      name:            'Partner A Form',
+      partner_key:     'partner-a',
+      organization:    partner_org,
+      transport_kind:  'zammad_form',
+      status:          'active',
       allowed_domains: ['partner-a.example.com'],
     )
   end
   let(:request_source_2) do
     DomServis::RequestSource.create!(
-      name:           'Partner B Form',
-      partner_key:    'partner-b',
-      organization:   partner_org_2,
-      transport_kind: 'zammad_form',
-      status:         'active',
+      name:            'Partner B Form',
+      partner_key:     'partner-b',
+      organization:    partner_org_2,
+      transport_kind:  'zammad_form',
+      status:          'active',
       allowed_domains: ['partner-b.example.com'],
     )
   end
   let(:base_ticket) do
     Ticket.create!(
-      group:               group,
-      customer:            customer,
-      title:               'Boiler repair request',
-      preferences:         { form: { remote_ip: '127.0.0.1', fingerprint_md5: 'abc123' } },
-      dom_servis_service_type:    'Boiler repair',
-      dom_servis_address:         'Lenina 10',
-      dom_servis_client_name:     'Ivan Petrov',
-      dom_servis_client_phone:    '+79001234567',
-      dom_servis_visit_day:       'mon',
-      dom_servis_visit_date:      '2026-03-23',
-      dom_servis_visit_time:      '10:00-12:00',
+      group:                        group,
+      customer:                     customer,
+      title:                        'Boiler repair request',
+      preferences:                  { form: { remote_ip: '127.0.0.1', fingerprint_md5: 'abc123' } },
+      dom_servis_service_type:      'Boiler repair',
+      dom_servis_address:           'Lenina 10',
+      dom_servis_client_name:       'Ivan Petrov',
+      dom_servis_client_phone:      '+79001234567',
+      dom_servis_visit_day:         'mon',
+      dom_servis_visit_date:        '2026-03-23',
+      dom_servis_visit_time:        '10:00-12:00',
       dom_servis_dispatch_priority: 'high',
-      dom_servis_description:     'Initial intake description',
-      dom_servis_comment:         'Call before arrival',
-      dom_servis_work_tags:       'boiler,urgent',
+      dom_servis_description:       'Initial intake description',
+      dom_servis_comment:           'Call before arrival',
+      dom_servis_work_tags:         'boiler,urgent',
     )
   end
   let(:second_ticket) do
     Ticket.create!(
-      group:               group,
-      customer:            customer,
-      title:               'Second boiler repair request',
-      preferences:         { form: { remote_ip: '127.0.0.1', fingerprint_md5: 'abc124' } },
-      dom_servis_service_type:    'Boiler repair',
-      dom_servis_address:         'Lenina 11',
-      dom_servis_client_name:     'Ivan Petrov',
-      dom_servis_client_phone:    '+79001234567',
-      dom_servis_visit_day:       'tue',
-      dom_servis_visit_date:      '2026-03-24',
-      dom_servis_visit_time:      '10:00-12:00',
+      group:                        group,
+      customer:                     customer,
+      title:                        'Second boiler repair request',
+      preferences:                  { form: { remote_ip: '127.0.0.1', fingerprint_md5: 'abc124' } },
+      dom_servis_service_type:      'Boiler repair',
+      dom_servis_address:           'Lenina 11',
+      dom_servis_client_name:       'Ivan Petrov',
+      dom_servis_client_phone:      '+79001234567',
+      dom_servis_visit_day:         'tue',
+      dom_servis_visit_date:        '2026-03-24',
+      dom_servis_visit_time:        '10:00-12:00',
       dom_servis_dispatch_priority: 'high',
-      dom_servis_description:     'Initial intake description 2',
-      dom_servis_comment:         'Call before arrival',
-      dom_servis_work_tags:       'boiler,urgent',
+      dom_servis_description:       'Initial intake description 2',
+      dom_servis_comment:           'Call before arrival',
+      dom_servis_work_tags:         'boiler,urgent',
     )
   end
 
   let(:payload) do
     DomServis::Intake::TicketAdapter.new(
-      ticket:          base_ticket,
-      request_source:  request_source,
-      source:          'form',
-      channel_key:     request_source.transport_kind,
+      ticket:           base_ticket,
+      request_source:   request_source,
+      source:           'form',
+      channel_key:      request_source.transport_kind,
       source_reference: base_ticket.number,
     ).payload
   end
@@ -116,12 +116,12 @@ RSpec.describe DomServis::Intake::DispatchJobCreator do
 
   it 'creates a direct dispatch job without a backing ticket for non-native sources' do
     payload = {
-      source:             'ai',
-      request_source_id:   request_source_2.id,
-      channel_key:        'ai_service',
-      source_reference:   'ai-request-001',
-      raw_payload:        { input: 'Boiler leak in apartment 42', request_source_id: request_source_2.id },
-      dispatch:           {
+      source:            'ai',
+      request_source_id: request_source_2.id,
+      channel_key:       'ai_service',
+      source_reference:  'ai-request-001',
+      raw_payload:       { input: 'Boiler leak in apartment 42', request_source_id: request_source_2.id },
+      dispatch:          {
         source:            'ai',
         request_source_id: request_source_2.id,
         organization_id:   partner_org_2.id,
@@ -141,7 +141,7 @@ RSpec.describe DomServis::Intake::DispatchJobCreator do
     expect(job.source).to eq('ai')
     expect(job.source_reference).to eq('ai-request-001')
     expect(job.intake_channel_key).to eq('ai_service')
-    expect(job.intake_payload).to eq({ 'input' => 'Boiler leak in apartment 42' })
+    expect(job.intake_payload).to eq({ 'input' => 'Boiler leak in apartment 42', 'request_source_id' => request_source_2.id })
     expect(job.organization_id).to eq(partner_org_2.id)
     expect(job.request_source_id).to eq(request_source_2.id)
     expect(job.service_type).to eq('Boiler repair')
@@ -150,12 +150,12 @@ RSpec.describe DomServis::Intake::DispatchJobCreator do
 
   it 'is idempotent for the same external source reference' do
     direct_payload = {
-      source:             'webhook',
-      request_source_id:   request_source_2.id,
-      channel_key:        'partner_webhook',
-      source_reference:   'webhook-request-001',
-      raw_payload:        { ticket: 'external-123', request_source_id: request_source_2.id },
-      dispatch:           {
+      source:            'webhook',
+      request_source_id: request_source_2.id,
+      channel_key:       'partner_webhook',
+      source_reference:  'webhook-request-001',
+      raw_payload:       { ticket: 'external-123', request_source_id: request_source_2.id },
+      dispatch:          {
         source:            'webhook',
         request_source_id: request_source_2.id,
         organization_id:   partner_org_2.id,
@@ -175,12 +175,12 @@ RSpec.describe DomServis::Intake::DispatchJobCreator do
     request_source_2.update!(status: 'paused')
 
     paused_payload = {
-      source:             'webhook',
-      request_source_id:   request_source_2.id,
-      channel_key:        'partner_webhook',
-      source_reference:   'webhook-request-paused',
-      raw_payload:        { ticket: 'external-paused', request_source_id: request_source_2.id },
-      dispatch:           {
+      source:            'webhook',
+      request_source_id: request_source_2.id,
+      channel_key:       'partner_webhook',
+      source_reference:  'webhook-request-paused',
+      raw_payload:       { ticket: 'external-paused', request_source_id: request_source_2.id },
+      dispatch:          {
         source:            'webhook',
         request_source_id: request_source_2.id,
         organization_id:   partner_org_2.id,
@@ -191,23 +191,23 @@ RSpec.describe DomServis::Intake::DispatchJobCreator do
 
     expect do
       described_class.new(payload: paused_payload, actor_user: dispatcher).execute
-    end.to raise_error(Exceptions::Forbidden, /paused/)
+    end.to raise_error(Exceptions::Forbidden, %r{paused})
   end
 
   it 'keeps partner identity isolated across two sources using the same transport' do
     payload_a = DomServis::Intake::TicketAdapter.new(
-      ticket:          base_ticket,
-      request_source:  request_source,
-      source:          'form',
-      channel_key:     request_source.transport_kind,
+      ticket:           base_ticket,
+      request_source:   request_source,
+      source:           'form',
+      channel_key:      request_source.transport_kind,
       source_reference: 'partner-a-intake-001',
     ).payload
 
     payload_b = DomServis::Intake::TicketAdapter.new(
-      ticket:          second_ticket,
-      request_source:  request_source_2,
-      source:          'form',
-      channel_key:     request_source_2.transport_kind,
+      ticket:           second_ticket,
+      request_source:   request_source_2,
+      source:           'form',
+      channel_key:      request_source_2.transport_kind,
       source_reference: 'partner-b-intake-001',
     ).payload
 

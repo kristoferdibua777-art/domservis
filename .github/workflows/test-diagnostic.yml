@@ -1,0 +1,296 @@
+name: Test diagnostic (temporary)
+
+on:
+  push:
+    branches:
+      - fix/rubocop-baseline
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-diagnostic:
+    runs-on: ubuntu-latest
+
+    container:
+      image: zammad/zammad-ci:latest
+
+    defaults:
+      run:
+        shell: bash
+
+    services:
+      postgresql:
+        image: postgres:18
+        env:
+          POSTGRES_USER: zammad
+          POSTGRES_PASSWORD: zammad
+
+      redis:
+        image: redis:6
+
+    env:
+      RAILS_ENV: test
+      Z_LOCALES: "en-us:de-de"
+      TZ: Europe/London
+      REDIS_URL: redis://redis:6379
+      CI_SKIP_ASSETS_PRECOMPILE: "true"
+      CI_SKIP_DB_RESET: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Cache Rubygems
+        id: cache-bundler
+        uses: actions/cache@v5
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-cache-bundler-${{ hashFiles('Gemfile.lock') }}
+
+      - name: Pre
+        run: .github/workflows/ci/pre.sh
+
+      # Runs even if "Pre" failed, so the artifact upload step always has a
+      # directory to upload (possibly empty) instead of erroring out because
+      # the path never existed.
+      - name: Ensure diagnostic log directory
+        if: always()
+        run: mkdir -p diagnostic-logs
+
+      - name: "Stage 1/6: assets:precompile"
+        id: assets_precompile
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          bundle exec rake assets:precompile 2>&1 | tee diagnostic-logs/assets-precompile.log
+
+      # TEMPORARY (round 6): DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER=1 is now
+      # also set here, not just in the isolated Stage 2b/6 run below. The
+      # isolated run (ticket-create-user.spec.ts on its own) always passes
+      # cleanly with the expected FormUpdater sequence - the timeout only
+      # reproduces here, in the full suite, so this is the run whose log
+      # actually needs the diagnostic output. The flag stays narrowly gated
+      # (see tests/support/diagnostic-ticket-create-user.ts) and only logs
+      # for the `formUpdater` operation, so no other spec is affected.
+      - name: "Stage 2/6: pnpm test (Vitest)"
+        id: vitest
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER=1 pnpm test 2>&1 | tee diagnostic-logs/vitest.log
+
+      # TEMPORARY targeted diagnostic (round 5): runs only
+      # ticket-create-user.spec.ts, with DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER=1
+      # enabling the narrowly-gated logging in
+      # tests/support/diagnostic-ticket-create-user.ts, to observe the exact
+      # FormUpdater request sequence around the file's two known timeouts.
+      # Kept alongside Stage 2/6 above (which now also sets the same flag) as
+      # a control: this isolated run is what already showed the sequence
+      # completing cleanly outside the full suite.
+      - name: "Stage 2b/6 (temporary): targeted ticket-create-user.spec.ts diagnostic"
+        id: vitest_ticket_create_user_diagnostic
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER=1 pnpm test ticket-create-user.spec.ts 2>&1 | tee diagnostic-logs/ticket-create-user-targeted.log
+
+      - name: "Stage 3/6: zammad:db:init"
+        id: db_init_before_rspec
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          bundle exec rake zammad:db:init 2>&1 | tee diagnostic-logs/db-init.log
+
+      - name: "Stage 4/6: RSpec"
+        id: rspec
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          bundle exec rspec \
+            --exclude-pattern "spec/system/**/*_spec.rb" \
+            -t ~searchindex \
+            -t ~integration \
+            -t ~required_envs \
+            2>&1 | tee diagnostic-logs/rspec.log
+
+      - name: "Stage 5/6: zammad:db:reset"
+        id: db_reset_before_minitest
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          bundle exec rake zammad:db:reset 2>&1 | tee diagnostic-logs/db-reset.log
+
+      - name: "Stage 6/6: Minitest"
+        id: minitest
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          bundle exec rake test:units 2>&1 | tee diagnostic-logs/minitest.log
+
+      - name: Summary
+        if: always()
+        run: |
+          ASSETS_OUTCOME="${{ steps.assets_precompile.outcome }}"
+          VITEST_OUTCOME="${{ steps.vitest.outcome }}"
+          VITEST_TARGETED_OUTCOME="${{ steps.vitest_ticket_create_user_diagnostic.outcome }}"
+          DB_INIT_OUTCOME="${{ steps.db_init_before_rspec.outcome }}"
+          RSPEC_OUTCOME="${{ steps.rspec.outcome }}"
+          DB_RESET_OUTCOME="${{ steps.db_reset_before_minitest.outcome }}"
+          MINITEST_OUTCOME="${{ steps.minitest.outcome }}"
+
+          {
+            echo "## Test diagnostic summary"
+            echo
+            echo "| Stage | Outcome |"
+            echo "| --- | --- |"
+            echo "| assets:precompile | ${ASSETS_OUTCOME} |"
+            echo "| pnpm test (Vitest) | ${VITEST_OUTCOME} |"
+            echo "| pnpm test (targeted ticket-create-user diagnostic) | ${VITEST_TARGETED_OUTCOME} |"
+            echo "| db:init (pre-RSpec) | ${DB_INIT_OUTCOME} |"
+            echo "| RSpec | ${RSPEC_OUTCOME} |"
+            echo "| db:reset (pre-Minitest) | ${DB_RESET_OUTCOME} |"
+            echo "| Minitest | ${MINITEST_OUTCOME} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Best-effort failure excerpts for stages that did not succeed.
+          # Every grep is allowed to find nothing (`|| true`) so a clean
+          # match failure never fails this step - the full untruncated
+          # logs are always available in the uploaded artifact regardless
+          # of what this excerpt captures.
+          extract() {
+            local heading="$1"
+            local log_file="$2"
+            local pattern="$3"
+
+            [ -f "$log_file" ] || return 0
+
+            local excerpt
+            excerpt="$(grep -E "$pattern" "$log_file" || true)"
+
+            [ -n "$excerpt" ] || return 0
+
+            {
+              echo
+              echo "### ${heading}"
+              echo '```'
+              echo "$excerpt" | tail -n 200
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          if [[ "$VITEST_OUTCOME" != "success" ]]; then
+            extract \
+              "Vitest failure excerpt" \
+              diagnostic-logs/vitest.log \
+              '^ ?(FAIL|Test Files|Tests)[[:space:]]|✗|×|\[DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER\]'
+          fi
+
+          # Always surface the targeted round-5 diagnostic log lines
+          # (DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER output), not only on
+          # failure - the FormUpdater request sequence they show is the
+          # point of this stage regardless of whether the targeted run
+          # happens to pass or fail. The stage's own success/failure is
+          # still summarized above and still gates the workflow.
+          extract \
+            "Targeted ticket-create-user.spec.ts diagnostic log" \
+            diagnostic-logs/ticket-create-user-targeted.log \
+            '^ ?(FAIL|PASS|Test Files|Tests)[[:space:]]|✗|×|\[DOMSERVIS_DIAGNOSTIC_TICKET_CREATE_USER\]'
+
+          if [[ "$RSPEC_OUTCOME" != "success" ]]; then
+            extract \
+              "RSpec failure excerpt" \
+              diagnostic-logs/rspec.log \
+              '^Failures:|^Failure/Error:|^Failed examples:|^rspec .*# |[0-9]+ examples?, [0-9]+ failures?'
+          fi
+
+          if [[ "$MINITEST_OUTCOME" != "success" ]]; then
+            extract \
+              "Minitest failure excerpt" \
+              diagnostic-logs/minitest.log \
+              '^Failure:|^Error:|[0-9]+ runs, [0-9]+ assertions, [0-9]+ failures, [0-9]+ errors'
+          fi
+
+      - name: Upload diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: domservis-test-diagnostic-logs
+          path: diagnostic-logs/
+          if-no-files-found: warn
+
+      - name: Gate
+        if: always()
+        run: |
+          FAILED=0
+
+          check_stage() {
+            local name="$1"
+            local outcome="$2"
+
+            echo "$name: $outcome"
+
+            if [[ "$outcome" != "success" ]]; then
+              FAILED=1
+            fi
+          }
+
+          check_stage \
+            "assets:precompile" \
+            "${{ steps.assets_precompile.outcome }}"
+
+          check_stage \
+            "pnpm test (Vitest)" \
+            "${{ steps.vitest.outcome }}"
+
+          check_stage \
+            "pnpm test (targeted ticket-create-user diagnostic)" \
+            "${{ steps.vitest_ticket_create_user_diagnostic.outcome }}"
+
+          check_stage \
+            "db:init (pre-RSpec)" \
+            "${{ steps.db_init_before_rspec.outcome }}"
+
+          check_stage \
+            "RSpec" \
+            "${{ steps.rspec.outcome }}"
+
+          check_stage \
+            "db:reset (pre-Minitest)" \
+            "${{ steps.db_reset_before_minitest.outcome }}"
+
+          check_stage \
+            "Minitest" \
+            "${{ steps.minitest.outcome }}"
+
+          if [[ "$FAILED" -ne 0 ]]; then
+            echo "::error::One or more diagnostic Test stages failed."
+            exit 1
+          fi
+
+          echo "All diagnostic Test stages passed."

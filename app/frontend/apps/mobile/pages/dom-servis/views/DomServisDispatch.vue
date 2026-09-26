@@ -89,6 +89,20 @@ const csrfToken = () => {
   return document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content
 }
 
+const dayLabel = (visitDay?: string) => {
+  const map: Record<string, string> = {
+    mon: 'Пн',
+    tue: 'Вт',
+    wed: 'Ср',
+    thu: 'Чт',
+    fri: 'Пт',
+    sat: 'Сб',
+    sun: 'Вс',
+  }
+
+  return map[visitDay || ''] || visitDay || 'День не указан'
+}
+
 const formatSchedule = (job: DispatchJob) => {
   const parts = [dayLabel(job.visit_day)]
 
@@ -119,20 +133,6 @@ const statusLabel = (status?: DispatchStatus) => {
   }
 
   return map[status || ''] || status || 'Не указан'
-}
-
-const dayLabel = (visitDay?: string) => {
-  const map: Record<string, string> = {
-    mon: 'Пн',
-    tue: 'Вт',
-    wed: 'Ср',
-    thu: 'Чт',
-    fri: 'Пт',
-    sat: 'Сб',
-    sun: 'Вс',
-  }
-
-  return map[visitDay || ''] || visitDay || 'День не указан'
 }
 
 const currentUserInternalId = computed(() => Number(session.user?.internalId || 0))
@@ -256,7 +256,7 @@ watch(
   { immediate: true },
 )
 
-const apiRequest = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
+const apiRequest = async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
   const headers = new Headers(init.headers || {})
 
   if (init.method && init.method !== 'GET') {
@@ -296,7 +296,7 @@ const loadTags = async () => {
 const loadBoard = async () => {
   try {
     await Promise.all([loadJobs(), loadPolicy(), loadTags()])
-  } catch (error) {
+  } catch {
     notify({
       id: 'dom-servis-mobile-load-error',
       message: __('The dispatch board could not be loaded.'),
@@ -357,7 +357,7 @@ const submitJobAction = async (
         type: NotificationTypes.Success,
       })
     }
-  } catch (error) {
+  } catch {
     notify({
       id: `dom-servis-mobile-error-${job.id}-${path}`,
       message: __('The dispatch action could not be completed.'),
@@ -369,7 +369,12 @@ const submitJobAction = async (
 }
 
 const takeJob = (job: DispatchJob) =>
-  submitJobAction(job, `/api/v1/dom_servis/dispatch/jobs/${job.id}/take`, undefined, 'Заявка назначена.')
+  submitJobAction(
+    job,
+    `/api/v1/dom_servis/dispatch/jobs/${job.id}/take`,
+    undefined,
+    'Заявка назначена.',
+  )
 
 const releaseJob = (job: DispatchJob) =>
   submitJobAction(
@@ -392,7 +397,11 @@ const canTake = (job: DispatchJob) => {
 }
 
 const canRelease = (job: DispatchJob) => {
-  return Boolean(policy.value?.actions.release_to_pool) && job.status !== 'pool' && (isMine(job) || policy.value?.role_key !== 'master')
+  return (
+    Boolean(policy.value?.actions.release_to_pool) &&
+    job.status !== 'pool' &&
+    (isMine(job) || policy.value?.role_key !== 'master')
+  )
 }
 
 const canStart = (job: DispatchJob) => {
@@ -458,7 +467,11 @@ onMounted(() => {
             {{ roleLabel }} работает в Дом-Сервис через мобильный интерфейс Zammad.
           </p>
         </div>
-        <CommonLink :link="domServisDispatchDesktopPath" external class="text-sm font-medium text-blue">
+        <CommonLink
+          :link="domServisDispatchDesktopPath"
+          external
+          class="text-sm font-medium text-blue"
+        >
           Расширенный режим
         </CommonLink>
       </div>
@@ -501,14 +514,11 @@ onMounted(() => {
         </div>
 
         <div v-if="tags.length" class="mt-3">
-          <div class="mb-2 flex items-center justify-between text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">
+          <div
+            class="mb-2 flex items-center justify-between text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase"
+          >
             <span>Теги</span>
-            <button
-              v-if="activeTagCount"
-              type="button"
-              class="text-blue"
-              @click="clearTagFilters"
-            >
+            <button v-if="activeTagCount" type="button" class="text-blue" @click="clearTagFilters">
               Сбросить
             </button>
           </div>
@@ -533,7 +543,10 @@ onMounted(() => {
 
       <div class="flex min-h-0 flex-1 flex-col">
         <div class="flex-1 overflow-y-auto px-4 py-4">
-          <div v-if="!filteredJobs.length" class="rounded-2xl border border-white/10 bg-gray-500 px-4 py-5 text-sm text-gray-100">
+          <div
+            v-if="!filteredJobs.length"
+            class="rounded-2xl border border-white/10 bg-gray-500 px-4 py-5 text-sm text-gray-100"
+          >
             По текущим фильтрам заявок не найдено. Смените фильтр или обновите экран.
           </div>
 
@@ -544,9 +557,7 @@ onMounted(() => {
               type="button"
               class="w-full rounded-2xl border p-4 text-left transition"
               :class="
-                selectedJobId === job.id
-                  ? 'border-blue bg-blue/10'
-                  : 'border-white/10 bg-gray-500'
+                selectedJobId === job.id ? 'border-blue bg-blue/10' : 'border-white/10 bg-gray-500'
               "
               @click="selectedJobId = job.id"
             >
@@ -559,7 +570,9 @@ onMounted(() => {
                     {{ job.service_type }}
                   </div>
                 </div>
-                <div class="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold text-blue">
+                <div
+                  class="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold text-blue"
+                >
                   {{ statusLabel(job.status) }}
                 </div>
               </div>
@@ -602,44 +615,62 @@ onMounted(() => {
                   {{ selectedJob.service_type }}
                 </div>
               </div>
-              <button type="button" class="text-sm font-medium text-blue" @click="selectedJobId = null">
+              <button
+                type="button"
+                class="text-sm font-medium text-blue"
+                @click="selectedJobId = null"
+              >
                 Закрыть
               </button>
             </div>
 
             <dl class="mt-4 space-y-3 text-sm">
               <div>
-                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">Адрес</dt>
+                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">
+                  Адрес
+                </dt>
                 <dd class="mt-1 text-white">{{ selectedJob.address }}</dd>
               </div>
               <div v-if="selectedJob.client_name || selectedJob.client_phone">
-                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">Клиент</dt>
+                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">
+                  Клиент
+                </dt>
                 <dd class="mt-1 text-white">
                   {{ selectedJob.client_name || 'Не указан' }}
                   <span v-if="selectedJob.client_phone"> · {{ selectedJob.client_phone }}</span>
                 </dd>
               </div>
               <div>
-                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">График</dt>
+                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">
+                  График
+                </dt>
                 <dd class="mt-1 text-white">{{ formatSchedule(selectedJob) }}</dd>
               </div>
               <div>
-                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">Статус</dt>
+                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">
+                  Статус
+                </dt>
                 <dd class="mt-1 text-white">{{ statusLabel(selectedJob.status) }}</dd>
               </div>
               <div>
-                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">Приоритет</dt>
+                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">
+                  Приоритет
+                </dt>
                 <dd class="mt-1 text-white">{{ priorityLabel(selectedJob.priority) }}</dd>
               </div>
               <div v-if="selectedJob.assignee || selectedJob.organization">
-                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">Назначение</dt>
+                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">
+                  Назначение
+                </dt>
                 <dd class="mt-1 text-white">
                   {{ selectedJob.assignee || 'Исполнитель не назначен' }}
                   <span v-if="selectedJob.organization"> · {{ selectedJob.organization }}</span>
                 </dd>
               </div>
               <div v-if="selectedJob.work_tags?.length">
-                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">Теги</dt>
+                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">
+                  Теги
+                </dt>
                 <dd class="mt-2 flex flex-wrap gap-2">
                   <span
                     v-for="tag in selectedJob.work_tags"
@@ -651,11 +682,15 @@ onMounted(() => {
                 </dd>
               </div>
               <div v-if="selectedJob.comment">
-                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">Комментарий</dt>
+                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">
+                  Комментарий
+                </dt>
                 <dd class="mt-1 whitespace-pre-line text-white">{{ selectedJob.comment }}</dd>
               </div>
               <div v-if="selectedJob.description">
-                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">Описание</dt>
+                <dt class="text-xs font-semibold tracking-[0.18em] text-gray-100 uppercase">
+                  Описание
+                </dt>
                 <dd class="mt-1 whitespace-pre-line text-white">{{ selectedJob.description }}</dd>
               </div>
             </dl>

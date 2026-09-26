@@ -133,4 +133,3 @@ docker compose exec -T zammad-railsserver bundle exec rake dom_servis:webpush:st
 Для багов — воспроизведение до исправления и после него.
 
 [К началу документации](../../developer.md)
-

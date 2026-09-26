@@ -36,8 +36,13 @@ describe('testing home section menu', () => {
 
     const view = await visitView('/')
 
+    // The menu item intentionally renders an `information` subtitle
+    // ("Дом-Сервис") next to the label, via CommonSectionMenuLink - see
+    // Home.vue. That subtitle is plain visible text inside the same link,
+    // so per the standard accessible name algorithm it is included in the
+    // link's accessible name, not just its visible label.
     const dispatchLink = view.getByRole('link', {
-      name: 'Диспетчерская доска',
+      name: 'Диспетчерская доска Дом-Сервис',
     })
 
     expect(dispatchLink).toHaveAttribute('href', '/mobile/dom-servis/dispatch')
