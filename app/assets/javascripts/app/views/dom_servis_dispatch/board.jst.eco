@@ -437,7 +437,7 @@
                       <% else if field.type is 'date': %>
                         <input class="form-control js-edit-field" data-field="<%= field.key %>" type="date" value="<%= field.value %>">
                       <% else if field.type is 'time': %>
-                        <input class="form-control js-edit-field" data-field="<%= field.key %>" type="time" value="<%= field.value %>">
+                        <input class="form-control js-edit-field js-visit-time-input" data-field="<%= field.key %>" type="text" autocomplete="off" spellcheck="false" placeholder="09:05 или 09:00-11:30" value="<%= field.value %>">
                       <% else: %>
                         <input class="form-control js-edit-field" data-field="<%= field.key %>" type="text" value="<%= field.value %>">
                       <% end %>
@@ -641,7 +641,8 @@
           <div class="dom-servis-dispatch-modal__columns">
           <div class="form-group">
             <label>Время визита</label>
-            <input class="form-control js-create-visit-time js-create-draft-field" type="time" value="<%= @createDraft.visit_time %>">
+            <input class="form-control js-create-visit-time js-create-draft-field js-visit-time-input" type="text" autocomplete="off" spellcheck="false" placeholder="09:05 или 09:00-11:30" value="<%= @createDraft.visit_time %>">
+            <div class="dom-servis-dispatch-drawer__field-hint">Точное время 09:05 или окно 09:00-11:30, 24-часовой формат. Пустое поле — время не задано.</div>
           </div>
 
           <div class="form-group">

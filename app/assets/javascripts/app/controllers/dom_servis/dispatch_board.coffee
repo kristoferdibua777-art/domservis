@@ -28,6 +28,7 @@ class App.DomServisDispatchBoard extends App.Controller
     'click .js-remove-create-attachment': 'removeCreateAttachment'
     'change .js-create-attachment-kind': 'changeCreateAttachmentKind'
     'click .js-save-edit': 'saveEdit'
+    'input .js-visit-time-input': 'clearVisitTimeError'
     'click .js-edit-tag-toggle': 'toggleEditTag'
     'change .js-assign-assignee': 'setAssignAssignee'
     'click .js-assign-job': 'assignJob'
@@ -929,6 +930,11 @@ class App.DomServisDispatchBoard extends App.Controller
       @notify(type: 'error', msg: 'Выбери день недели.', timeout: 4000)
       return null
 
+    visitTime = @normalizeVisitTimeInput(@createDraft.visit_time)
+    if !@validVisitTime(visitTime)
+      @showVisitTimeError(@$('.js-create-visit-time'))
+      return null
+
     {
       service_type: serviceType
       address: address
@@ -937,7 +943,7 @@ class App.DomServisDispatchBoard extends App.Controller
       organization_id: @normalizeNumericId(@createDraft.organization_id) || @privateOrganizationId()
       visit_day: visitDay
       visit_date: visitDate || @nextDateForDay(visitDay)
-      visit_time: @createDraft.visit_time
+      visit_time: visitTime
       priority: @createDraft.priority || 'medium'
       description: @createDraft.description
       comment: @createDraft.comment
@@ -948,16 +954,33 @@ class App.DomServisDispatchBoard extends App.Controller
 
   buildEditPayload: (job) ->
     payload = {}
+    invalidVisitTimeInput = null
 
     _.each @editableEditFields(job), (field) =>
       input = @$(".js-edit-field[data-field='#{field.key}']")
       return if input.length < 1
 
       value = @readEditValue(field, input)
+
+      if field.key is 'visit_time'
+        # An untouched time is never sent, so a free-text intake snapshot
+        # survives edits of other fields. An explicit change must follow the
+        # backend contract.
+        return if @visitTimeUntouched(@jobFieldValue(job, 'visit_time'), value)
+
+        value = @normalizeVisitTimeInput(value)
+        if !@validVisitTime(value)
+          invalidVisitTimeInput = input
+          return
+
       normalized = @normalizeEditValue(field.key, value)
       return if !@fieldValueChanged(job, field.key, normalized)
 
       payload[field.key] = normalized
+
+    if invalidVisitTimeInput
+      @showVisitTimeError(invalidVisitTimeInput)
+      return false
 
     @normalizeSchedulePayload(job, payload)
 
@@ -971,6 +994,38 @@ class App.DomServisDispatchBoard extends App.Controller
       payload.visit_date = @nextDateForDay(payload.visit_day)
 
     payload
+
+  # Same contract as DomServis::DispatchSchedule on the server: empty, an exact
+  # time HH:MM or a window HH:MM-HH:MM, on a 24-hour clock.
+  visitTimePattern: /^(?:[01]\d|2[0-3]):[0-5]\d(?:-(?:[01]\d|2[0-3]):[0-5]\d)?$/
+
+  visitTimeFormatHint: 'Точное время 09:05 или окно 09:00-11:30, 24-часовой формат. Пустое поле — время не задано.'
+
+  # Tolerates spaces, an en/em dash or minus sign instead of the hyphen and a
+  # one-digit hour ("9:00 – 11:30"); anything else is left as typed for
+  # validVisitTime to reject.
+  normalizeVisitTimeInput: (value) ->
+    "#{value || ''}"
+      .replace(/\s+/g, '')
+      .replace(/[–—−]/g, '-')
+      .replace(/(^|-)(\d):/g, (match, prefix, hour) -> "#{prefix}0#{hour}:")
+
+  validVisitTime: (value) ->
+    value is '' || @visitTimePattern.test(value)
+
+  # The text input drops line breaks and readEditValue trims, so the stored
+  # value is compared the same way to tell an untouched field from an edit.
+  visitTimeUntouched: (storedValue, inputValue) ->
+    sanitize = (value) -> "#{value || ''}".replace(/[\r\n]+/g, '').trim()
+    sanitize(storedValue) is sanitize(inputValue)
+
+  showVisitTimeError: (input) ->
+    input.closest('.form-group').addClass('has-error')
+    input.trigger('focus')
+    @notify(type: 'error', msg: "Время визита не распознано. #{@visitTimeFormatHint}", timeout: 6000)
+
+  clearVisitTimeError: (e) ->
+    $(e.currentTarget).closest('.form-group').removeClass('has-error')
 
   readEditValue: (field, input) ->
     switch field.type
@@ -1707,6 +1762,7 @@ class App.DomServisDispatchBoard extends App.Controller
     return 'Список исполнителей строится по активным пользователям Дом-Сервис.' if fieldKey is 'assignee_id'
     return 'Используется как заказчик / источник заказа: управляющая компания, партнёр или Частный заказ.' if fieldKey is 'organization_id'
     return 'Диспетчер выбирает только существующие теги из общего словаря Zammad. Новые имена создаются через Manage > Tags.' if fieldKey is 'work_tags'
+    return "#{@visitTimeFormatHint} Текст из входящей заявки сохраняется, пока поле не изменено." if fieldKey is 'visit_time'
     null
 
   fieldInputValue: (job, fieldKey) ->
@@ -2181,6 +2237,10 @@ class App.DomServisDispatchBoard extends App.Controller
 
     if fieldKey in ['visit_day', 'visit_date']
       return @actionAllowed('move_job_day') || @actionAllowed('move_job_week')
+
+    # The server authorizes a time-only change as move_job_day.
+    if fieldKey is 'visit_time'
+      return @actionAllowed('move_job_day')
 
     true
 
