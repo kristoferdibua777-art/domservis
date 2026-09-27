@@ -478,4 +478,22 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
       end
     end
   end
+
+  describe 'GET /api/v1/dom_servis/dispatch/jobs/:job_id/events', authenticated_as: :dispatcher_user do
+    it 'returns the history newest first with the actor name', :aggregate_failures do
+      DomServis::DispatchEvent.create!(dispatch_job: job, actor_user: master_user, event_type: 'created', meta: { source: 'manual' })
+      DomServis::DispatchEvent.create!(dispatch_job: job, actor_user: dispatcher_user, event_type: 'priority_changed', meta: { from: 'medium', to: 'high' })
+
+      get "/api/v1/dom_servis/dispatch/jobs/#{job.id}/events", as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response.pluck('event_type')).to eq(%w[priority_changed created])
+      expect(json_response.first).to include(
+        'actor_user_id' => dispatcher_user.id,
+        'actor_name'    => dispatcher_user.fullname,
+        'meta'          => { 'from' => 'medium', 'to' => 'high' },
+      )
+      expect(json_response.last['actor_name']).to eq(master_user.fullname)
+    end
+  end
 end

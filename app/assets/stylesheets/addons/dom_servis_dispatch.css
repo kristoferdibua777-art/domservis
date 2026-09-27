@@ -1162,6 +1162,36 @@
   padding: 14px;
 }
 
+.dom-servis-dispatch-drawer__history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dom-servis-dispatch-drawer__history-item {
+  background: rgba(19, 23, 31, 0.42);
+  border: 1px solid rgba(76, 84, 103, 0.3);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.dom-servis-dispatch-drawer__history-title {
+  color: #eef2f9;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.dom-servis-dispatch-drawer__history-line {
+  color: #aab4c8;
+  font-size: 13px;
+  line-height: 1.45;
+  margin-bottom: 4px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
 .dom-servis-dispatch-drawer__assignment-panel {
   align-items: flex-end;
   display: grid;

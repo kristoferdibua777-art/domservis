@@ -5,6 +5,7 @@ class DomServis::Dispatch::EventsController < DomServis::Dispatch::BaseControlle
     job = dispatch_job_scope.find(params[:job_id])
     authorize job, :show?
 
-    render json: job.events.ordered_recent.map(&:attributes_with_association_ids), status: :ok
+    events = job.events.includes(:actor_user).ordered_recent
+    render json: events.map { |event| event.attributes_with_association_ids.merge('actor_name' => event.actor_user&.fullname) }, status: :ok
   end
 end

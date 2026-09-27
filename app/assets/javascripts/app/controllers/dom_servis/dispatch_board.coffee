@@ -67,6 +67,7 @@ class App.DomServisDispatchBoard extends App.Controller
     @attachmentCollections = {}
     @attachmentLoading = {}
     @attachmentUploading = {}
+    @eventCollections = {}
     @createDraft = {}
     @createAttachmentFiles = []
     @createAttachmentUploading = false
@@ -158,6 +159,8 @@ class App.DomServisDispatchBoard extends App.Controller
       detailCanDeleteAttachments: @canDeleteAttachments()
       detailAttachmentLoading: @attachmentLoading["#{detailJob?.id}"] is true
       detailAttachmentUploading: @attachmentUploading["#{detailJob?.id}"] is true
+      detailHistory: @buildHistoryEntries(detailJob)
+      detailHistoryLoading: detailJob? && !@eventCollections["#{detailJob.id}"]?
       organizationOptions: @organizationOptions()
       privateOrganizationId: @privateOrganizationId()
       jobCards: @buildJobCards()
@@ -263,6 +266,7 @@ class App.DomServisDispatchBoard extends App.Controller
         @jobs = @sortJobs(data || [])
         @loading = false
         @render()
+        @loadEvents(@detailJobId) if @detailOpen && @detailJobId
         @flushPendingRealtimeRefresh()
       error: (xhr) =>
         @jobs = []
@@ -390,6 +394,26 @@ class App.DomServisDispatchBoard extends App.Controller
         @render()
     )
 
+  # History is reloaded on every open and board refresh; until the first
+  # answer the card shows a loading line, later reloads keep the old list.
+  loadEvents: (jobId) =>
+    return if !jobId
+
+    key = "#{jobId}"
+
+    @ajax(
+      id: "dom_servis_dispatch_events_#{jobId}"
+      type: 'GET'
+      url: "#{@apiPath}/dom_servis/dispatch/jobs/#{jobId}/events"
+      success: (data) =>
+        @eventCollections[key] = data || []
+        @render() if @detailOpen && "#{@detailJobId}" is key && !@editOpen
+      error: =>
+        @eventCollections[key] = []
+        @notify(type: 'error', msg: 'Не удалось загрузить историю заявки.', timeout: 4000)
+        @render() if @detailOpen && "#{@detailJobId}" is key && !@editOpen
+    )
+
   refreshJobs: (e) =>
     @preventDefault(e)
     @loadEffectivePolicy()
@@ -478,6 +502,7 @@ class App.DomServisDispatchBoard extends App.Controller
     @detailJobId = job.id
     @detailAssignAssigneeId = if job.assignee_id? then "#{job.assignee_id}" else ''
     @loadAttachments(job.id)
+    @loadEvents(job.id)
     @render()
 
   closeDetail: (e) =>
@@ -505,6 +530,7 @@ class App.DomServisDispatchBoard extends App.Controller
     @editSaving = false
     @detailAssignAssigneeId = if job.assignee_id? then "#{job.assignee_id}" else ''
     @loadAttachments(job.id)
+    @loadEvents(job.id)
     @render()
 
   closeEdit: (e) =>
@@ -1822,6 +1848,103 @@ class App.DomServisDispatchBoard extends App.Controller
   buildAttachmentList: (job) ->
     return [] if !job
     @attachmentCollections["#{job.id}"] || []
+
+  buildHistoryEntries: (job) ->
+    return [] if !job
+    _.map(@eventCollections["#{job.id}"] || [], (event) => @historyEntry(event))
+
+  historyEntry: (event) ->
+    meta = event.meta || {}
+
+    {
+      title: @historyTitle(event.event_type, meta)
+      lines: @historyLines(event.event_type, meta)
+      actor: event.actor_name || 'Система'
+      time: @formatHistoryTime(event.created_at)
+    }
+
+  # Events written before the full audit trail may lack from/to; they get a
+  # title without values instead of a misleading transition.
+  historyTitle: (eventType, meta) ->
+    transition = (label, field) =>
+      return label if !_.has(meta, 'from') && !_.has(meta, 'to')
+      "#{label}: #{@historyValue(field, meta.from)} → #{@historyValue(field, meta.to)}"
+
+    switch eventType
+      when 'created' then 'Заявка создана'
+      when 'published' then 'Опубликована в пул'
+      when 'taken' then 'Взята мастером'
+      when 'assigned' then 'Назначен мастер'
+      when 'released' then 'Возвращена в пул'
+      when 'status_changed' then transition('Статус', 'status')
+      when 'moved_weekday' then transition('День визита', 'visit_day')
+      when 'priority_changed' then transition('Приоритет', 'priority')
+      when 'organization_changed' then transition('Заказчик', 'organization_id')
+      when 'comment_added' then 'Изменён комментарий диспетчера'
+      when 'description_updated' then 'Изменено описание'
+      when 'tags_changed' then 'Изменены теги работ'
+      when 'attachment_added' then "Добавлено вложение: #{meta.filename || '—'}"
+      when 'attachment_removed' then "Удалено вложение: #{meta.filename || '—'}"
+      when 'updated' then 'Изменены данные заявки'
+      when 'ai_parsed' then 'Заявка разобрана автоматически'
+      else eventType
+
+  historyLines: (eventType, meta) ->
+    lines = []
+    change = (label, field, from, to) =>
+      lines.push("#{label}: #{@historyValue(field, from)} → #{@historyValue(field, to)}")
+
+    switch eventType
+      when 'created'
+        lines.push("Источник: #{@sourceLabel(meta.source)}") if meta.source
+      when 'assigned'
+        change('Мастер', 'assignee_id', meta.from, meta.to) if _.has(meta, 'to')
+      when 'released'
+        lines.push("Мастер: #{@historyValue('assignee_id', meta.from)}") if _.has(meta, 'from')
+      when 'comment_added'
+        change('Комментарий', 'comment', meta.from, meta.comment) if _.has(meta, 'comment')
+      when 'description_updated'
+        change('Описание', 'description', meta.from, meta.description) if _.has(meta, 'description')
+      when 'tags_changed'
+        change('Теги', 'work_tags', meta.from, meta.to) if _.has(meta, 'to')
+      when 'updated'
+        _.each meta.changes || {}, (values, field) =>
+          change(@fieldLabel(field), field, values?.from, values?.to)
+
+    if meta.status && eventType in ['assigned', 'released']
+      change('Статус', 'status', meta.status.from, meta.status.to)
+
+    lines
+
+  historyValue: (field, value) ->
+    return '—' if !value? || value is '' || (_.isArray(value) && value.length is 0)
+
+    switch field
+      when 'status' then @statusLabel(value)
+      when 'priority' then @priorityLabel(value)
+      when 'visit_day' then @weekdayLabel(value)
+      when 'source' then @sourceLabel(value)
+      when 'assignee_id' then @historyUserName(value)
+      when 'organization_id' then @historyOrganizationName(value)
+      when 'work_tags' then (if _.isArray(value) then value.join(', ') else "#{value}")
+      else "#{value}"
+
+  historyUserName: (userId) ->
+    return App.User.findNative(userId).displayName() if App.User.exists(userId)
+    "##{userId}"
+
+  historyOrganizationName: (organizationId) ->
+    match = _.find(@organizations || [], (organization) -> "#{organization.id}" is "#{organizationId}")
+    match?.name || "##{organizationId}"
+
+  formatHistoryTime: (value) ->
+    return '' if !value
+
+    date = new Date(value)
+    return '' if isNaN(date.getTime())
+
+    pad = (number) -> ("0#{number}").slice(-2)
+    "#{pad(date.getDate())}.#{pad(date.getMonth() + 1)}.#{date.getFullYear()} #{pad(date.getHours())}:#{pad(date.getMinutes())}"
 
   canAddAttachment: (job) ->
     return false if !job

@@ -551,6 +551,33 @@
               </div>
             <% end %>
           </section>
+
+          <% if !@detailEditing: %>
+            <section class="dom-servis-dispatch-drawer__section">
+              <div class="dom-servis-dispatch-drawer__section-title">История</div>
+
+              <% if @detailHistoryLoading: %>
+                <div class="dom-servis-dispatch-drawer__attachment-empty">Загрузка истории…</div>
+              <% else if @detailHistory.length < 1: %>
+                <div class="dom-servis-dispatch-drawer__attachment-empty">Событий пока нет.</div>
+              <% else: %>
+                <div class="dom-servis-dispatch-drawer__history-list">
+                  <% for entry in @detailHistory: %>
+                    <div class="dom-servis-dispatch-drawer__history-item">
+                      <div class="dom-servis-dispatch-drawer__history-title"><%= entry.title %></div>
+                      <% for line in entry.lines: %>
+                        <div class="dom-servis-dispatch-drawer__history-line"><%= line %></div>
+                      <% end %>
+                      <div class="dom-servis-dispatch-drawer__attachment-meta">
+                        <span><%= entry.time %></span>
+                        <span><%= entry.actor %></span>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </section>
+          <% end %>
         </div>
 
         <div class="dom-servis-dispatch-drawer__footer<%= ' dom-servis-dispatch-drawer__footer--mobile' if @mobileView %>">
