@@ -2,7 +2,9 @@
 
 class DomServis::DispatchSchedule
   DATE_PATTERN = %r{\A\d{4}-\d{2}-\d{2}\z}
-  TIME_PATTERN = %r{\A(?:[01]\d|2[0-3]):[0-5]\d\z}
+  TIME_COMPONENT = '(?:[01]\d|2[0-3]):[0-5]\d'.freeze
+  TIME_PATTERN = %r{\A#{TIME_COMPONENT}\z}
+  TIME_WINDOW_PATTERN = %r{\A#{TIME_COMPONENT}-#{TIME_COMPONENT}\z}
   WEEKDAY_KEYS = %w[sun mon tue wed thu fri sat].freeze
 
   class << self
@@ -17,8 +19,8 @@ class DomServis::DispatchSchedule
       nil
     end
 
-    def valid_time?(value)
-      value.blank? || value.to_s.match?(TIME_PATTERN)
+    def valid_manual_time?(value)
+      value.blank? || value.to_s.match?(TIME_PATTERN) || value.to_s.match?(TIME_WINDOW_PATTERN)
     end
 
     def weekday_key(date)

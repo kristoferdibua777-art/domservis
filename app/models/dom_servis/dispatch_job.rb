@@ -263,8 +263,8 @@ class DomServis::DispatchJob < ApplicationModel
       errors.add(:visit_date, 'must use YYYY-MM-DD and be a real calendar date')
     end
 
-    if !DomServis::DispatchSchedule.valid_time?(visit_time)
-      errors.add(:visit_time, 'must use 24-hour HH:MM')
+    if strict_visit_time_required? && !DomServis::DispatchSchedule.valid_manual_time?(visit_time)
+      errors.add(:visit_time, 'must use 24-hour HH:MM or HH:MM-HH:MM')
     end
 
     return if visit_date_value.blank? || visit_day.blank?
@@ -273,6 +273,10 @@ class DomServis::DispatchJob < ApplicationModel
     return if visit_day == expected_visit_day
 
     errors.add(:visit_day, "must match visit_date (expected '#{expected_visit_day}')")
+  end
+
+  def strict_visit_time_required?
+    source == 'manual' || (!new_record? && will_save_change_to_visit_time?)
   end
 
   def infer_visit_day

@@ -116,6 +116,18 @@ RSpec.describe DomServis::DispatchJob, current_user_id: 1, type: :model do
       expect(job).to be_valid
     end
 
+    it 'accepts the existing manual visit window format' do
+      job = described_class.new(dispatch_job_attrs.merge(visit_time: '09:00-11:30'))
+
+      expect(job).to be_valid
+    end
+
+    it 'preserves a free-form visit time snapshot from intake' do
+      job = described_class.new(dispatch_job_attrs.merge(source: 'form', visit_time: 'Уточнить у клиента'))
+
+      expect(job).to be_valid
+    end
+
     it 'rejects a non-existent visit date', :aggregate_failures do
       job = described_class.new(dispatch_job_attrs.merge(visit_date: '2026-02-30'))
 
@@ -134,7 +146,14 @@ RSpec.describe DomServis::DispatchJob, current_user_id: 1, type: :model do
       job = described_class.new(dispatch_job_attrs.merge(visit_time: '24:30'))
 
       expect(job).not_to be_valid
-      expect(job.errors[:visit_time]).to include('must use 24-hour HH:MM')
+      expect(job.errors[:visit_time]).to include('must use 24-hour HH:MM or HH:MM-HH:MM')
+    end
+
+    it 'requires a canonical time when an intake snapshot is rescheduled', :aggregate_failures do
+      job = described_class.create!(dispatch_job_attrs.merge(source: 'form', visit_time: 'Уточнить у клиента'))
+
+      expect(job.update(visit_time: '25:00')).to be(false)
+      expect(job.errors[:visit_time]).to include('must use 24-hour HH:MM or HH:MM-HH:MM')
     end
 
     it 'rejects a weekday that does not match the visit date', :aggregate_failures do
