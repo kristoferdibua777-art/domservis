@@ -106,6 +106,7 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
       status:        'done',
       priority:      'high',
       visit_day:     'tue',
+      visit_date:    '2026-03-24',
       work_tags:     %w[gas waiting-parts],
       comment:       'Work completed successfully',
       description:   'Updated completion details',
@@ -133,6 +134,7 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket.dom_servis_dispatch_status).to eq('done')
     expect(ticket.dom_servis_dispatch_priority).to eq('high')
     expect(ticket.dom_servis_visit_day).to eq('tue')
+    expect(ticket.dom_servis_visit_date).to eq('2026-03-24')
     expect(ticket.dom_servis_comment).to eq('Work completed successfully')
     expect(ticket.dom_servis_description).to eq('Updated completion details')
     expect(ticket.tag_list).to eq(%w[gas waiting-parts])
