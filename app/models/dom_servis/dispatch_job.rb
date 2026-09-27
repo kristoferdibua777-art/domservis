@@ -46,6 +46,7 @@ class DomServis::DispatchJob < ApplicationModel
   validates :visit_day, inclusion: { in: VISIT_DAYS }
   validates :service_type, presence: true
   validates :address, presence: true
+  validate :schedule_is_valid, if: :schedule_validation_required?
   validate :status_transition_allowed, on: :update, if: :will_save_change_to_status?
   validate :assignee_matches_status, if: -> { new_record? || will_save_change_to_status? || will_save_change_to_assignee_id? }
 
@@ -251,8 +252,32 @@ class DomServis::DispatchJob < ApplicationModel
     end
   end
 
+  def schedule_validation_required?
+    new_record? || will_save_change_to_visit_day? || will_save_change_to_visit_date? || will_save_change_to_visit_time?
+  end
+
+  def schedule_is_valid
+    visit_date_value = DomServis::DispatchSchedule.parse_date(visit_date)
+
+    if visit_date.present? && visit_date_value.blank?
+      errors.add(:visit_date, 'must use YYYY-MM-DD and be a real calendar date')
+    end
+
+    if !DomServis::DispatchSchedule.valid_time?(visit_time)
+      errors.add(:visit_time, 'must use 24-hour HH:MM')
+    end
+
+    return if visit_date_value.blank? || visit_day.blank?
+
+    expected_visit_day = DomServis::DispatchSchedule.weekday_key(visit_date_value)
+    return if visit_day == expected_visit_day
+
+    errors.add(:visit_day, "must match visit_date (expected '#{expected_visit_day}')")
+  end
+
   def infer_visit_day
-    return weekday_key_from_date(visit_date) if visit_date.present?
+    visit_date_value = DomServis::DispatchSchedule.parse_date(visit_date)
+    return DomServis::DispatchSchedule.weekday_key(visit_date_value) if visit_date_value.present?
 
     case (created_at || Time.zone.now).wday
     when 1 then 'mon'
@@ -263,22 +288,6 @@ class DomServis::DispatchJob < ApplicationModel
     when 6 then 'sat'
     else 'sun'
     end
-  end
-
-  def weekday_key_from_date(value)
-    parsed_date = Date.parse(value.to_s)
-
-    case parsed_date.wday
-    when 1 then 'mon'
-    when 2 then 'tue'
-    when 3 then 'wed'
-    when 4 then 'thu'
-    when 5 then 'fri'
-    when 6 then 'sat'
-    else 'sun'
-    end
-  rescue ArgumentError
-    'mon'
   end
 
   class << self

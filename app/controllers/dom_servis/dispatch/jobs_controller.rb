@@ -430,7 +430,8 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
   def ensure_schedule_update_allowed!(job, updates)
     visit_day_changed  = updates.key?(:visit_day) && updates[:visit_day].to_s != job.visit_day.to_s
     visit_date_changed = updates.key?(:visit_date) && updates[:visit_date].to_s != job.visit_date.to_s
-    return if !visit_day_changed && !visit_date_changed
+    visit_time_changed = updates.key?(:visit_time) && updates[:visit_time].to_s != job.visit_time.to_s
+    return if !visit_day_changed && !visit_date_changed && !visit_time_changed
 
     old_date = parse_dispatch_date(job.visit_date)
     new_date = parse_dispatch_date(updates[:visit_date].presence || job.visit_date)

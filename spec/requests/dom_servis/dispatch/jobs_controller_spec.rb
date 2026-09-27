@@ -191,6 +191,14 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
         expect(job.reload).to have_attributes(visit_day: 'wed', visit_date: '2026-03-25')
         expect(job.events.last).to have_attributes(event_type: 'moved_weekday', actor_user_id: dispatcher_user.id)
       end
+
+      it 'rejects a date that does not match the requested weekday', :aggregate_failures do
+        post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/move_day", params: { visit_day: 'wed', visit_date: '2026-03-26' }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(job.reload).to have_attributes(visit_day: 'mon', visit_date: '2026-03-23')
+        expect(job.events.where(event_type: 'moved_weekday')).to be_empty
+      end
     end
 
     context 'when logged in as a master', authenticated_as: -> { master_user } do
@@ -315,6 +323,23 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
 
         expect(response).to have_http_status(:forbidden)
         expect(job.reload.status).to eq('pool')
+      end
+
+      it 'requires schedule permission to change the visit time', :aggregate_failures do
+        allow(DomServis::DispatchPolicy).to receive(:action_allowed?).and_call_original
+        allow(DomServis::DispatchPolicy).to receive(:action_allowed?).with(anything, 'move_job_day').and_return(false)
+
+        put "/api/v1/dom_servis/dispatch/jobs/#{job.id}", params: { visit_time: '11:30' }, as: :json
+
+        expect(response).to have_http_status(:forbidden)
+        expect(job.reload.visit_time).to be_blank
+      end
+
+      it 'rejects a non-canonical visit time', :aggregate_failures do
+        put "/api/v1/dom_servis/dispatch/jobs/#{job.id}", params: { visit_time: '25:00' }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(job.reload.visit_time).to be_blank
       end
     end
   end
