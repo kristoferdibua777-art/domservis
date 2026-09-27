@@ -20,7 +20,9 @@ class DomServis::Intake::DispatchJobCreator
     end
 
     UserInfo.with_user_id(actor_user.id) do
-      dispatch_job = DomServis::DispatchJob.create!(dispatch_attributes)
+      dispatch_job = ActiveRecord::Base.transaction do
+        DomServis::DispatchJob.create!(dispatch_attributes).tap { |job| create_intake_events!(job) }
+      end
       sync_backing_ticket!(dispatch_job) if ticket.present?
       mark_request_source_used!
       dispatch_job
@@ -69,6 +71,20 @@ class DomServis::Intake::DispatchJobCreator
       created_by_id:      actor_user.id,
       updated_by_id:      actor_user.id,
     )
+  end
+
+  # Same history start as a job created on the board ('created', then
+  # 'published' to the pool), attributed to the intake actor like created_by.
+  def create_intake_events!(dispatch_job)
+    created_meta = {
+      source:            normalized_source,
+      request_source_id: normalized_request_source_id,
+      channel_key:       payload[:channel_key],
+      source_reference:  normalized_source_reference,
+    }
+
+    DomServis::DispatchEvent.create!(dispatch_job:, actor_user:, event_type: 'created', meta: created_meta)
+    DomServis::DispatchEvent.create!(dispatch_job:, actor_user:, event_type: 'published', meta: {})
   end
 
   def sync_backing_ticket!(dispatch_job)

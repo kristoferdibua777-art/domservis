@@ -5,6 +5,26 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
   # take/assign and the lifecycle timestamps are maintained by the model.
   CREATE_FORBIDDEN_PARAMS = %i[assignee_id published_at taken_at completed_at closed_at cancelled_at].freeze
 
+  # Business fields of a job. Every saved change of one of them ends up in the
+  # job's event history with its old and new value. assignee_id is here for
+  # the master a move back to the pool drops.
+  AUDITED_FIELDS = %w[
+    organization_id status assignee_id priority visit_day visit_date visit_time service_type
+    client_name client_phone address description comment source work_tags
+  ].freeze
+
+  # Fields whose change has its own event type (see collect_tracked_changes).
+  # Changes of the other audited fields are listed in one 'updated' event.
+  FIELD_EVENT_TYPES = {
+    'status'          => 'status_changed',
+    'priority'        => 'priority_changed',
+    'visit_day'       => 'moved_weekday',
+    'comment'         => 'comment_added',
+    'description'     => 'description_updated',
+    'organization_id' => 'organization_changed',
+    'work_tags'       => 'tags_changed',
+  }.freeze
+
   def index
     model_index_render(dispatch_job_scope.ordered_recent, params)
   end
@@ -72,7 +92,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
         updated_by_id: current_user.id,
       )
 
-      create_event!(job, 'assigned', from: previous_assignee_id, to: assignee.id)
+      create_event!(job, 'assigned', { from: previous_assignee_id, to: assignee.id }.merge(saved_status_change(job)))
     end
 
     sync_backing_ticket!(job, changes: { 'assigned' => { from: previous_assignee_id, to: assignee.id } })
@@ -134,8 +154,9 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     job.with_lock do
       raise Exceptions::UnprocessableEntity, "A dispatch job in '#{job.status}' cannot be released to the pool." if !DomServis::DispatchWorkflow.releasable?(job.status)
 
+      previous_assignee_id = job.assignee_id
       job.update!(DomServis::DispatchWorkflow.transition_attributes('pool').merge(updated_by_id: current_user.id))
-      create_event!(job, 'released')
+      create_event!(job, 'released', { from: previous_assignee_id }.merge(saved_status_change(job)))
     end
 
     sync_backing_ticket!(job, changes: { 'released' => {} })
@@ -158,6 +179,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
 
       job.update!(updates.merge(updated_by_id: current_user.id))
       create_event!(job, 'status_changed', from: previous_status, to: status)
+      create_untracked_changes_event!(job, %w[status_changed])
       changed = true
     end
 
@@ -183,6 +205,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     job.with_lock do
       job.update!(updates.merge(updated_by_id: current_user.id))
       create_event!(job, 'moved_weekday', from: job.visit_day_before_last_save, to: job.visit_day)
+      create_untracked_changes_event!(job, %w[moved_weekday])
     end
 
     sync_backing_ticket!(job, changes: { 'moved_weekday' => { from: job.visit_day_before_last_save, to: job.visit_day } })
@@ -278,9 +301,30 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
       create_event!(job, event_type, meta)
     end
 
-    create_event!(job, 'updated') if tracked_changes.blank?
+    create_untracked_changes_event!(job, tracked_changes.keys)
 
     tracked_changes
+  end
+
+  # Records the saved changes that none of the given specific events covers
+  # (address, client, service, visit date and time, source, ...) as one
+  # 'updated' event with the old and new value of each field. Nothing is
+  # recorded when nothing changed.
+  def create_untracked_changes_event!(job, tracked_event_types)
+    changes = job.saved_changes.slice(*AUDITED_FIELDS).each_with_object({}) do |(field, (from, to)), memo|
+      next if tracked_event_types.include?(FIELD_EVENT_TYPES[field])
+
+      memo[field] = { from:, to: }
+    end
+    return if changes.blank?
+
+    create_event!(job, 'updated', changes:)
+  end
+
+  def saved_status_change(job)
+    return {} if !job.saved_change_to_status?
+
+    { status: { from: job.status_before_last_save, to: job.status } }
   end
 
   def permitted_job_params
@@ -322,11 +366,11 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
       end
 
       if updates[:comment].present? && updates[:comment] != job.comment
-        changes['comment_added'] = { comment: updates[:comment] }
+        changes['comment_added'] = { comment: updates[:comment], from: job.comment }
       end
 
       if updates.key?(:description) && updates[:description].to_s != job.description.to_s
-        changes['description_updated'] = { description: updates[:description] }
+        changes['description_updated'] = { description: updates[:description], from: job.description }
       end
 
       if updates.key?(:organization_id) && normalized_assignee_id(updates[:organization_id]) != normalized_assignee_id(job.organization_id)
@@ -334,7 +378,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
       end
 
       if updates.key?(:work_tags) && normalized_tag_names(updates[:work_tags]) != normalized_tag_names(job.work_tags)
-        changes['tags_changed'] = { to: updates[:work_tags] }
+        changes['tags_changed'] = { from: job.work_tags, to: updates[:work_tags] }
       end
 
     end

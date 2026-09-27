@@ -171,6 +171,36 @@ RSpec.describe DomServis::Intake::DispatchJobCreator, current_user_id: 1 do
     expect(DomServis::DispatchJob.count).to eq(1)
   end
 
+  it 'starts the job history like a job created on the board', :aggregate_failures do
+    direct_payload = {
+      source:            'webhook',
+      request_source_id: request_source_2.id,
+      channel_key:       'partner_webhook',
+      source_reference:  'webhook-request-002',
+      raw_payload:       { ticket: 'external-124', request_source_id: request_source_2.id },
+      dispatch:          {
+        source:            'webhook',
+        request_source_id: request_source_2.id,
+        organization_id:   partner_org_2.id,
+        service_type:      'Boiler repair',
+        address:           'Lenina 10',
+      },
+    }
+
+    job = described_class.new(payload: direct_payload, actor_user: dispatcher).execute
+    described_class.new(payload: direct_payload, actor_user: dispatcher).execute
+
+    events = job.events.reorder(:id)
+    expect(events.map(&:event_type)).to eq(%w[created published])
+    expect(events.map(&:actor_user_id)).to eq([dispatcher.id, dispatcher.id])
+    expect(events.first.meta).to include(
+      'source'            => 'webhook',
+      'request_source_id' => request_source_2.id,
+      'channel_key'       => 'partner_webhook',
+      'source_reference'  => 'webhook-request-002',
+    )
+  end
+
   it 'rejects intake from a paused request source' do
     request_source_2.update!(status: 'paused')
 
