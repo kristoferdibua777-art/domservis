@@ -436,4 +436,27 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
       end
     end
   end
+
+  describe 'GET /api/v1/dom_servis/dispatch/jobs', authenticated_as: :dispatcher_user do
+    it 'returns the backing ticket number as the job number', :aggregate_failures do
+      ticket = create(:ticket)
+      job.update!(ticket_id: ticket.id)
+
+      get '/api/v1/dom_servis/dispatch/jobs?expand=true', as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response.find { |item| item['id'] == job.id }).to include('ticket_id' => ticket.id, 'ticket_number' => ticket.number)
+
+      get "/api/v1/dom_servis/dispatch/jobs/#{job.id}", as: :json
+
+      expect(json_response).to include('ticket_number' => ticket.number)
+    end
+
+    it 'has no ticket number before the backing ticket exists', :aggregate_failures do
+      get "/api/v1/dom_servis/dispatch/jobs/#{job.id}", as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response).not_to have_key('ticket_number')
+    end
+  end
 end

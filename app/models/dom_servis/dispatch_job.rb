@@ -89,8 +89,11 @@ class DomServis::DispatchJob < ApplicationModel
     "#manage/dom_servis_dispatch/id:#{id}"
   end
 
+  # ticket_number is the job number people see (Ticket.number); job_code is
+  # kept only for compatibility.
   def attributes_with_association_ids
     super.merge(
+      ticket_number:                 ticket&.number,
       request_source_label:          request_source&.display_name,
       request_source_partner_key:    request_source&.partner_key,
       request_source_transport_kind: request_source&.transport_kind,
