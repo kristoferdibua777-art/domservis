@@ -48,6 +48,8 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
 
     expect(ticket).to be_persisted
     expect(dispatch_job.reload.ticket_id).to eq(ticket.id)
+    expect(ticket.customer).to have_attributes(phone: '+79001234567', firstname: 'Ivan', lastname: 'Petrov')
+    expect(ticket.customer.roles).to include(Role.find_by!(name: 'Customer'))
     expect(ticket.group_id).to eq(group.id)
     expect(ticket.organization_id).to be_nil
     expect(dispatch_job.organization_id).to eq(organization.id)

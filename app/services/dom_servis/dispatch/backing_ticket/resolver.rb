@@ -30,7 +30,15 @@ class DomServis::Dispatch::BackingTicket::Resolver
   end
 
   def customer
-    @customer ||= begin
+    return shared_customer if dispatch_job.source != 'manual'
+
+    @customer ||= DomServis::Dispatch::ClientResolver
+      .new(name: dispatch_job.client_name, phone: dispatch_job.client_phone, operator: actor_user)
+      .resolve!
+  end
+
+  def shared_customer
+    @shared_customer ||= begin
       email = Setting.get('dom_servis_dispatch_ticket_customer_email').presence || DEFAULT_CUSTOMER_EMAIL
       User.find_by(email: email.downcase) || User.create!(
         firstname: 'Dom-Servis',

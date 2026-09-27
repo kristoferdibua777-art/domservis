@@ -628,6 +628,10 @@ msgstr ""
 msgid "A user is required!"
 msgstr ""
 
+#: app/services/dom_servis/dispatch/client_resolver.rb:31
+msgid "A valid client phone is required."
+msgstr ""
+
 #: app/assets/javascripts/app/views/pre_defined_webhook.jst.eco:12
 msgid "A webhook can be fired by triggers and schedulers, don't forget to define them!"
 msgstr ""
@@ -4566,6 +4570,7 @@ msgstr ""
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/plugins/customer.ts:13
 #: app/frontend/apps/mobile/pages/ticket/views/TicketInformation/plugins/customer.ts:6
 #: app/graphql/gql/types/overview_type.rb:93
+#: app/services/dom_servis/dispatch/client_resolver.rb:89
 #: db/seeds/object_manager_attributes.rb:63
 #: db/seeds/roles.rb:23
 #: db/seeds/ticket_article_senders.rb:4
@@ -4598,6 +4603,10 @@ msgstr ""
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarSummary/TicketSidebarSummary.vue:78
 msgid "Customer intent"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/client_resolver.rb:84
+msgid "Customer role is not configured."
 msgstr ""
 
 #: db/seeds/settings.rb:3444
@@ -10946,6 +10955,10 @@ msgstr ""
 
 #: app/models/user.rb:690
 msgid "More than 250 secondary organizations are not allowed."
+msgstr ""
+
+#: app/services/dom_servis/dispatch/client_resolver.rb:36
+msgid "More than one user has this normalized phone. Select or correct the client before creating the dispatch job."
 msgstr ""
 
 #: app/frontend/apps/mobile/pages/home/views/FavoriteTicketOverviewsEdit.vue:134
