@@ -146,7 +146,8 @@ RSpec.describe DomServis::DispatchJob, current_user_id: 1, type: :model do
 
     it 'does not block an unrelated update of a legacy job with an invalid schedule' do
       job = described_class.create!(dispatch_job_attrs)
-      job.update_columns(visit_date: 'legacy-date') # rubocop:disable Rails/SkipsModelValidations -- simulates a pre-core legacy row
+      # Simulate a pre-core legacy row without applying the new validations.
+      job.update_columns(visit_date: 'legacy-date')
 
       expect { job.update!(priority: 'high') }.not_to raise_error
     end
