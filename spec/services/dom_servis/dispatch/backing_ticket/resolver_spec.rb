@@ -13,9 +13,12 @@ RSpec.describe DomServis::Dispatch::BackingTicket::Resolver do
   it 'returns and memoizes the active matching priority instead of the default', :aggregate_failures do
     allow(Ticket::Priority).to receive(:where).with(active: true).and_call_original
 
-    expect(resolver.ticket_priority).to eq(high_priority)
-    expect(resolver.ticket_priority).to equal(high_priority)
-    expect(resolver.ticket_priority).not_to eq(default_priority)
+    first_result = resolver.ticket_priority
+    second_result = resolver.ticket_priority
+
+    expect(first_result).to eq(high_priority)
+    expect(second_result).to equal(first_result)
+    expect(first_result).not_to eq(default_priority)
     expect(Ticket::Priority).to have_received(:where).with(active: true).once
   end
 
