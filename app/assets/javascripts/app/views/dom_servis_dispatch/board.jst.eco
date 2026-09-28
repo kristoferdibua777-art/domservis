@@ -284,7 +284,7 @@
       <div class="dom-servis-dispatch-calendar__grid">
         <div class="dom-servis-dispatch-calendar__column dom-servis-dispatch-calendar__column--hours">
           <div class="dom-servis-dispatch-calendar__head"></div>
-          <div class="dom-servis-dispatch-calendar__body">
+          <div class="dom-servis-dispatch-calendar__body" style="height: <%= @calendar.bodyHeight %>px">
             <% for hour in @calendar.hours: %>
               <div class="dom-servis-dispatch-calendar__hour" style="top: <%= hour.top %>%"><%= hour.label %></div>
             <% end %>
@@ -294,7 +294,7 @@
         <% for column in @calendar.columns: %>
           <div class="dom-servis-dispatch-calendar__column">
             <div class="dom-servis-dispatch-calendar__head" title="<%= column.label %>"><%= column.label %></div>
-            <div class="dom-servis-dispatch-calendar__body">
+            <div class="dom-servis-dispatch-calendar__body" style="height: <%= @calendar.bodyHeight %>px">
               <% for hour in @calendar.hours: %>
                 <div class="dom-servis-dispatch-calendar__line" style="top: <%= hour.top %>%"></div>
               <% end %>

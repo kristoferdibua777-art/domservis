@@ -75,6 +75,60 @@
     <section class="dom-servis-dispatch-admin__section">
       <div class="dom-servis-dispatch-admin__section-head">
         <div>
+          <h2><%- @T('Dispatcher calendar') %></h2>
+          <p><%- @T('Set the visit length and the hours the dispatcher calendar shows (by default 120 minutes, from 8 to 20). Jobs outside these hours are listed under the grid.') %></p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__settings-card">
+        <div class="form-group dom-servis-dispatch-admin__setting">
+          <label><%- @T('Visit length in minutes') %></label>
+          <input
+            class="form-control js-policy-setting"
+            type="number"
+            min="15"
+            max="720"
+            step="15"
+            data-setting="visit_duration_minutes"
+            value="<%= @policy.settings.visit_duration_minutes %>">
+          <p class="dom-servis-dispatch-admin__setting-hint"><%- @T('How long a visit with an exact start time but no end lasts in the dispatcher calendar.') %></p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__settings-card">
+        <div class="form-group dom-servis-dispatch-admin__setting">
+          <label><%- @T('Calendar day starts at (hour)') %></label>
+          <input
+            class="form-control js-policy-setting"
+            type="number"
+            min="0"
+            max="23"
+            step="1"
+            data-setting="calendar_day_start_hour"
+            value="<%= @policy.settings.calendar_day_start_hour %>">
+          <p class="dom-servis-dispatch-admin__setting-hint"><%- @T('First hour shown in the dispatcher calendar.') %></p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__settings-card">
+        <div class="form-group dom-servis-dispatch-admin__setting">
+          <label><%- @T('Calendar day ends at (hour)') %></label>
+          <input
+            class="form-control js-policy-setting"
+            type="number"
+            min="1"
+            max="24"
+            step="1"
+            data-setting="calendar_day_end_hour"
+            value="<%= @policy.settings.calendar_day_end_hour %>">
+          <p class="dom-servis-dispatch-admin__setting-hint"><%- @T('Last hour shown in the dispatcher calendar. Must be later than the start.') %></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
           <h2><%- @T('Dispatch Tags') %></h2>
           <p><%- @T('Dispatch job tags reuse the global Zammad tag namespace. Create new tag names only in Manage > Tags, then dispatchers can assign them on jobs and the same tags will be mirrored into backing tickets.') %></p>
         </div>

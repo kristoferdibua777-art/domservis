@@ -653,7 +653,8 @@
   white-space: nowrap;
 }
 
-/* 12 visible hours, 56 px each. */
+/* 56 px per visible hour: the board sets the height for the calendar hours
+   in the dispatch policy settings; 672 px are the default 12 hours. */
 .dom-servis-dispatch-calendar__body {
   background: rgba(19, 23, 31, 0.42);
   border: 1px solid rgba(76, 84, 103, 0.3);

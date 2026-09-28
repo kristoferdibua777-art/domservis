@@ -322,6 +322,7 @@ class App.DomServisDispatchBoard extends App.Controller
         data ||= {}
         @policyRegistry = data.registry || {}
         @policySettings = data.settings || {}
+        App.DomServisDispatchCalendar.configure(@policySettings)
         @effectivePolicy =
           role_key: data.role_key
           actions: data.actions || {}
@@ -332,6 +333,7 @@ class App.DomServisDispatchBoard extends App.Controller
       error: =>
         @policyRegistry = {}
         @policySettings = {}
+        App.DomServisDispatchCalendar.configure(@policySettings)
         @effectivePolicy = null
         @render() if !@loading
     )
@@ -1228,6 +1230,8 @@ class App.DomServisDispatchBoard extends App.Controller
       isToday: date is now.date
       nowTop: if showNow then percent(now.minutes) else null
       hours: _.map([(start / 60)..(calendar.DAY_END_MINUTES / 60)], (hour) -> { label: "#{pad(hour)}:00", top: percent(hour * 60) })
+      # 56 px per visible hour, as many hours as the policy settings show.
+      bodyHeight: span / 60 * 56
       jobCount: jobs.length
       conflictCount: _.reduce(columns, ((sum, column) -> sum + _.filter(column.entries.concat(column.outside), (entry) -> entry.conflict).length), 0)
       columns: _.map(columns, (column) => @calendarColumnView(column))

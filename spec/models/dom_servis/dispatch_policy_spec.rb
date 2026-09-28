@@ -48,4 +48,46 @@ RSpec.describe DomServis::DispatchPolicy, type: :model do
     expect(described_class.action_allowed?(master_user, 'change_assignee')).to be(false)
     expect(described_class.status_allowed?(master_user, 'transferred_to_partner')).to be(false)
   end
+
+  describe 'calendar settings' do
+    def normalized_settings(raw_settings)
+      described_class.set!('settings' => raw_settings)['settings']
+    end
+
+    it 'defaults to a 2-hour visit and a day from 8 to 20' do
+      expect(described_class.current['settings']).to include(
+        'visit_duration_minutes'  => 120,
+        'calendar_day_start_hour' => 8,
+        'calendar_day_end_hour'   => 20,
+      )
+    end
+
+    it 'keeps whole numbers within the bounds' do
+      expect(normalized_settings('visit_duration_minutes' => '90', 'calendar_day_start_hour' => '7', 'calendar_day_end_hour' => 22)).to include(
+        'visit_duration_minutes'  => 90,
+        'calendar_day_start_hour' => 7,
+        'calendar_day_end_hour'   => 22,
+      )
+    end
+
+    it 'falls back to the defaults for values out of bounds' do
+      expect(normalized_settings('visit_duration_minutes' => 5, 'calendar_day_start_hour' => -1, 'calendar_day_end_hour' => 30)).to include(
+        'visit_duration_minutes'  => 120,
+        'calendar_day_start_hour' => 8,
+        'calendar_day_end_hour'   => 20,
+      )
+    end
+
+    it 'resets both hours when the day would end before it starts' do
+      expect(normalized_settings('calendar_day_start_hour' => 18, 'calendar_day_end_hour' => 9)).to include(
+        'calendar_day_start_hour' => 8,
+        'calendar_day_end_hour'   => 20,
+      )
+    end
+
+    it 'keeps the deadline warning rule' do
+      expect(normalized_settings('deadline_warning_minutes' => 0)['deadline_warning_minutes']).to eq(120)
+      expect(normalized_settings('deadline_warning_minutes' => 45)['deadline_warning_minutes']).to eq(45)
+    end
+  end
 end

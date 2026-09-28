@@ -1,11 +1,36 @@
 # Scheduling helpers for the Dom-Servis dispatcher calendar. Product
-# decisions (2026-09-28): an exact visit time means a 2-hour visit, the
-# calendar shows 08:00-20:00, "today" follows Zammad's timezone_default and
-# overlapping jobs of one master are flagged, never blocked.
+# decisions (2026-09-28): an exact visit time means a visit of the set
+# length, the calendar shows the set hours (2 hours and 08:00-20:00 unless
+# the admin changes them in the dispatch policy settings), "today" follows
+# Zammad's timezone_default and overlapping jobs of one master are flagged,
+# never blocked.
 class App.DomServisDispatchCalendar
+  @DEFAULTS:
+    visit_duration_minutes: 120
+    calendar_day_start_hour: 8
+    calendar_day_end_hour: 20
+
   @DEFAULT_VISIT_MINUTES: 120
   @DAY_START_MINUTES: 8 * 60
   @DAY_END_MINUTES: 20 * 60
+
+  # Applies the dispatch policy settings. The server already normalizes
+  # them; a value that is still unusable falls back to its default, and the
+  # hours only change as a pair, so the day never ends before it starts.
+  @configure: (settings) ->
+    number = (key, min, max) =>
+      value = parseInt(settings?[key], 10)
+      if isNaN(value) || value < min || value > max then @DEFAULTS[key] else value
+
+    startHour = number('calendar_day_start_hour', 0, 23)
+    endHour = number('calendar_day_end_hour', 1, 24)
+    if endHour <= startHour
+      startHour = @DEFAULTS.calendar_day_start_hour
+      endHour = @DEFAULTS.calendar_day_end_hour
+
+    @DEFAULT_VISIT_MINUTES = number('visit_duration_minutes', 15, 720)
+    @DAY_START_MINUTES = startHour * 60
+    @DAY_END_MINUTES = endHour * 60
 
   # Cancelled and partner-transferred jobs no longer occupy a master's time.
   @HIDDEN_STATUSES: ['cancelled', 'transferred_to_partner']

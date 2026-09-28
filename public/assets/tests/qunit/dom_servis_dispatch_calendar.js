@@ -1,6 +1,7 @@
 // Dom-Servis dispatcher calendar: an exact visit time is a 2-hour visit, the
-// day shows 08:00-20:00, "today" follows Zammad's timezone_default and
-// overlapping jobs of one master are flagged, never blocked.
+// day shows 08:00-20:00 (defaults of the dispatch policy settings), "today"
+// follows Zammad's timezone_default and overlapping jobs of one master are
+// flagged, never blocked.
 
 const Calendar = App.DomServisDispatchCalendar
 
@@ -77,6 +78,37 @@ QUnit.test('today and the current minute follow the company timezone', assert =>
   assert.deepEqual(Calendar.zonedNow('Not/AZone', now), Calendar.zonedNow(null, now), 'an unknown zone falls back to the browser zone')
 });
 
+QUnit.test('visit length and calendar hours come from the policy settings', assert => {
+  const current = () => [Calendar.DAY_START_MINUTES, Calendar.DAY_END_MINUTES, Calendar.DEFAULT_VISIT_MINUTES]
+
+  try {
+    Calendar.configure({ visit_duration_minutes: 90, calendar_day_start_hour: 6, calendar_day_end_hour: 22 })
+    assert.deepEqual(Calendar.visitInterval('09:00'), { start: 540, end: 630 }, 'an exact time lasts the set length')
+    assert.deepEqual(Calendar.visitInterval('09:00-12:00'), { start: 540, end: 720 }, 'a window stays as is')
+
+    const [, ivan] = Calendar.buildDay(
+      [
+        { id: 1, assignee_id: 5, visit_time: '06:00' },
+        { id: 2, assignee_id: 5, visit_time: '21:00' },
+        { id: 3, assignee_id: 5, visit_time: '22:00' },
+      ],
+      [{ id: null, label: 'Без мастера' }, { id: 5, label: 'Иван' }],
+    )
+    assert.deepEqual(ivan.entries.map((entry) => [entry.job.id, rounded(entry.top), rounded(entry.height)]), [[1, 0, 9.38], [2, 93.75, 6.25]], 'placed within 06:00-22:00')
+    assert.deepEqual(ivan.outside.map((entry) => entry.job.id), [3], 'from 22:00 on the job is outside the day')
+
+    Calendar.configure({ visit_duration_minutes: 'abc', calendar_day_start_hour: 18, calendar_day_end_hour: 9 })
+    assert.deepEqual(current(), [480, 1200, 120], 'unusable values and a day ending before it starts fall back to the defaults')
+
+    Calendar.configure({ visit_duration_minutes: 720, calendar_day_start_hour: 0, calendar_day_end_hour: 24 })
+    assert.deepEqual(current(), [0, 1440, 720], 'the whole day and the longest visit')
+  } finally {
+    Calendar.configure(null)
+  }
+
+  assert.deepEqual(current(), [480, 1200, 120], 'without settings the defaults apply')
+});
+
 QUnit.test('calendar dates', assert => {
   assert.equal(Calendar.shiftDate('2026-09-30', 1), '2026-10-01')
   assert.equal(Calendar.shiftDate('2026-09-28', -1), '2026-09-27')
@@ -125,6 +157,45 @@ QUnit.test('board calendar view for a dispatcher', assert => {
   board.viewMode = 'calendar'
   board.mobileView = true
   assert.strictEqual(board.buildCalendarView(), null, 'not on the mobile layout')
+});
+
+QUnit.test('the board applies the policy settings to the calendar', assert => {
+  const requests = []
+  const board = Object.create(App.DomServisDispatchBoard.prototype)
+
+  Object.assign(board, {
+    apiPath: '/api/v1',
+    viewMode: 'calendar',
+    loading: false,
+    mobileView: false,
+    calendarDate: '2026-09-28',
+    dispatcherAccess: () => true,
+    adminAccess: () => false,
+    companyNow: () => ({ date: '2026-09-28', minutes: 7 * 60 }),
+    masterAssigneeOptions: () => [],
+    jobs: [],
+    ajax: (options) => requests.push(options),
+    render: () => {},
+  })
+
+  try {
+    assert.equal(board.buildCalendarView().bodyHeight, 672, 'default 12 hours, 56 px each')
+
+    board.loadEffectivePolicy()
+    requests[0].success({ role_key: 'dispatcher', settings: { visit_duration_minutes: 60, calendar_day_start_hour: 6, calendar_day_end_hour: 22 } })
+
+    const view = board.buildCalendarView()
+    assert.deepEqual([view.hours[0].label, view.hours[view.hours.length - 1].label, view.hours.length], ['06:00', '22:00', 17])
+    assert.equal(view.bodyHeight, 16 * 56, 'the grid grows with the visible hours')
+    assert.equal(view.nowTop, 6.25, 'now line at 07:00 within 06:00-22:00')
+    assert.equal(App.DomServisDispatchCalendar.DEFAULT_VISIT_MINUTES, 60)
+
+    board.loadEffectivePolicy()
+    requests[1].error()
+    assert.equal(board.buildCalendarView().hours[0].label, '08:00', 'a failed policy load keeps the defaults')
+  } finally {
+    Calendar.configure(null)
+  }
 });
 
 QUnit.test('calendar uses the day loaded from the server', assert => {
