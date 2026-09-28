@@ -104,6 +104,26 @@ cancelled_at и status, отличный от pool, дают 422. Мастер �
 Эти примеры не заменяют текущие strong params.
 Ответы generic CRUD формирует Zammad; нельзя считать, что для всех действий существует один response envelope.
 
+### История заявки
+
+GET /jobs/:job_id/events возвращает события заявки, новые первыми: event_type, actor_user_id, meta, created_at.
+Каждое изменение бизнес-полей попадает в историю со старым и новым значением:
+
+| Событие | meta |
+| --- | --- |
+| created, published | при создании на доске и при приёме из формы/webhook/AI; для приёма в created: source, request_source_id, channel_key, source_reference |
+| status_changed, priority_changed, moved_weekday, organization_changed | from, to |
+| taken | пусто: мастер — actor_user_id, переход pool → taken |
+| assigned | from, to (id мастера); status {from, to}, если назначение перевело заявку из pool |
+| released | from (id снятого мастера), status {from, to} |
+| attachment_added, attachment_removed | attachment_id, kind, filename |
+| comment_added, description_updated | новое значение (comment / description) и прежнее в from |
+| tags_changed | from, to |
+| updated | changes: { поле: { from, to } } для остальных полей: адрес, клиент, телефон, услуга, дата и время визита, источник, снятый при возврате в pool мастер |
+
+Запрос, который ничего не изменил, событие не создаёт.
+Удаление заявки удаляет и её историю.
+
 ## Политика, теги и источники
 
 | Метод | Путь | Назначение |

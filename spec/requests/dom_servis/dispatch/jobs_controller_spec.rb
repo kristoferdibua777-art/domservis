@@ -150,7 +150,10 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
       expect(job.assignee_id).to eq(master_user.id)
       expect(job.status).to eq('taken')
       expect(job.taken_at).to be_present
-      expect(job.events.last.event_type).to eq('assigned')
+      expect(job.events.last).to have_attributes(
+        event_type: 'assigned',
+        meta:       { 'from' => nil, 'to' => master_user.id, 'status' => { 'from' => 'pool', 'to' => 'taken' } },
+      )
     end
 
     it 'does not assign a master to a closed job', :aggregate_failures do
@@ -189,7 +192,8 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
 
         expect(response).to have_http_status(:ok)
         expect(job.reload).to have_attributes(visit_day: 'wed', visit_date: '2026-03-25')
-        expect(job.events.last).to have_attributes(event_type: 'moved_weekday', actor_user_id: dispatcher_user.id)
+        expect(job.events.find_by(event_type: 'moved_weekday')).to have_attributes(actor_user_id: dispatcher_user.id, meta: { 'from' => 'mon', 'to' => 'wed' })
+        expect(job.events.find_by(event_type: 'updated').meta).to eq('changes' => { 'visit_date' => { 'from' => '2026-03-23', 'to' => '2026-03-25' } })
       end
 
       it 'rejects a date that does not match the requested weekday', :aggregate_failures do
@@ -278,6 +282,7 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
 
       expect(response).to have_http_status(:ok)
       expect(taken_job.reload).to have_attributes(status: 'pool', assignee_id: nil, taken_at: nil)
+      expect(taken_job.events.find_by(event_type: 'released').meta).to eq('from' => master_user.id, 'status' => { 'from' => 'taken', 'to' => 'pool' })
     end
 
     it 'does not release finished work', :aggregate_failures do
@@ -341,6 +346,41 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
         expect(response).to have_http_status(:unprocessable_entity)
         expect(job.reload.visit_time).to be_blank
       end
+
+      it 'records the old and new value of every changed field', :aggregate_failures do
+        put "/api/v1/dom_servis/dispatch/jobs/#{job.id}", params: { address: 'Lenina 12', client_name: 'Ivan Petrov', visit_time: '09:00-11:30', priority: 'high' }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(job.events.pluck(:event_type)).to contain_exactly('priority_changed', 'updated')
+        expect(job.events.find_by(event_type: 'priority_changed')).to have_attributes(actor_user_id: dispatcher_user.id, meta: { 'from' => 'medium', 'to' => 'high' })
+        expect(job.events.find_by(event_type: 'updated')).to have_attributes(
+          actor_user_id: dispatcher_user.id,
+          meta:          {
+            'changes' => {
+              'address'     => { 'from' => 'Lenina 10', 'to' => 'Lenina 12' },
+              'client_name' => { 'from' => nil, 'to' => 'Ivan Petrov' },
+              'visit_time'  => { 'from' => nil, 'to' => '09:00-11:30' },
+            },
+          },
+        )
+      end
+
+      it 'keeps the previous dispatcher comment in the history', :aggregate_failures do
+        job.update!(comment: 'Call before arrival')
+
+        put "/api/v1/dom_servis/dispatch/jobs/#{job.id}", params: { comment: 'Gate code 1234' }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(job.events.find_by(event_type: 'comment_added').meta).to eq('comment' => 'Gate code 1234', 'from' => 'Call before arrival')
+        expect(job.events.where(event_type: 'updated')).to be_empty
+      end
+
+      it 'records nothing when nothing changed', :aggregate_failures do
+        put "/api/v1/dom_servis/dispatch/jobs/#{job.id}", params: { address: 'Lenina 10' }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(job.events).to be_empty
+      end
     end
   end
 
@@ -376,6 +416,8 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
 
         expect(response).to have_http_status(:ok)
         expect(taken_job.reload).to have_attributes(status: 'pool', assignee_id: nil, taken_at: nil)
+        expect(taken_job.events.find_by(event_type: 'status_changed').meta).to eq('from' => 'taken', 'to' => 'pool')
+        expect(taken_job.events.find_by(event_type: 'updated').meta).to eq('changes' => { 'assignee_id' => { 'from' => master_user.id, 'to' => nil } })
       end
 
       it 'closes a done job', :aggregate_failures do
