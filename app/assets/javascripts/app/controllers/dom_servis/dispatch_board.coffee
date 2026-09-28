@@ -42,12 +42,17 @@ class App.DomServisDispatchBoard extends App.Controller
     'change .js-change-visit-day': 'changeVisitDay'
     'click .js-enable-push': 'enablePushNotifications'
     'click .js-test-push': 'testPushNotification'
+    'click .js-view-mode': 'setViewMode'
+    'click .js-calendar-day-shift': 'shiftCalendarDay'
+    'click .js-calendar-today': 'resetCalendarDay'
 
   constructor: ->
     super
 
     @statusFilter = 'open'
     @dayFilter = 'all'
+    @viewMode = 'board'
+    @calendarDate = null
     @selectedWeekStart = @startOfWeek(new Date())
     @effectivePolicy = null
     @policyRegistry = {}
@@ -148,6 +153,9 @@ class App.DomServisDispatchBoard extends App.Controller
       tagFilters: @buildTagFilters()
       createOpen: @createOpen
       editOpen: @editOpen
+      calendarAvailable: @calendarAvailable()
+      viewMode: @viewMode
+      calendar: @buildCalendarView()
       editSaving: @editSaving
       detailOpen: @detailOpen
       detailEditing: detailEditing
@@ -1109,6 +1117,105 @@ class App.DomServisDispatchBoard extends App.Controller
       return currentId isnt nextId
 
     "#{currentValue || ''}" isnt "#{nextValue || ''}"
+
+  # ---------------------------------------------------------------------
+  # Dispatcher calendar: one day, a column per master (see
+  # App.DomServisDispatchCalendar for the scheduling rules).
+  # ---------------------------------------------------------------------
+
+  calendarAvailable: ->
+    !@mobileView && (@dispatcherAccess() || @adminAccess())
+
+  setViewMode: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    mode = $(e.currentTarget).data('mode')
+    @viewMode = if mode is 'calendar' && @calendarAvailable() then 'calendar' else 'board'
+    @render()
+
+  shiftCalendarDay: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    offset = parseInt($(e.currentTarget).data('offset'), 10) || 0
+    @calendarDate = App.DomServisDispatchCalendar.shiftDate(@calendarDate || @companyNow().date, offset)
+    @render()
+
+  resetCalendarDay: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    @calendarDate = null
+    @render()
+
+  companyNow: ->
+    App.DomServisDispatchCalendar.zonedNow(App.Config.get('timezone_default'))
+
+  buildCalendarView: ->
+    return null if @viewMode isnt 'calendar' || @loading || !@calendarAvailable()
+
+    calendar = App.DomServisDispatchCalendar
+    now = @companyNow()
+    date = @calendarDate || now.date
+    jobs = _.filter(@jobs || [], (job) -> "#{job.visit_date || ''}" is date && job.status not in calendar.HIDDEN_STATUSES)
+    columns = calendar.buildDay(jobs, @calendarColumns(jobs))
+
+    start = calendar.DAY_START_MINUTES
+    span = calendar.DAY_END_MINUTES - start
+    percent = (minutes) -> Math.round((minutes - start) / span * 10000) / 100
+    pad = (number) -> ("0#{number}").slice(-2)
+    showNow = date is now.date && now.minutes >= start && now.minutes <= calendar.DAY_END_MINUTES
+
+    {
+      date: date
+      dateLabel: "#{@weekdayLabel(calendar.weekdayKey(date))}, #{@formatDate(date)}"
+      isToday: date is now.date
+      nowTop: if showNow then percent(now.minutes) else null
+      hours: _.map([(start / 60)..(calendar.DAY_END_MINUTES / 60)], (hour) -> { label: "#{pad(hour)}:00", top: percent(hour * 60) })
+      jobCount: jobs.length
+      conflictCount: _.reduce(columns, ((sum, column) -> sum + _.filter(column.entries.concat(column.outside), (entry) -> entry.conflict).length), 0)
+      columns: _.map(columns, (column) => @calendarColumnView(column))
+    }
+
+  # Jobs without a master first, then every active master (free ones too,
+  # so the dispatcher sees who can take a visit), then any other assignee.
+  calendarColumns: (jobs) ->
+    columns = [{ id: null, label: 'Без мастера' }]
+    known = {}
+
+    _.each @masterAssigneeOptions(), (option) ->
+      known[option.id] = true
+      columns.push({ id: parseInt(option.id, 10), label: option.label })
+
+    _.each jobs, (job) =>
+      return if !job.assignee_id? || known["#{job.assignee_id}"]
+      known["#{job.assignee_id}"] = true
+      columns.push({ id: job.assignee_id, label: @resolveAssigneeName(job) })
+
+    columns
+
+  calendarColumnView: (column) ->
+    round = (value) -> Math.round(value * 100) / 100
+    entryView = (entry, timeLabel = entry.timeLabel) =>
+      job = entry.job
+      title = job.service_type || 'Без названия'
+
+      {
+        id: job.id
+        title: title
+        address: job.address || ''
+        status: job.status
+        statusLabel: @statusLabel(job.status)
+        timeLabel: timeLabel
+        tooltip: _.compact([timeLabel, title, job.address, @statusLabel(job.status)]).join(' · ')
+        conflict: entry.conflict is true
+        top: round(entry.top || 0)
+        height: round(entry.height || 0)
+        left: round(entry.left || 0)
+        width: round(entry.width || 100)
+      }
+
+    {
+      label: column.label
+      entries: _.map(column.entries, (entry) -> entryView(entry))
+      outside: _.map(column.outside, (entry) -> entryView(entry))
+      untimed: _.map(column.untimed, (entry) -> entryView(entry, entry.job.visit_time || 'Без времени'))
+    }
 
   buildStats: ->
     currentUserId = App.User.current()?.id
