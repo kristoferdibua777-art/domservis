@@ -80,12 +80,11 @@ class DomServis::Dispatch::BackingTicket::Resolver
       priorities = Ticket::Priority.where(active: true).to_a
       matchers = PRIORITY_MATCHERS.fetch(dispatch_job.priority, [])
 
-      # Matchers are listed in order of preference, so the first one that
-      # finds an active priority wins. The result is kept in a local rather
-      # than returned, because `return` would skip the memoizing assignment.
-      matched_priority = matchers.lazy.filter_map do |matcher|
-        priorities.find { |priority| priority.name.to_s.match?(matcher) }
-      end.first
+      matched_priority = nil
+      matchers.each do |matcher|
+        matched_priority = priorities.find { |priority| priority.name.to_s.match?(matcher) }
+        break if matched_priority
+      end
 
       matched_priority || Ticket::Priority.find_by(default_create: true) || priorities.first
     end
