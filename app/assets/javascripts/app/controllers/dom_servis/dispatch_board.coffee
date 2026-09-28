@@ -2294,8 +2294,18 @@ class App.DomServisDispatchBoard extends App.Controller
         @notify(type: 'error', msg: @extractError(xhr, 'Не удалось удалить вложение.'), timeout: 5000)
     )
 
+  # A calendar day loaded from the server may hold jobs older than the
+  # board's newest page, and their card must open too.
   findJob: (id) ->
-    _.find @jobs, (job) -> "#{job.id}" is "#{id}"
+    matches = (job) -> "#{job.id}" is "#{id}"
+    found = _.find(@jobs || [], matches)
+    return found if found
+
+    for date, jobs of @calendarJobs || {}
+      found = _.find(jobs, matches)
+      return found if found
+
+    undefined
 
   filteredJobs: ->
     list = @jobsForDayAndStatusFilters()

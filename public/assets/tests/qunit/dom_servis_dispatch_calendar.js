@@ -178,3 +178,16 @@ QUnit.test('calendar asks the server for the chosen day', assert => {
   assert.equal(renders, 1, 'an open editor is not re-rendered')
   assert.deepEqual(board.calendarJobs['2026-09-28'], [], 'but the day is updated')
 });
+
+QUnit.test('the card of a job from a loaded calendar day opens', assert => {
+  const board = Object.create(App.DomServisDispatchBoard.prototype)
+
+  Object.assign(board, {
+    jobs: [{ id: 1, service_type: 'On the board page' }],
+    calendarJobs: { '2026-09-28': [{ id: 7, service_type: 'Older than the board page' }] },
+  })
+
+  assert.equal(board.findJob(1).service_type, 'On the board page')
+  assert.equal(board.findJob('7').service_type, 'Older than the board page')
+  assert.strictEqual(board.findJob(9), undefined)
+});
