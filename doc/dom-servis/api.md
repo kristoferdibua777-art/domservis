@@ -106,7 +106,8 @@ cancelled_at и status, отличный от pool, дают 422. Мастер �
 
 ### История заявки
 
-GET /jobs/:job_id/events возвращает события заявки, новые первыми: event_type, actor_user_id, meta, created_at.
+GET /jobs/:job_id/events возвращает события заявки, новые первыми:
+event_type, actor_user_id, actor_name (имя автора), meta, created_at.
 Каждое изменение бизнес-полей попадает в историю со старым и новым значением:
 
 | Событие | meta |
