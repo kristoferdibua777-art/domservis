@@ -80,19 +80,14 @@ class DomServis::Dispatch::BackingTicket::Resolver
       priorities = Ticket::Priority.where(active: true).to_a
       matchers = PRIORITY_MATCHERS.fetch(dispatch_job.priority, [])
 
-      matchers.each do |matcher|
-        match = priorities.find { |priority| priority.name.to_s.match?(matcher) }
-        # `return` here would return from the whole #ticket_priority method,
-        # bypassing the `@ticket_priority ||= begin ... end` assignment
-        # around this block and silently defeating the memoization on every
-        # call that finds a match. `break` exits just this `.each` loop and
-        # lets execution fall through to (and be captured by) the fallback
-        # line below, exactly like the previous `return` did for a match,
-        # while actually getting memoized.
-        break match if match
-      end
+      # Matchers are listed in order of preference, so the first one that
+      # finds an active priority wins. The result is kept in a local rather
+      # than returned, because `return` would skip the memoizing assignment.
+      matched_priority = matchers.lazy.filter_map do |matcher|
+        priorities.find { |priority| priority.name.to_s.match?(matcher) }
+      end.first
 
-      Ticket::Priority.find_by(default_create: true) || priorities.first
+      matched_priority || Ticket::Priority.find_by(default_create: true) || priorities.first
     end
   end
 
