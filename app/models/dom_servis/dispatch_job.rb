@@ -35,10 +35,13 @@ class DomServis::DispatchJob < ApplicationModel
   belongs_to :organization, optional: true
   belongs_to :request_source, class_name: 'DomServis::RequestSource', optional: true
 
+  # The history outlives the job (decision 2026-09-28): on deletion the
+  # events are detached and keep the job code (see #keep_job_code_on_events);
+  # only a history purge after an export removes them.
   has_many :events,
            class_name: 'DomServis::DispatchEvent',
            inverse_of: :dispatch_job,
-           dependent:  :destroy
+           dependent:  :nullify
 
   validates :status, inclusion: { in: STATUSES }
   validates :priority, inclusion: { in: PRIORITIES }
@@ -57,6 +60,8 @@ class DomServis::DispatchJob < ApplicationModel
   before_validation :normalize_work_tags
   before_validation :normalize_intake_metadata
   before_validation :sync_lifecycle_timestamps
+  # Prepended so it runs before `dependent: :nullify` detaches the events.
+  before_destroy :keep_job_code_on_events, prepend: true
   after_commit :notify_dispatch_board_created, on: :create
   after_commit :notify_dispatch_board_updated, on: :update
   after_commit :notify_dispatch_board_destroyed, on: :destroy
@@ -98,6 +103,10 @@ class DomServis::DispatchJob < ApplicationModel
   end
 
   private
+
+  def keep_job_code_on_events
+    events.update_all(job_code: job_code) # rubocop:disable Rails/SkipsModelValidations
+  end
 
   def notify_dispatch_board_created
     notify_dispatch_board_clients(:create)
