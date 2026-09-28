@@ -514,6 +514,7 @@ class App.DomServisDispatchBoard extends App.Controller
     @detailAssignAssigneeId = if job.assignee_id? then "#{job.assignee_id}" else ''
     @loadAttachments(job.id)
     @loadEvents(job.id)
+    @loadCalendarJobs(job.visit_date) if job.visit_date
     @render()
 
   closeDetail: (e) =>
@@ -814,6 +815,7 @@ class App.DomServisDispatchBoard extends App.Controller
 
   setAssignAssignee: (e) =>
     @detailAssignAssigneeId = $(e.currentTarget).val()
+    @render()
 
   assignJob: (e) =>
     @preventDefault(e)
@@ -1157,13 +1159,13 @@ class App.DomServisDispatchBoard extends App.Controller
   # The board list holds only the newest jobs, so the calendar asks the
   # server for the chosen day; until the answer comes it shows what the
   # board already has. An open create or edit form is never re-rendered.
-  loadCalendarJobs: =>
-    return if !@calendarAvailable()
-
-    date = @currentCalendarDate()
+  # Also used by the job card: the assignment warning needs the whole day.
+  loadCalendarJobs: (date = @currentCalendarDate()) =>
+    return if !@dispatcherAccess() && !@adminAccess()
+    return if !date
 
     @ajax(
-      id: 'dom_servis_dispatch_calendar_jobs'
+      id: "dom_servis_dispatch_calendar_jobs_#{date}"
       type: 'GET'
       url: "#{@apiPath}/dom_servis/dispatch/jobs"
       data:
@@ -1173,10 +1175,35 @@ class App.DomServisDispatchBoard extends App.Controller
       processData: true
       success: (data) =>
         @calendarJobs[date] = data || []
-        return if @viewMode isnt 'calendar' || @createOpen || @editOpen
-        @render() if @currentCalendarDate() is date
+        return if @createOpen || @editOpen
+
+        calendarDay = @viewMode is 'calendar' && @calendarAvailable() && @currentCalendarDate() is date
+        cardDay = @detailOpen && "#{@currentDetailJob()?.visit_date || ''}" is date
+        @render() if calendarDay || cardDay
       error: (xhr) =>
         @notify(type: 'error', msg: @extractError(xhr, 'Не удалось загрузить заявки дня.'), timeout: 4000)
+    )
+
+  dayJobs: (date) ->
+    @calendarJobs?[date] || @jobs || []
+
+  assignmentConflicts: (job, masterId) ->
+    return [] if !job || !masterId
+    App.DomServisDispatchCalendar.overlappingJobs(job, masterId, @dayJobs(job.visit_date))
+
+  # Warn, never block (decision 2026-09-28): before assigning, the dispatcher
+  # sees the master's visits that overlap this one.
+  assignmentWarning: (job, masterId) ->
+    conflicts = @assignmentConflicts(job, masterId)
+    return null if conflicts.length is 0
+
+    visits = _.map(conflicts, (conflict) -> [conflict.timeLabel, conflict.job.service_type || 'Без названия'].join(' · '))
+    "У мастера в это время: #{visits.join('; ')}"
+
+  assignOptionsFor: (job) ->
+    _.map(@masterAssigneeOptions(), (option) =>
+      return option if @assignmentConflicts(job, option.id).length is 0
+      _.extend({}, option, { label: "#{option.label} — занят в это время" })
     )
 
   buildCalendarView: ->
@@ -1583,8 +1610,9 @@ class App.DomServisDispatchBoard extends App.Controller
     currentUserId = App.User.current()?.id
     canOperate = @dispatcherAccess() || job.assignee_id is currentUserId
     deadlineState = @jobDeadlineState(job)
-    assignOptions = @masterAssigneeOptions()
+    assignOptions = @assignOptionsFor(job)
     canAssign = @dispatcherAccess() && @actionAllowed('change_assignee') && assignOptions.length > 0 && job.status in ['pool', 'taken', 'in_progress']
+    assignAssigneeId = @detailAssignAssigneeId || if job.assignee_id? then "#{job.assignee_id}" else ''
     canTransfer = @dispatcherAccess() && @actionAllowed('transfer_to_partner') && @statusAllowed('transferred_to_partner') && job.status in ['pool', 'taken', 'in_progress']
 
     {
@@ -1606,7 +1634,8 @@ class App.DomServisDispatchBoard extends App.Controller
       deadlineLabel: deadlineState?.label || null
       assigneeName: @resolveAssigneeName(job)
       assigneeOptions: assignOptions
-      assignAssigneeId: @detailAssignAssigneeId || if job.assignee_id? then "#{job.assignee_id}" else ''
+      assignAssigneeId: assignAssigneeId
+      assignWarning: if canAssign then @assignmentWarning(job, assignAssigneeId) else null
       visibleTags: @tagBadgeItems(tags, 4)
       hiddenTagsCount: Math.max(tags.length - 4, 0)
       description: job.description || ''

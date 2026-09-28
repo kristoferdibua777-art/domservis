@@ -1397,6 +1397,17 @@
   margin-bottom: 0;
 }
 
+.dom-servis-dispatch-drawer__assignment-warning {
+  background: rgba(215, 95, 124, 0.16);
+  border: 1px solid rgba(215, 95, 124, 0.6);
+  border-radius: 10px;
+  color: #ffb3c4;
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 8px;
+  padding: 6px 10px;
+}
+
 .dom-servis-dispatch-drawer__assignment-control label {
   color: #c9cfd8;
   display: block;
