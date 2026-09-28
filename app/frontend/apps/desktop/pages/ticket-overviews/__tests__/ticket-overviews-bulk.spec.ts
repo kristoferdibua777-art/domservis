@@ -1,5 +1,7 @@
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
+import { onTestFailed } from 'vitest'
+
 import { getTestRouter } from '#tests/support/components/renderComponent.ts'
 import { visitView } from '#tests/support/components/visitView.ts'
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
@@ -150,7 +152,7 @@ describe('Ticket Overviews > Bulk edit tickets', () => {
 })
 
 describe('Ticket Overviews > Async bulk update notifications', () => {
-  const setupBulkUpdateView = async () => {
+  const setupBulkUpdateView = async (markStage: (stage: string) => void = () => {}) => {
     mockDefaultOverviewQueries()
     mockDefaultTicketsCachedByOverview({ edges: [{ node: createDummyTicket() }] })
     mockUserCurrent({
@@ -177,18 +179,27 @@ describe('Ticket Overviews > Async bulk update notifications', () => {
       },
     })
 
+    markStage('visit overview')
     const view = await visitView('tickets/view/my_assigned')
 
+    markStage('wait for overview query')
     await waitForUserCurrentTicketOverviewsQueryCalls()
 
+    markStage('select ticket')
     await view.events.click(view.getByRole('checkbox', { name: 'Select this entry' }))
+    markStage('open bulk edit')
     await view.events.click(view.getByRole('button', { name: 'Bulk actions' }))
 
+    markStage('find state field')
     const ticketState = await view.findByLabelText('State')
+    markStage('open state menu')
     await view.events.click(ticketState)
+    markStage('choose closed state')
     await view.events.click(view.getByRole('option', { name: 'closed' }))
+    markStage('apply bulk update')
     await view.events.click(view.getByRole('button', { name: 'Apply' }))
 
+    markStage('wait for bulk mutation')
     await waitForTicketUpdateBulkMutationCalls()
 
     return view
@@ -412,11 +423,24 @@ describe('Ticket Overviews > Async bulk update notifications', () => {
   })
 
   it('shows only an error notification when all tickets fail during the bulk update', async () => {
-    const view = await setupBulkUpdateView()
+    const stages: { stage: string; elapsedMs: number }[] = []
+    const startedAt = Date.now()
+    const markStage = (stage: string) => {
+      stages.push({ stage, elapsedMs: Date.now() - startedAt })
+    }
+
+    // A suite timeout otherwise reports only the test declaration, hiding the blocked await.
+    onTestFailed(() => {
+      console.log('[bulk-update-timeout]', JSON.stringify(stages))
+    })
+
+    const view = await setupBulkUpdateView(markStage)
 
     // We expect two of the same labels: one in the notification message and one instead of the bulk actions button.
+    markStage('wait for progress notification')
     expect(await view.findAllByText('Bulk action in progress…')).toHaveLength(2)
 
+    markStage('deliver failed subscription status')
     await getUserCurrentTicketBulkUpdateStatusUpdatesSubscriptionHandler().trigger({
       userCurrentTicketBulkUpdateStatusUpdates: {
         bulkUpdateStatus: {
@@ -428,15 +452,18 @@ describe('Ticket Overviews > Async bulk update notifications', () => {
       },
     })
 
+    markStage('check progress notification removed')
     expect(view.queryByText('Bulk action in progress…')).not.toBeInTheDocument()
     expect(view.queryByRole('progressbar')).not.toBeInTheDocument()
 
+    markStage('wait for error notification')
     expect(
       await view.findByText(
         'Bulk action failed for 5 ticket(s). Check attribute values and try again.',
       ),
     ).toBeInTheDocument()
 
+    markStage('check absence of success notification')
     expect(view.queryByText(/Bulk action successful/)).not.toBeInTheDocument()
   })
 })
