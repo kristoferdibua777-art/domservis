@@ -274,6 +274,31 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
     end
   end
 
+  describe 'DELETE /api/v1/dom_servis/dispatch/jobs/:id', authenticated_as: :dispatcher_user do
+    it 'keeps the history of the deleted job', :aggregate_failures do
+      DomServis::DispatchEvent.create!(dispatch_job: job, actor_user: master_user, event_type: 'created', meta: { source: 'manual' })
+      job_id   = job.id
+      job_code = job.job_code
+
+      delete "/api/v1/dom_servis/dispatch/jobs/#{job_id}", as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(DomServis::DispatchJob.exists?(job_id)).to be(false)
+
+      history = DomServis::DispatchEvent.where(job_code: job_code).reorder(:id)
+      expect(history.pluck(:event_type)).to eq(%w[created deleted])
+      expect(history.pluck(:dispatch_job_id)).to eq([nil, nil])
+      expect(history.last.actor_user_id).to eq(dispatcher_user.id)
+      expect(history.last.meta).to include(
+        'job_code'     => job_code,
+        'status'       => 'pool',
+        'service_type' => 'Boiler repair',
+        'address'      => 'Lenina 10',
+        'visit_date'   => '2026-03-23',
+      )
+    end
+  end
+
   describe 'POST /api/v1/dom_servis/dispatch/jobs/:id/release', authenticated_as: -> { master_user } do
     it 'returns a taken job to the pool without its master', :aggregate_failures do
       taken_job = create_dispatch_job(status: 'taken', assignee: master_user)
@@ -494,31 +519,6 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
         'meta'          => { 'from' => 'medium', 'to' => 'high' },
       )
       expect(json_response.last['actor_name']).to eq(master_user.fullname)
-    end
-  end
-
-  describe 'DELETE /api/v1/dom_servis/dispatch/jobs/:id', authenticated_as: :dispatcher_user do
-    it 'keeps the history of the deleted job', :aggregate_failures do
-      DomServis::DispatchEvent.create!(dispatch_job: job, actor_user: master_user, event_type: 'created', meta: { source: 'manual' })
-      job_id   = job.id
-      job_code = job.job_code
-
-      delete "/api/v1/dom_servis/dispatch/jobs/#{job_id}", as: :json
-
-      expect(response).to have_http_status(:ok)
-      expect(DomServis::DispatchJob.exists?(job_id)).to be(false)
-
-      history = DomServis::DispatchEvent.where(job_code: job_code).order(:id)
-      expect(history.pluck(:event_type)).to eq(%w[created deleted])
-      expect(history.pluck(:dispatch_job_id)).to eq([nil, nil])
-      expect(history.last.actor_user_id).to eq(dispatcher_user.id)
-      expect(history.last.meta).to include(
-        'job_code'     => job_code,
-        'status'       => 'pool',
-        'service_type' => 'Boiler repair',
-        'address'      => 'Lenina 10',
-        'visit_date'   => '2026-03-23',
-      )
     end
   end
 end
