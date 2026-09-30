@@ -303,6 +303,17 @@ class App.DomServisDispatchBoard extends App.Controller
 
     @scheduleRealtimeRefresh()
 
+  # Admins export the job history every 30 days (decision 2026-09-28); the
+  # server says when it is due, the board reminds once per visit.
+  remindHistoryExport: ->
+    return if @historyExportReminded
+    @historyExportReminded = true
+    @notify(
+      type: 'info'
+      msg: 'Пора выгрузить историю заявок: с прошлой выгрузки прошло больше 30 дней. Выгрузка — в Dispatch Admin, раздел «История заявок».'
+      timeout: 10000
+    )
+
   loadEffectivePolicy: =>
     @ajax(
       id: 'dom_servis_dispatch_effective_policy'
@@ -319,6 +330,7 @@ class App.DomServisDispatchBoard extends App.Controller
           fields: data.fields || {}
           settings: data.settings || {}
         @render() if !@loading
+        @remindHistoryExport() if data.history_export_due
       error: =>
         @policyRegistry = {}
         @policySettings = {}
