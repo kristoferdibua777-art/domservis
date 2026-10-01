@@ -65,6 +65,33 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(ticket.articles.last.body).to include('Call before arrival')
   end
 
+  it 'gives the backing ticket the Zammad priority matching the dispatch priority' do
+    dispatch_job.update!(priority: 'high', updated_by_id: dispatcher.id)
+
+    ticket = DomServis::Dispatch::BackingTicket::Create
+      .new(dispatch_job:, operator: dispatcher)
+      .execute
+
+    # Zammad seeds "1 low", "2 normal" (the default for new tickets) and "3 high".
+    expect(ticket.priority.name).to match(%r{high}i)
+  end
+
+  it 'moves the backing ticket to the matching Zammad priority when the dispatch priority changes' do
+    ticket = DomServis::Dispatch::BackingTicket::Create
+      .new(dispatch_job:, operator: dispatcher)
+      .execute
+
+    expect(ticket.priority.name).not_to match(%r{high}i)
+
+    dispatch_job.update!(priority: 'high', updated_by_id: dispatcher.id)
+
+    DomServis::Dispatch::BackingTicket::SyncFromDispatch
+      .new(dispatch_job:, operator: dispatcher, changes: { 'priority_changed' => { from: 'medium', to: 'high' } })
+      .execute
+
+    expect(ticket.reload.priority.name).to match(%r{high}i)
+  end
+
   it 'files the backing ticket under a group the operator can access' do
     # Sorts first among the active groups, but the operator has no access to it.
     create(:group, name: '000 Blocked Group')
