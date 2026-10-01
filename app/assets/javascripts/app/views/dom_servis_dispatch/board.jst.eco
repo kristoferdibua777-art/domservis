@@ -497,6 +497,16 @@
             <% end %>
           <% end %>
 
+          <% if @detailJob?.ticketSyncError: %>
+            <section class="dom-servis-dispatch-drawer__section">
+              <div class="dom-servis-dispatch-drawer__section-title">Тикет Zammad не обновлён</div>
+              <div class="alert alert-warning">Последнее изменение заявки не дошло до тикета: <%= @detailJob.ticketSyncError %>. Система один раз повторит попытку сама.</div>
+              <% if @detailJob.canResyncTicket: %>
+                <button class="btn btn--text js-resync-ticket js-no-detail" data-id="<%= @detailJob.id %>"<%= ' disabled' if @detailJob.ticketResyncing %>><%= if @detailJob.ticketResyncing then 'Синхронизация…' else 'Повторить синхронизацию' %></button>
+              <% end %>
+            </section>
+          <% end %>
+
           <section class="dom-servis-dispatch-drawer__section">
             <div class="dom-servis-dispatch-drawer__section-title">Вложения</div>
 

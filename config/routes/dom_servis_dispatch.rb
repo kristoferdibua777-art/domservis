@@ -22,6 +22,7 @@ Zammad::Application.routes.draw do
             post :status, action: :update_status
             post :move_day
             post :change_priority
+            post :resync_ticket
           end
 
           resources :events, only: %i[index]
