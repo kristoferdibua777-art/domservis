@@ -36,8 +36,9 @@ RSpec.describe DomServis::DispatchJob, current_user_id: 1, type: :model do
   end
 
   after do
-    described_class.delete_all
+    # Events first: they reference their jobs until a job is destroyed.
     DomServis::DispatchEvent.delete_all
+    described_class.delete_all
     private_organization.delete if private_organization.persisted?
   end
 
@@ -170,6 +171,15 @@ RSpec.describe DomServis::DispatchJob, current_user_id: 1, type: :model do
 
       expect { job.update!(priority: 'high') }.not_to raise_error
     end
+  end
+
+  it 'keeps its history, detached and with the job code, when destroyed' do
+    job   = described_class.create!(dispatch_job_attrs)
+    event = DomServis::DispatchEvent.create!(dispatch_job: job, event_type: 'created', meta: {})
+
+    job.destroy!
+
+    expect(event.reload).to have_attributes(dispatch_job_id: nil, job_code: job.job_code)
   end
 
   it 'sends an authenticated push after destroy commit' do

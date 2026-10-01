@@ -109,7 +109,13 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     job = dispatch_job_scope.find(params[:id])
     authorize job, :destroy?
     ensure_action_allowed!('delete_job')
-    job.destroy!
+
+    # The history outlives the job: the last event says who deleted it and
+    # what it was, and all events stay detached with the job code.
+    job.transaction do
+      create_event!(job, 'deleted', deleted_job_snapshot(job))
+      job.destroy!
+    end
 
     model_destroy_render_item
   end
@@ -407,6 +413,20 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
       event_type:,
       meta:         meta,
     )
+  end
+
+  def deleted_job_snapshot(job)
+    {
+      job_code:      job.job_code,
+      ticket_number: job.ticket&.number,
+      status:        job.status,
+      service_type:  job.service_type,
+      address:       job.address,
+      client_name:   job.client_name,
+      assignee_name: job.assignee&.fullname,
+      visit_date:    job.visit_date,
+      visit_time:    job.visit_time,
+    }
   end
 
   def ensure_dispatch_tags_exist!(tag_names)
