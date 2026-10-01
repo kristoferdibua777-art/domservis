@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-import { ref } from 'vue'
+import { ref, toRaw } from 'vue'
 
 import getUuid from '#shared/utils/getUuid.ts'
 
@@ -46,7 +46,11 @@ const useNotifications = () => {
 
     if (!newNotification.persistent) {
       newNotification.timeout = window.setTimeout(() => {
-        removeNotification(newNotification.id)
+        // Remove only this notification: after a clear or a manual close,
+        // a newer notification may reuse the id and must not vanish early.
+        notifications.value = notifications.value.filter(
+          (notification: Notification) => toRaw(notification) !== newNotification,
+        )
       }, newNotification.durationMS || defaultNotificationDurationMS)
     }
 

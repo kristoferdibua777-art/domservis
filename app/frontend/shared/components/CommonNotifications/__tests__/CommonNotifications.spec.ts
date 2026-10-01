@@ -64,6 +64,39 @@ describe('CommonNotifications.vue', () => {
     expect(wrapper.queryByTestId('notification')).not.toBeInTheDocument()
   })
 
+  it('does not let the timer of a cleared notification remove a newer one with the same id', async () => {
+    const { notify, clearAllNotifications } = useNotifications()
+
+    notify({ id: 'reused-id', message: 'Cleared', type: NotificationTypes.Success, durationMS: 10 })
+    clearAllNotifications()
+
+    notify({ id: 'reused-id', message: 'Newer', type: NotificationTypes.Info, persistent: true })
+
+    await vi.advanceTimersByTimeAsync(20)
+    await nextTick()
+
+    expect(wrapper.getByText('Newer')).toBeInTheDocument()
+  })
+
+  it('does not let the timer of a closed notification remove a newer one with the same id', async () => {
+    const { notify, removeNotification } = useNotifications()
+
+    notify({ id: 'reused-id', message: 'Closed', type: NotificationTypes.Success, durationMS: 10 })
+    removeNotification('reused-id')
+
+    notify({ id: 'reused-id', message: 'Newer', type: NotificationTypes.Error, durationMS: 100 })
+
+    await vi.advanceTimersByTimeAsync(20)
+    await nextTick()
+
+    expect(wrapper.getByText('Newer')).toBeInTheDocument()
+
+    await vi.advanceTimersByTimeAsync(100)
+    await nextTick()
+
+    expect(wrapper.queryByText('Newer')).not.toBeInTheDocument()
+  })
+
   it('does not remove persistent notifications', async () => {
     const { notify } = useNotifications()
 
