@@ -42,6 +42,27 @@ class App.DomServisDispatchCalendar
   @overlaps: (first, second) ->
     first.start < second.end && second.start < first.end
 
+  # The master's other jobs on the job's day whose time overlaps the job's
+  # time, as [{ job, interval, timeLabel }]. Empty when the job has no date
+  # or no canonical time.
+  @overlappingJobs: (job, masterId, jobs) ->
+    interval = @visitInterval(job?.visit_time)
+    return [] if !interval || !job.visit_date
+
+    result = []
+    for other in jobs || []
+      continue if "#{other.id}" is "#{job.id}"
+      continue if "#{other.assignee_id}" isnt "#{masterId}"
+      continue if "#{other.visit_date || ''}" isnt "#{job.visit_date}"
+      continue if other.status in @HIDDEN_STATUSES
+
+      otherInterval = @visitInterval(other.visit_time)
+      continue if !otherInterval || !@overlaps(interval, otherInterval)
+
+      result.push({ job: other, interval: otherInterval, timeLabel: @timeLabel(otherInterval) })
+
+    result
+
   # Lays out one day. columns: [{ id, label }] where id is a master's id or
   # null for jobs without a master. Returns the columns with timed entries
   # (percent geometry within the visible hours, side-by-side lanes for

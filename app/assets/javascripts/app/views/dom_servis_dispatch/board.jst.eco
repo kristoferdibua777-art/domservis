@@ -531,6 +531,9 @@
                           <option value="<%= option.id %>"<%= ' selected' if "#{@detailJob.assignAssigneeId}" is "#{option.id}" %>><%= option.label %></option>
                         <% end %>
                       </select>
+                      <% if @detailJob.assignWarning: %>
+                        <div class="dom-servis-dispatch-drawer__assignment-warning"><%= @detailJob.assignWarning %></div>
+                      <% end %>
                     </div>
                     <div class="dom-servis-dispatch-drawer__assignment-actions">
                       <button class="btn btn--primary js-assign-job js-no-detail" data-id="<%= @detailJob.id %>">Назначить</button>

@@ -191,3 +191,81 @@ QUnit.test('the card of a job from a loaded calendar day opens', assert => {
   assert.equal(board.findJob('7').service_type, 'Older than the board page')
   assert.strictEqual(board.findJob(9), undefined)
 });
+
+QUnit.test('overlapping jobs of a master on the job day', assert => {
+  const job = { id: 1, visit_date: '2026-09-28', visit_time: '10:00', status: 'pool' }
+  const jobs = [
+    job,
+    { id: 2, assignee_id: 5, visit_date: '2026-09-28', visit_time: '09:00-10:30', status: 'taken' },
+    { id: 3, assignee_id: 5, visit_date: '2026-09-28', visit_time: '12:00', status: 'taken' },
+    { id: 4, assignee_id: 5, visit_date: '2026-09-29', visit_time: '10:00', status: 'taken' },
+    { id: 5, assignee_id: 6, visit_date: '2026-09-28', visit_time: '10:00', status: 'taken' },
+    { id: 6, assignee_id: 5, visit_date: '2026-09-28', visit_time: '11:00', status: 'cancelled' },
+  ]
+
+  assert.deepEqual(Calendar.overlappingJobs(job, 5, jobs).map((item) => [item.job.id, item.timeLabel]), [[2, '09:00–10:30']])
+  assert.deepEqual(Calendar.overlappingJobs(job, '5', jobs).map((item) => item.job.id), [2], 'master id as a string from the select')
+  assert.deepEqual(Calendar.overlappingJobs({ id: 9, visit_date: '2026-09-28', visit_time: 'после обеда' }, 5, jobs), [], 'no canonical time')
+  assert.deepEqual(Calendar.overlappingJobs({ ...job, assignee_id: 5, visit_time: '09:00' }, 5, [{ ...job, assignee_id: 5, visit_time: '09:00' }]), [], 'the job itself is no conflict')
+});
+
+QUnit.test('assigning warns about the master visits at the same time', assert => {
+  const board = Object.create(App.DomServisDispatchBoard.prototype)
+  const job = { id: 1, visit_date: '2026-09-28', visit_time: '10:00', status: 'pool' }
+
+  Object.assign(board, {
+    masterAssigneeOptions: () => [{ id: '5', label: 'Иван' }, { id: '6', label: 'Пётр' }],
+    jobs: [],
+    calendarJobs: {
+      '2026-09-28': [
+        job,
+        { id: 2, assignee_id: 5, visit_date: '2026-09-28', visit_time: '09:00', status: 'taken', service_type: 'Котёл' },
+        { id: 3, assignee_id: 5, visit_date: '2026-09-28', visit_time: '11:00-11:30', status: 'taken', service_type: 'Кран' },
+      ],
+    },
+  })
+
+  assert.equal(board.assignmentWarning(job, '5'), 'У мастера в это время: 09:00–11:00 · Котёл; 11:00–11:30 · Кран')
+  assert.strictEqual(board.assignmentWarning(job, '6'), null, 'a free master')
+  assert.strictEqual(board.assignmentWarning(job, ''), null, 'nobody chosen yet')
+  assert.deepEqual(board.assignOptionsFor(job).map((option) => option.label), ['Иван — занят в это время', 'Пётр'])
+});
+
+QUnit.test('choosing a master in the card shows the warning at once', assert => {
+  let renders = 0
+  const board = Object.create(App.DomServisDispatchBoard.prototype)
+
+  board.render = () => { renders += 1 }
+  board.setAssignAssignee({ currentTarget: $('<select><option value="5" selected>Иван</option></select>').get(0) })
+
+  assert.equal(board.detailAssignAssigneeId, '5')
+  assert.equal(renders, 1)
+});
+
+QUnit.test('the open card gets its whole day from the server', assert => {
+  const requests = []
+  let renders = 0
+  const board = Object.create(App.DomServisDispatchBoard.prototype)
+
+  Object.assign(board, {
+    apiPath: '/api/v1',
+    viewMode: 'board',
+    mobileView: true,
+    calendarJobs: {},
+    detailOpen: true,
+    dispatcherAccess: () => true,
+    adminAccess: () => false,
+    currentDetailJob: () => ({ id: 1, visit_date: '2026-09-30' }),
+    ajax: (options) => requests.push(options),
+    render: () => { renders += 1 },
+  })
+
+  board.loadCalendarJobs('2026-09-30')
+  assert.equal(requests[0].data.visit_date, '2026-09-30', 'also for a dispatcher on the mobile layout')
+  requests[0].success([{ id: 2 }])
+  assert.equal(renders, 1, 'the card of that day is re-rendered')
+
+  board.loadCalendarJobs('2026-10-01')
+  requests[1].success([])
+  assert.equal(renders, 1, 'another day does not touch the card')
+});
