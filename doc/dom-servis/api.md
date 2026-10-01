@@ -122,9 +122,11 @@ event_type, actor_user_id, actor_name (имя автора), meta, created_at.
 | comment_added, description_updated | новое значение (comment / description) и прежнее в from |
 | tags_changed | from, to |
 | updated | changes: { поле: { from, to } } для остальных полей: адрес, клиент, телефон, услуга, дата и время визита, источник, снятый при возврате в pool мастер |
+| deleted | снимок удалённой заявки: job_code, ticket_number, status, service_type, address, client_name, assignee_name, visit_date, visit_time |
 
 Запрос, который ничего не изменил, событие не создаёт.
-Удаление заявки удаляет и её историю.
+Удаление заявки сохраняет историю: последним пишется deleted, события отвязываются от заявки
+(dispatch_job_id = null) и хранят её код в job_code.
 
 ## Политика, теги и источники
 
