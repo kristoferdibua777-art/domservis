@@ -45,6 +45,7 @@
 | POST | /jobs/:id/status | Изменить статус |
 | POST | /jobs/:id/move_day | Изменить день |
 | POST | /jobs/:id/change_priority | Изменить приоритет |
+| POST | /jobs/:id/resync_ticket | Повторить синхронизацию backing ticket (диспетчер, администратор); 422, если снова не удалось |
 | GET | /jobs/:job_id/events | История |
 | GET/POST | /jobs/:job_id/attachments | Список / добавление файла |
 | GET/DELETE | /jobs/:job_id/attachments/:id | Чтение / удаление файла |

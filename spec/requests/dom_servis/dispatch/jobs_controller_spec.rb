@@ -236,6 +236,68 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
     end
   end
 
+  describe 'backing ticket sync failures', :aggregate_failures, authenticated_as: :dispatcher_user, performs_jobs: true do
+    let(:ticket_sync) { instance_double(DomServis::Dispatch::BackingTicket::SyncFromDispatch) }
+
+    before do
+      allow_any_instance_of(DomServis::Dispatch::JobsController).to receive(:sync_backing_ticket!).and_call_original
+      allow(DomServis::Dispatch::BackingTicket::SyncFromDispatch).to receive(:new).and_return(ticket_sync)
+    end
+
+    it 'keeps the change, records the failure and retries it later' do
+      allow(ticket_sync).to receive(:execute).and_raise(StandardError, 'ticket store down')
+
+      expect do
+        post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/change_priority", params: { priority: 'high' }, as: :json
+      end.to have_enqueued_job(DomServis::BackingTicketResyncJob).with(job.id)
+
+      expect(response).to have_http_status(:ok)
+      expect(job.reload.priority).to eq('high')
+      expect(job.ticket_sync_failed_at).to be_present
+      expect(job.ticket_sync_error).to eq('StandardError: ticket store down')
+      expect(json_response['ticket_sync_error']).to eq('StandardError: ticket store down')
+    end
+
+    it 'clears a recorded failure once a later sync succeeds' do
+      allow(ticket_sync).to receive(:execute).and_return(true)
+      job.record_ticket_sync_failure!(StandardError.new('earlier failure'))
+
+      post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/change_priority", params: { priority: 'high' }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(job.reload).to have_attributes(ticket_sync_failed_at: nil, ticket_sync_error: nil)
+    end
+
+    it 'lets a dispatcher retry the sync' do
+      allow(ticket_sync).to receive(:execute).and_return(true)
+      job.record_ticket_sync_failure!(StandardError.new('earlier failure'))
+
+      post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/resync_ticket", as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(job.reload.ticket_sync_failed_at).to be_nil
+    end
+
+    it 'reports a retry that fails again' do
+      allow(ticket_sync).to receive(:execute).and_raise(StandardError, 'still down')
+      job.record_ticket_sync_failure!(StandardError.new('earlier failure'))
+
+      post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/resync_ticket", as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response['error']).to include('still down')
+      expect(job.reload.ticket_sync_error).to eq('StandardError: still down')
+    end
+
+    context 'when logged in as a master', authenticated_as: -> { master_user } do
+      it 'does not let a master retry the sync' do
+        post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/resync_ticket", as: :json
+
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+  end
+
   describe 'POST /api/v1/dom_servis/dispatch/jobs/:id/take', authenticated_as: -> { master_user } do
     it 'takes a pool job', :aggregate_failures do
       post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/take", as: :json

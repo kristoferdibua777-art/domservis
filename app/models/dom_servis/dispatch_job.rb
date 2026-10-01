@@ -97,6 +97,22 @@ class DomServis::DispatchJob < ApplicationModel
     ).compact
   end
 
+  # The backing ticket is a projection: when updating it fails, the job keeps
+  # its change and remembers the failure until a later sync succeeds. Columns
+  # are written directly so that recording never fails the original request.
+  def record_ticket_sync_failure!(error)
+    update_columns( # rubocop:disable Rails/SkipsModelValidations
+      ticket_sync_failed_at: Time.zone.now,
+      ticket_sync_error:     "#{error.class}: #{error.message}".truncate(500),
+    )
+  end
+
+  def clear_ticket_sync_failure!
+    return if ticket_sync_failed_at.nil? && ticket_sync_error.nil?
+
+    update_columns(ticket_sync_failed_at: nil, ticket_sync_error: nil) # rubocop:disable Rails/SkipsModelValidations
+  end
+
   private
 
   def notify_dispatch_board_created
