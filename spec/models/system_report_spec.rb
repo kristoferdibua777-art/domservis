@@ -238,7 +238,17 @@ RSpec.describe SystemReport, current_user_id: 1, type: :model do
           'form_allowed_params',
           'dom_servis_form_intake_enabled',
           'dom_servis_form_organization_id',
+          'dom_servis_dispatch_policy',
+          'dom_servis_webpush_vapid_public_key',
+          'dom_servis_webpush_subject',
         ]
+      end
+
+      it 'leaves out the Dom-Servis Web Push private key', :aggregate_failures do
+        settings = described_class.fetch[:system_report]['Setting'].pluck(:name)
+
+        expect(settings).to include('dom_servis_webpush_vapid_public_key')
+        expect(settings).not_to include('dom_servis_webpush_vapid_private_key')
       end
 
       it 'does not return confidential settings' do

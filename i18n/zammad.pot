@@ -2572,6 +2572,14 @@ msgstr ""
 msgid "Base role"
 msgstr ""
 
+#: db/seeds/settings.rb:3185
+msgid "Base64url-encoded VAPID private key used to sign outgoing dispatch Web Push messages. Keep secret."
+msgstr ""
+
+#: db/seeds/settings.rb:3171
+msgid "Base64url-encoded VAPID public key used by the dispatch board to subscribe browsers for Web Push."
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/_ui_element/object_manager_attribute.coffee:729
 #: app/assets/javascripts/app/views/integration/exchange.jst.eco:11
 msgid "Basic Authentication"
@@ -3889,6 +3897,10 @@ msgstr ""
 
 #: lib/ai/vectordb.rb:153
 msgid "Connection to Elasticsearch Vector DB failed"
+msgstr ""
+
+#: db/seeds/settings.rb:3199
+msgid "Contact URI included in VAPID JWT claims (mailto: or https: URL)."
 msgstr ""
 
 #: app/assets/javascripts/app/views/widget/two_factor_login/help_text.jst.eco:8
@@ -6145,6 +6157,18 @@ msgstr ""
 msgid "Dom-Servis Web Push VAPID keys are not configured. Run `rake dom_servis:webpush:generate_keys`."
 msgstr ""
 
+#: db/seeds/settings.rb:3182
+msgid "Dom-Servis Web Push VAPID private key"
+msgstr ""
+
+#: db/seeds/settings.rb:3168
+msgid "Dom-Servis Web Push VAPID public key"
+msgstr ""
+
+#: db/seeds/settings.rb:3196
+msgid "Dom-Servis Web Push subject"
+msgstr ""
+
 #: app/controllers/dispatch_board_controller.rb:39
 msgid "Dom-Servis dispatch board for masters and dispatchers."
 msgstr ""
@@ -6155,6 +6179,10 @@ msgstr ""
 
 #: app/services/dom_servis/dispatch/backing_ticket/mapper.rb:89
 msgid "Dom-Servis dispatch job updated"
+msgstr ""
+
+#: db/seeds/settings.rb:3154
+msgid "Dom-Servis dispatch policy"
 msgstr ""
 
 #: app/services/dom_servis/intake/dispatch_job_creator.rb:33
@@ -16135,6 +16163,10 @@ msgstr ""
 
 #: db/seeds/settings.rb:5113
 msgid "Stores the GitLab configuration."
+msgstr ""
+
+#: db/seeds/settings.rb:3157
+msgid "Stores the dispatch board role matrices for actions, statuses and fields."
 msgstr ""
 
 #: db/seeds/settings.rb:6151
