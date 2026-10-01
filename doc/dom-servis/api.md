@@ -132,10 +132,14 @@ event_type, actor_user_id, actor_name (имя автора), meta, created_at.
 
 | Метод | Путь | Назначение |
 | --- | --- | --- |
-| GET | /api/v1/dom_servis/dispatch/policy | Эффективные правила текущего пользователя |
+| GET | /api/v1/dom_servis/dispatch/policy | Эффективные правила текущего пользователя; администратору ещё history_export_due |
 | GET/PUT/PATCH | /api/v1/dom_servis/dispatch/admin_policy | Чтение / сохранение административной политики |
 | POST | /api/v1/dom_servis/dispatch/admin_policy/reset | Сброс политики |
 | GET | /api/v1/dom_servis/dispatch/tags | Общий словарь и использование тегов |
+| GET | /api/v1/dom_servis/dispatch/history_exports | Администратор: число событий истории, пора ли выгружать (due), последняя выгрузка |
+| POST | /api/v1/dom_servis/dispatch/history_exports | Администратор: новая выгрузка всех событий до текущего последнего |
+| GET | /api/v1/dom_servis/dispatch/history_exports/:id/download | Администратор: файл выгрузки (.xlsx) |
+| POST | /api/v1/dom_servis/dispatch/history_exports/:id/purge | Администратор: удалить события скачанной выгрузки |
 | GET/POST | /api/v1/dom_servis/request_sources | Список / создание источника |
 | GET/PUT/PATCH/DELETE | /api/v1/dom_servis/request_sources/:id | Работа с источником |
 | GET/POST | /api/v1/dom_servis/request_sources/search | Поиск источников |
