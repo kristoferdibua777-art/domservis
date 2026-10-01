@@ -143,7 +143,6 @@ event_type, actor_user_id, actor_name (имя автора), meta, created_at.
 ## Push-подписки
 
 Фактический префикс: /api/v1/dom_servis/dispatch/push_subscriptions.
-В комментариях controller встречается старый путь без dispatch — ориентируйтесь на routes.
 
 | Метод | Путь относительно префикса | Назначение |
 | --- | --- | --- |
