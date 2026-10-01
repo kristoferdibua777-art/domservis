@@ -33,6 +33,12 @@
       <span><%- @T('Done') %></span>
       <strong><%= @stats.done %></strong>
     </div>
+    <% if @stats.ticket_sync_failed > 0: %>
+      <div class="dom-servis-dispatch-admin-card" title="Изменения этих заявок не дошли до тикетов Zammad. Повторить синхронизацию можно в карточке заявки на доске.">
+        <span>Тикет не обновлён</span>
+        <strong><%= @stats.ticket_sync_failed %></strong>
+      </div>
+    <% end %>
   </div>
 
   <div class="dom-servis-dispatch-admin__note">

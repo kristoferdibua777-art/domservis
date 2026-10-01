@@ -33,11 +33,14 @@ class DomServis::Dispatch::AdminPoliciesController < DomServis::Dispatch::BaseCo
   def dispatch_stats
     jobs = DomServis::DispatchJob.all
 
+    # ticket_sync_failed: jobs whose backing ticket failed to update and was
+    # not synced since.
     {
-      total:  jobs.count,
-      pool:   jobs.where(status: 'pool').count,
-      active: jobs.where(status: %w[taken in_progress]).count,
-      done:   jobs.where(status: %w[done closed]).count,
+      total:              jobs.count,
+      pool:               jobs.where(status: 'pool').count,
+      active:             jobs.where(status: %w[taken in_progress]).count,
+      done:               jobs.where(status: %w[done closed]).count,
+      ticket_sync_failed: jobs.where.not(ticket_sync_failed_at: nil).count,
     }
   end
 end

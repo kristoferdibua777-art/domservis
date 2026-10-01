@@ -35,6 +35,7 @@ class App.DomServisDispatchBoard extends App.Controller
     'click .js-take-job': 'takeJob'
     'click .js-release-job': 'releaseJob'
     'click .js-set-status': 'setStatus'
+    'click .js-resync-ticket': 'resyncTicket'
     'click .js-trigger-attachment-upload': 'triggerAttachmentUpload'
     'change .js-upload-attachment-input': 'uploadAttachments'
     'click .js-remove-attachment': 'removeAttachment'
@@ -888,6 +889,35 @@ class App.DomServisDispatchBoard extends App.Controller
         @loadJobs(manualRefresh: true)
     )
 
+  # The backing ticket did not take the last change (the server records the
+  # failure and retries once by itself); a dispatcher can retry right away.
+  ticketSyncErrorLabel: (job) ->
+    return null if !job?.ticket_sync_failed_at
+
+    [@formatHistoryTime(job.ticket_sync_failed_at), job.ticket_sync_error].filter((part) -> part).join(' · ')
+
+  resyncTicket: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    id = $(e.currentTarget).data('id')
+    return if !id || @ticketResyncingId
+
+    @ticketResyncingId = id
+    @render()
+
+    @ajax(
+      id: "dom_servis_dispatch_resync_ticket_#{id}"
+      type: 'POST'
+      url: "#{@apiPath}/dom_servis/dispatch/jobs/#{id}/resync_ticket"
+      success: =>
+        @ticketResyncingId = null
+        @notify(type: 'success', msg: 'Тикет Zammad обновлён.', timeout: 3000)
+        @loadJobs(manualRefresh: true)
+      error: (xhr) =>
+        @ticketResyncingId = null
+        @notify(type: 'error', msg: @extractError(xhr, 'Не удалось обновить тикет Zammad.'), timeout: 6000)
+        @loadJobs(manualRefresh: true)
+    )
+
   changePriority: (e) =>
     id = $(e.currentTarget).data('id')
     priority = $(e.currentTarget).val()
@@ -1479,6 +1509,9 @@ class App.DomServisDispatchBoard extends App.Controller
       canFinish: canOperate && job.status is 'in_progress' && @actionAllowed('set_status_done') && @statusAllowed('done')
       canCancel: @dispatcherAccess() && job.status in ['pool', 'taken', 'in_progress'] && @actionAllowed('cancel_job') && @statusAllowed('cancelled')
       canClose: @dispatcherAccess() && job.status is 'done' && @actionAllowed('close_job') && @statusAllowed('closed')
+      ticketSyncError: @ticketSyncErrorLabel(job)
+      canResyncTicket: @dispatcherAccess()
+      ticketResyncing: "#{@ticketResyncingId}" is "#{job.id}"
     }
 
   buildDetailGroups: (job) ->

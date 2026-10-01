@@ -250,6 +250,17 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     }, status: :ok
   end
 
+  # Syncs the backing ticket again after a failure was recorded on the job.
+  def resync_ticket
+    job = dispatch_job_scope.find(params[:id])
+    authorize job, :resync_ticket?
+
+    sync_backing_ticket!(job)
+    raise Exceptions::UnprocessableEntity, "Тикет не обновлён: #{job.ticket_sync_error}" if job.ticket_sync_failed_at.present?
+
+    model_item_render(job)
+  end
+
   private
 
   def job_create_params
@@ -517,8 +528,14 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     service_class
       .new(dispatch_job: job, operator: current_user, changes: changes)
       .execute
+    job.clear_ticket_sync_failure!
   rescue => e
     Rails.logger.error("[dom_servis.backing_ticket] sync failed for job=#{job.id}: #{e.class}: #{e.message}")
     raise if strict
+
+    # The job keeps its change; the failure is shown on the board and
+    # retried once automatically.
+    job.record_ticket_sync_failure!(e)
+    DomServis::BackingTicketResyncJob.set(wait: DomServis::BackingTicketResyncJob::RETRY_DELAY).perform_later(job.id)
   end
 end
