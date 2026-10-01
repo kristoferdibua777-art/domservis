@@ -1165,29 +1165,53 @@
 .dom-servis-dispatch-drawer__history-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .dom-servis-dispatch-drawer__history-item {
   background: rgba(19, 23, 31, 0.42);
   border: 1px solid rgba(76, 84, 103, 0.3);
-  border-radius: 14px;
-  padding: 12px;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.dom-servis-dispatch-drawer__history-row {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+summary.dom-servis-dispatch-drawer__history-row {
+  cursor: pointer;
+}
+
+.dom-servis-dispatch-drawer__history-time {
+  color: #99a6ba;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .dom-servis-dispatch-drawer__history-title {
   color: #eef2f9;
-  font-size: 14px;
-  font-weight: 700;
+  flex: 1 1 auto;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.4;
-  margin-bottom: 4px;
+  min-width: 0;
+}
+
+.dom-servis-dispatch-drawer__history-actor {
+  color: #99a6ba;
+  font-size: 12px;
 }
 
 .dom-servis-dispatch-drawer__history-line {
   color: #aab4c8;
   font-size: 13px;
   line-height: 1.45;
-  margin-bottom: 4px;
+  margin-top: 6px;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }

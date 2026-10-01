@@ -557,16 +557,26 @@
               <% else: %>
                 <div class="dom-servis-dispatch-drawer__history-list">
                   <% for entry in @detailHistory: %>
-                    <div class="dom-servis-dispatch-drawer__history-item">
-                      <div class="dom-servis-dispatch-drawer__history-title"><%= entry.title %></div>
-                      <% for line in entry.lines: %>
-                        <div class="dom-servis-dispatch-drawer__history-line"><%= line %></div>
-                      <% end %>
-                      <div class="dom-servis-dispatch-drawer__attachment-meta">
-                        <span><%= entry.time %></span>
-                        <span><%= entry.actor %></span>
+                    <% if entry.lines.length > 0: %>
+                      <details class="dom-servis-dispatch-drawer__history-item">
+                        <summary class="dom-servis-dispatch-drawer__history-row">
+                          <span class="dom-servis-dispatch-drawer__history-time"><%= entry.time %></span>
+                          <span class="dom-servis-dispatch-drawer__history-title"><%= entry.title %></span>
+                          <span class="dom-servis-dispatch-drawer__history-actor"><%= entry.actor %></span>
+                        </summary>
+                        <% for line in entry.lines: %>
+                          <div class="dom-servis-dispatch-drawer__history-line"><%= line %></div>
+                        <% end %>
+                      </details>
+                    <% else: %>
+                      <div class="dom-servis-dispatch-drawer__history-item">
+                        <div class="dom-servis-dispatch-drawer__history-row">
+                          <span class="dom-servis-dispatch-drawer__history-time"><%= entry.time %></span>
+                          <span class="dom-servis-dispatch-drawer__history-title"><%= entry.title %></span>
+                          <span class="dom-servis-dispatch-drawer__history-actor"><%= entry.actor %></span>
+                        </div>
                       </div>
-                    </div>
+                    <% end %>
                   <% end %>
                 </div>
               <% end %>

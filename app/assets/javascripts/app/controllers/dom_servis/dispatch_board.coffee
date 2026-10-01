@@ -1906,9 +1906,13 @@ class App.DomServisDispatchBoard extends App.Controller
     return [] if !job
     @attachmentCollections["#{job.id}"] || []
 
+  # Short history: one line per action with its time and author; the old and
+  # new values open on click. 'published' only repeats 'created'.
   buildHistoryEntries: (job) ->
     return [] if !job
-    _.map(@eventCollections["#{job.id}"] || [], (event) => @historyEntry(event))
+
+    events = _.reject(@eventCollections["#{job.id}"] || [], (event) -> event.event_type is 'published')
+    _.map(events, (event) => @historyEntry(event))
 
   historyEntry: (event) ->
     meta = event.meta || {}
@@ -1926,23 +1930,29 @@ class App.DomServisDispatchBoard extends App.Controller
     transition = (label, field) =>
       return label if !_.has(meta, 'from') && !_.has(meta, 'to')
       "#{label}: #{@historyValue(field, meta.from)} → #{@historyValue(field, meta.to)}"
+    changedFields = _.keys(meta.changes || {})
 
     switch eventType
       when 'created' then 'Заявка создана'
       when 'published' then 'Опубликована в пул'
       when 'taken' then 'Взята мастером'
-      when 'assigned' then 'Назначен мастер'
+      when 'assigned'
+        if meta.to? then "Назначен мастер: #{@historyValue('assignee_id', meta.to)}" else 'Назначен мастер'
       when 'released' then 'Возвращена в пул'
       when 'status_changed' then transition('Статус', 'status')
       when 'moved_weekday' then transition('День визита', 'visit_day')
       when 'priority_changed' then transition('Приоритет', 'priority')
       when 'organization_changed' then transition('Заказчик', 'organization_id')
-      when 'comment_added' then 'Изменён комментарий диспетчера'
+      when 'comment_added' then 'Изменён комментарий'
       when 'description_updated' then 'Изменено описание'
-      when 'tags_changed' then 'Изменены теги работ'
+      when 'tags_changed' then 'Изменены теги'
       when 'attachment_added' then "Добавлено вложение: #{meta.filename || '—'}"
       when 'attachment_removed' then "Удалено вложение: #{meta.filename || '—'}"
-      when 'updated' then 'Изменены данные заявки'
+      when 'updated'
+        if changedFields.length > 0
+          "Изменены: #{_.map(changedFields, (field) => @fieldLabel(field)).join(', ')}"
+        else
+          'Изменены данные заявки'
       when 'ai_parsed' then 'Заявка разобрана автоматически'
       else eventType
 
