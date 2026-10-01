@@ -18,10 +18,12 @@ RSpec.describe ExcelSheet::Ticket do
       expect(tags_count).to eq 1
     end
 
-    it 'has 32 column in default configuration' do
+    # 32 Zammad columns plus the 15 Dom-Servis backing ticket fields
+    # (DomServis::Dispatch::BackingTicket::Fields), which every installation has.
+    it 'has 47 column in default configuration' do
       tags_count = instance.ticket_header.count
 
-      expect(tags_count).to eq 32
+      expect(tags_count).to eq 32 + DomServis::Dispatch::BackingTicket::Fields::DEFINITIONS.size
     end
 
     it 'all elements have width attribute' do

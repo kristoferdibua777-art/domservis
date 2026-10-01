@@ -2502,3 +2502,7 @@ ObjectManager::Attribute.add(
   to_delete:   false,
   position:    1450,
 )
+
+# Dom-Servis backing ticket fields: their ticket columns come from a migration,
+# the attribute records from here (see DomServis::Dispatch::BackingTicket::Fields).
+DomServis::Dispatch::BackingTicket::Fields.ensure_object_manager_attributes!

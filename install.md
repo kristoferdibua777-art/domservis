@@ -388,10 +388,11 @@ sudo docker compose ps -a
 
 Если 10–15 минут нет прогресса, откройте раздел устранения проблем вместо многократных перезапусков.
 
-### 7.3. Подготовка модуля на чистой базе
+### 7.3. Проверка модуля на чистой базе
 
-В текущей версии часть настроек Дом-Сервиса может пропускаться до первоначального наполнения Zammad. Следующий блок
-добавляет недостающую конфигурацию после завершения init. Он не задаёт пароли и не создаёт сотрудников.
+Чистая установка сама создаёт настройки, роли и поля тикета Дом-Сервиса: их добавляют seeds при первом
+init, а на серверах, установленных раньше без них, — миграции при обновлении. Ручная подготовка не нужна.
+Следующий блок только проверяет результат и ничего не меняет.
 
 Скопируйте **весь блок целиком**:
 
@@ -399,28 +400,27 @@ sudo docker compose ps -a
 sudo docker compose exec -T zammad-railsserver bundle exec rails runner - <<'RUBY'
 abort 'Сначала дождитесь завершения zammad-init' unless Setting.exists?(name: 'system_init_done')
 
-require Rails.root.join('db/migrate/20260318130001_add_dom_servis_dispatch_permissions').to_s
-AddDomServisDispatchPermissions.new.up
+settings = %w[dom_servis_dispatch_policy dom_servis_webpush_vapid_public_key dom_servis_webpush_vapid_private_key dom_servis_webpush_subject]
+roles    = ['Dom-Servis Admin', 'Dom-Servis Dispatcher', 'Dom-Servis Master']
+fields   = DomServis::Dispatch::BackingTicket::Fields::DEFINITIONS.pluck(:name)
 
-require Rails.root.join('db/migrate/20260318212000_create_dom_servis_dispatch_policy_setting').to_s
-CreateDomServisDispatchPolicySetting.new.up
+missing  = settings.reject { |name| Setting.exists?(name:) }
+missing += roles.reject { |name| Role.exists?(name:) }
+missing += fields.reject { |name| ObjectManager::Attribute.get(object: 'Ticket', name:).present? }
 
-require Rails.root.join('db/migrate/20260710120100_add_dom_servis_webpush_settings').to_s
-AddDomServisWebpushSettings.new.up
-
-require Rails.root.join('db/migrate/20260322010000_add_dom_servis_backing_ticket_fields').to_s
-missing_fields = AddDomServisBackingTicketFields::FIELD_DEFINITIONS.any? do |field|
-  ObjectManager::Attribute.get(object: 'Ticket', name: field[:name]).blank?
-end
-AddDomServisBackingTicketFields.new.up if missing_fields
-
-DomServis::DispatchRoleCatalog.sync!
-puts 'Дом-Сервис: настройки, поля и роли подготовлены.'
+puts missing.empty? ? 'Дом-Сервис: настройки, роли и поля на месте.' : "Не хватает: #{missing.join(', ')}"
 RUBY
 ```
 
-Ожидается сообщение «Дом-Сервис: настройки, поля и роли подготовлены.». Если отсутствует файл или класс, версия
-отличается от описанной: передайте ошибку разработчику, не пропускайте шаг молча.
+Ожидается сообщение «Дом-Сервис: настройки, роли и поля на месте.». Если чего-то не хватает, выполните миграции и
+повторите проверку:
+
+```bash
+sudo docker compose exec -T zammad-railsserver bundle exec rails db:migrate
+```
+
+Если после миграций список не пуст или команда сообщает об отсутствующем классе, версия образа отличается от описанной:
+передайте вывод разработчику, не пропускайте шаг молча.
 
 ### 7.4. Открытие сайта
 

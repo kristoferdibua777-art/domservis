@@ -6145,16 +6145,72 @@ msgstr ""
 msgid "Document file"
 msgstr ""
 
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:21
+msgid "Dom-Servis Address"
+msgstr ""
+
 #: app/models/dom_servis/dispatch_role_catalog.rb:5
 msgid "Dom-Servis Admin"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:25
+msgid "Dom-Servis Assignee"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:16
+msgid "Dom-Servis Client Name"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:17
+msgid "Dom-Servis Client Phone"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:24
+msgid "Dom-Servis Comment"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:23
+msgid "Dom-Servis Description"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:19
+msgid "Dom-Servis Dispatch Priority"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:20
+msgid "Dom-Servis Dispatch Source"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:18
+msgid "Dom-Servis Dispatch Status"
 msgstr ""
 
 #: app/models/dom_servis/dispatch_role_catalog.rb:9
 msgid "Dom-Servis Dispatcher"
 msgstr ""
 
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:11
+msgid "Dom-Servis Job Code"
+msgstr ""
+
 #: app/models/dom_servis/dispatch_role_catalog.rb:13
 msgid "Dom-Servis Master"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:15
+msgid "Dom-Servis Service Type"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:13
+msgid "Dom-Servis Visit Date"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:12
+msgid "Dom-Servis Visit Day"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:14
+msgid "Dom-Servis Visit Time"
 msgstr ""
 
 #: app/services/dom_servis/notifications/web_push_sender.rb:80
@@ -6171,6 +6227,10 @@ msgstr ""
 
 #: db/seeds/settings.rb:3196
 msgid "Dom-Servis Web Push subject"
+msgstr ""
+
+#: app/services/dom_servis/dispatch/backing_ticket/fields.rb:22
+msgid "Dom-Servis Work Tags"
 msgstr ""
 
 #: app/controllers/dispatch_board_controller.rb:39
