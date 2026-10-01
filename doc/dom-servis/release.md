@@ -25,7 +25,9 @@ flowchart LR
 
 Обычный push develop не является триггером этого release workflow.
 
-Образ: ghcr.io/koronamedia/svib-dom-servis.
+Образ: ghcr.io/kristoferdibua777-art/svib-dom-servis (ghcr.io/<владелец репозитория>/svib-dom-servis).
+До октября 2026 образы публиковались из koronamedia/Svib-Home-Service в ghcr.io/koronamedia/svib-dom-servis;
+новых версий там нет.
 Платформа: linux/amd64.
 Сборка получает COMMIT_SHA.
 
@@ -41,7 +43,9 @@ flowchart LR
 
 Перед запуском Actions убедиться, что выбран нужный ref, а изменения находятся на GitHub.
 После success проверить summary и соответствие commit/тега на
-[странице пакета](https://github.com/koronamedia/Svib-Home-Service/pkgs/container/svib-dom-servis).
+[странице пакета](https://github.com/kristoferdibua777-art/domservis/pkgs/container/svib-dom-servis).
+После первой публикации проверить видимость пакета: VPS скачивает образ без входа в GitHub только из
+публичного пакета (Package settings → Change visibility → Public).
 
 Workflow не подключается к VPS и не выполняет production deploy.
 
@@ -51,10 +55,11 @@ Workflow не подключается к VPS и не выполняет product
 Эти значения обычно задаются в серверной .env:
 
 ```dotenv
-IMAGE_REPO=ghcr.io/koronamedia/svib-dom-servis
+IMAGE_REPO=ghcr.io/kristoferdibua777-art/svib-dom-servis
 VERSION=конкретный-тег
 ```
 
+Без IMAGE_REPO Compose берёт значение по умолчанию — обычный образ Zammad, а не Дом-Сервис.
 Общий образ используют init, railsserver, scheduler, websocket, nginx и backup.
 PostgreSQL, Redis, Memcached и Elasticsearch имеют отдельные образы и версии.
 
@@ -77,7 +82,7 @@ PostgreSQL, Redis, Memcached и Elasticsearch имеют отдельные об
 1. Зафиксировать старый тег и revision runtime.
 2. Проверить требования выпуска и миграции.
 3. Сделать согласованную копию БД и файлов; проверить доступность копии вне VPS.
-4. Изменить VERSION.
+4. Изменить VERSION (однократно при переходе на новый реестр — и IMAGE_REPO).
 5. Скачать образ до остановки приложения.
 6. При миграциях остановить пишущие процессы и выполнить init новой версии.
 7. Запустить согласованный набор контейнеров.
@@ -92,6 +97,7 @@ PostgreSQL, Redis, Memcached и Elasticsearch имеют отдельные об
 
 ## Rollback
 
+Точка возврата — прежние IMAGE_REPO и VERSION (install.md сохраняет их в .env.before-update) и резервная копия.
 Старый образ не отменяет миграции.
 Если схема изменилась несовместимо, требуется восстановление согласованных БД/файлов
 и соответствующего старого образа.

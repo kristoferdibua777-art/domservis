@@ -89,6 +89,9 @@ jobs:
           provenance: false
           build-args: |
             COMMIT_SHA=${{ github.sha }}
+          # Links the GHCR package to this repository.
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           tags: ${{ steps.tags.outputs.tags }}
 
       - name: Publish summary

@@ -11,7 +11,8 @@
 
 Два репозитория:
 
-- [Приложение](https://github.com/koronamedia/Svib-Home-Service): Rails, UI, миграции, тесты, Dockerfile.
+- [Приложение](https://github.com/kristoferdibua777-art/domservis): Rails, UI, миграции, тесты, Dockerfile;
+  образы выпусков публикуются в ghcr.io/kristoferdibua777-art/svib-dom-servis ([выпуск](release.md)).
 - [Runtime](https://github.com/koronamedia/Svib-Home-Service-docker-compose):
   Compose, сервисы, переменные окружения, скрипты запуска.
 

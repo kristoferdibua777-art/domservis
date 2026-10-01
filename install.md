@@ -175,16 +175,17 @@ getent ahostsv4 master.example.ru
 
 **В браузере:**
 
-1. Откройте [пакет svib-dom-servis](https://github.com/koronamedia/Svib-Home-Service/pkgs/container/svib-dom-servis).
+1. Откройте [пакет svib-dom-servis](https://github.com/kristoferdibua777-art/domservis/pkgs/container/svib-dom-servis).
 2. Найдите Recent tagged image versions. Для полного списка — View all tagged versions.
 3. Скопируйте у нужной свежей версии конкретный тег manual-… или release-….
 4. Если такого обозначения нет, подойдёт полный sha-… из той же версии.
 5. При сомнениях откройте
-   [сборки docker-release](https://github.com/koronamedia/Svib-Home-Service/actions/workflows/docker-release.yaml):
+   [сборки docker-release](https://github.com/kristoferdibua777-art/domservis/actions/workflows/docker-release.yaml):
    нужная сборка должна завершиться зелёным success. Это подтверждает сборку, но не приёмку всех функций продукта.
 
-На дату подготовки опубликована версия **manual-20260715-13**, связанная с cdc71a1bd8. Это пример; при установке
-проверьте список заново.
+Выпуски публикуются из репозитория kristoferdibua777-art/domservis с тегами release-…. До октября 2026 образы
+выходили в ghcr.io/koronamedia/svib-dom-servis (последняя версия — manual-20260715-13, она же sha-cdc71a1bd8…); новых
+версий там нет, для установки и обновлений используйте только новый пакет.
 
 Для фиксации версии не выбирайте плавающие develop или latest. Надпись Latest на странице GitHub не означает, что нужно
 вводить слово latest.
@@ -192,16 +193,17 @@ getent ahostsv4 master.example.ru
 Если GitHub показывает:
 
 ```text
-docker pull ghcr.io/koronamedia/svib-dom-servis:manual-20260715-13
+docker pull ghcr.io/kristoferdibua777-art/svib-dom-servis:release-2026.10.1
 ```
 
 то в VERSION дальше вставьте только:
 
 ```text
-manual-20260715-13
+release-2026.10.1
 ```
 
-Пакет публичный на дату проверки. Для скачивания аккаунт GitHub и токен не нужны.
+Пакет должен быть публичным: тогда для скачивания аккаунт GitHub и токен не нужны. Если docker pull отвечает
+denied или unauthorized, пакет приватный — владелец открывает его в Package settings → Change visibility → Public.
 
 <a id="configuration"></a>
 
@@ -222,6 +224,8 @@ cd /srv/dom-servis
 используйте раздел обновления.
 
 На VPS нужен **Svib-Home-Service-docker-compose**. Репозиторий исходного приложения клонировать не требуется.
+Этот репозиторий содержит только конфигурацию запуска; какой образ приложения запускать, задают IMAGE_REPO
+и VERSION в .env (раздел 5.2). Без IMAGE_REPO Compose запустит обычный Zammad вместо Дом-Сервиса.
 
 Все дальнейшие команды sudo docker compose выполняются из /srv/dom-servis. После нового подключения сначала:
 
@@ -248,7 +252,7 @@ nano .env
 
 ```dotenv
 COMPOSE_PROJECT_NAME=dom-servis
-IMAGE_REPO=ghcr.io/koronamedia/svib-dom-servis
+IMAGE_REPO=ghcr.io/kristoferdibua777-art/svib-dom-servis
 VERSION=ВСТАВЬТЕ_ТЕГ_С_GITHUB
 ZAMMAD_FQDN=master.example.ru
 ZAMMAD_HTTP_TYPE=https
@@ -352,7 +356,8 @@ sudo docker compose config --quiet
 sudo docker compose config --images
 ```
 
-Первая команда при успехе ничего не выводит. Вторая должна показать ghcr.io/koronamedia/svib-dom-servis с вашим тегом,
+Первая команда при успехе ничего не выводит. Вторая должна показать
+ghcr.io/kristoferdibua777-art/svib-dom-servis с вашим тегом,
 caddy:2 и инфраструктурные образы.
 
 Если видите ghcr.io/zammad/zammad, вернитесь к .env.
@@ -694,6 +699,10 @@ nano .env
 
 Замените **только VERSION**. Пароль базы не меняйте. Сохраните.
 
+Однократно при переходе со старого реестра: если в .env стоит IMAGE_REPO=ghcr.io/koronamedia/svib-dom-servis,
+замените его на ghcr.io/kristoferdibua777-art/svib-dom-servis вместе с VERSION — новые выпуски выходят только там.
+Старые значения остаются в .env.before-update: вместе с резервной копией это точка возврата.
+
 ```bash
 sudo docker compose config --quiet
 sudo docker compose config --images
@@ -724,7 +733,9 @@ sudo docker compose logs --tail=100 zammad-init zammad-railsserver zammad-schedu
 Для обычного обновления приложения git pull не требуется. Он нужен при изменении самого Compose-репозитория. Его
 изменения проверяют отдельно: там задаются в том числе версии PostgreSQL и Elasticsearch.
 
-При ошибке миграции оставьте сервис закрытым и передайте ошибку разработчику. Возврат VERSION не отменяет изменений базы.
+При ошибке миграции оставьте сервис закрытым и передайте ошибку разработчику. Возврат IMAGE_REPO и VERSION
+из .env.before-update не отменяет изменений базы: после миграций откат — это прежние значения вместе с резервной
+копией из раздела 12.
 
 <a id="troubleshooting"></a>
 
