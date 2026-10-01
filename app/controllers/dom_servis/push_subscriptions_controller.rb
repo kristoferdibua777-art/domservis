@@ -10,7 +10,7 @@
 class DomServis::PushSubscriptionsController < ApplicationController
   prepend_before_action :authenticate_and_authorize!
 
-  # POST /api/v1/dom_servis/push_subscriptions
+  # POST /api/v1/dom_servis/dispatch/push_subscriptions
   #
   # Body (form-encoded or JSON):
   #   endpoint        - push service URL (required)
@@ -42,7 +42,7 @@ class DomServis::PushSubscriptionsController < ApplicationController
 
   end
 
-  # DELETE /api/v1/dom_servis/push_subscriptions/:id
+  # DELETE /api/v1/dom_servis/dispatch/push_subscriptions/:id
   def destroy
     subscription = DomServis::PushSubscription.find_by(id: params[:id])
     raise Exceptions::UnprocessableEntity, __('Unknown push subscription.') if subscription.blank?
@@ -53,7 +53,7 @@ class DomServis::PushSubscriptionsController < ApplicationController
     render json: { status: 'ok' }
   end
 
-  # POST /api/v1/dom_servis/push_subscriptions/test
+  # POST /api/v1/dom_servis/dispatch/push_subscriptions/test
   #
   # Sends a test push notification to every active subscription owned by
   # the current user, so they can verify the channel works end-to-end.
