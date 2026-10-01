@@ -4,8 +4,9 @@
 # pool past its configured deadline (dispatch policy setting
 # `deadline_warning_minutes`, default 120).
 #
-# Enqueued by DomServis::DispatchJob on creation with a delay equal to the
-# deadline. When the job runs it re-checks whether the dispatch job is
+# Enqueued by DomServis::DispatchJob with a delay equal to the deadline when
+# a job is created in the pool and whenever it returns there (released or
+# reopened). When the job runs it re-checks whether the dispatch job is
 # still unclaimed; if it has been taken in the meantime, the escalation
 # is a no-op and is silently discarded.
 #

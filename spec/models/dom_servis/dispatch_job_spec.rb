@@ -187,4 +187,36 @@ RSpec.describe DomServis::DispatchJob, current_user_id: 1, type: :model do
                                                         ),
                                                       ))
   end
+
+  describe 'pool escalation', performs_jobs: true do
+    it 'is scheduled when the job is created in the pool' do
+      expect { described_class.create!(dispatch_job_attrs) }.to have_enqueued_job(DomServis::DispatchEscalationJob)
+    end
+
+    it 'starts over when a master returns the job to the pool' do
+      job = described_class.create!(dispatch_job_attrs)
+      job.update!(status: 'taken', assignee_id: 1)
+
+      expect { job.update!(status: 'pool', assignee_id: nil) }.to have_enqueued_job(DomServis::DispatchEscalationJob).with(job.id)
+    end
+
+    it 'starts over when a cancelled job is reopened' do
+      job = described_class.create!(dispatch_job_attrs)
+      job.update!(status: 'cancelled')
+
+      expect { job.update!(status: 'pool') }.to have_enqueued_job(DomServis::DispatchEscalationJob).with(job.id)
+    end
+
+    it 'is not scheduled again while the job stays where it is' do
+      job = described_class.create!(dispatch_job_attrs)
+
+      expect { job.update!(priority: 'high') }.not_to have_enqueued_job(DomServis::DispatchEscalationJob)
+    end
+
+    it 'is not scheduled when the job leaves the pool' do
+      job = described_class.create!(dispatch_job_attrs)
+
+      expect { job.update!(status: 'taken', assignee_id: 1) }.not_to have_enqueued_job(DomServis::DispatchEscalationJob)
+    end
+  end
 end
