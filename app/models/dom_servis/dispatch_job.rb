@@ -65,6 +65,9 @@ class DomServis::DispatchJob < ApplicationModel
   # never blocks the board itself.
   after_commit :notify_recipients_on_create, on: :create
   after_commit :notify_recipients_on_assignment, on: :update
+  # A job back in the pool (released or reopened) waits for a master again,
+  # so its escalation starts over; a still pending one is rescheduled.
+  after_commit :schedule_pool_escalation, on: :update, if: :returned_to_pool?
 
   scope :ordered_recent, -> { order(created_at: :desc, id: :desc) }
   scope :pool_visible, -> { where(status: 'pool', assignee_id: nil) }
@@ -164,6 +167,10 @@ class DomServis::DispatchJob < ApplicationModel
       recipients: recipients,
       actor:      updated_by,
     ).deliver
+  end
+
+  def returned_to_pool?
+    saved_change_to_status? && status == 'pool'
   end
 
   # Schedules a delayed escalation job that fires if this dispatch job
