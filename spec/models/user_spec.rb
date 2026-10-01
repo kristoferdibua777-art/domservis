@@ -726,6 +726,7 @@ RSpec.describe User, type: :model do
         'Cti::CallerId'                      => { 'user_id' => 1 },
         'DataPrivacyTask'                    => { 'created_by_id' => 0, 'updated_by_id' => 0 },
         'DomServis::DispatchEvent'           => { 'actor_user_id' => 0 },
+        'DomServis::DispatchHistoryExport'   => { 'created_by_id' => 0, 'purged_by_id' => 0 },
         'DomServis::DispatchJob'             => { 'assignee_id' => 0, 'created_by_id' => 0, 'updated_by_id' => 0 },
         'DomServis::PushSubscription'        => { 'user_id' => 0 },
         'DomServis::RequestSource'           => { 'created_by_id' => 0, 'updated_by_id' => 0 },
