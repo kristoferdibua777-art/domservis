@@ -5,7 +5,7 @@
 Два репозитория должны быть соседями. Из выбранного рабочего каталога:
 
 ```bash
-git clone https://github.com/koronamedia/Svib-Home-Service.git
+git clone https://github.com/kristoferdibua777-art/domservis.git Svib-Home-Service
 git clone https://github.com/koronamedia/Svib-Home-Service-docker-compose.git
 ```
 
