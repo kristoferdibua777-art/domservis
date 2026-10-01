@@ -50,13 +50,13 @@ RSpec.describe DomServis::Dispatch::ClientResolver do
     end
 
     it 'rejects ambiguous exact matches without merging users' do
-      create(:customer, phone: '+7 900 123-45-67')
-      create(:customer, mobile: '8 (900) 123-45-67')
+      first  = create(:customer, phone: '+7 900 123-45-67')
+      second = create(:customer, mobile: '8 (900) 123-45-67')
 
       resolver = described_class.new(name: 'Ivan Petrov', phone: '89001234567', operator:)
 
       expect { resolver.resolve! }
-        .to raise_error(Exceptions::UnprocessableEntity, %r{More than one user})
+        .to raise_error(Exceptions::UnprocessableEntity, %r{More than one user.*#{Regexp.escape(first.fullname)} \(##{first.id}\), #{Regexp.escape(second.fullname)} \(##{second.id}\)})
     end
 
     it 'does not fuzzy-match a different phone number', :aggregate_failures do
@@ -75,6 +75,18 @@ RSpec.describe DomServis::Dispatch::ClientResolver do
 
       expect(customer).not_to eq(existing)
       expect(customer.phone).to eq('+81901234567')
+    end
+
+    it 'normalizes only the numbers of users that end with the same digits', :aggregate_failures do
+      create_list(:customer, 3, phone: '+7 911 000-00-00')
+      existing = create(:customer, phone: '8 (900) 123-45-67')
+      allow(described_class).to receive(:normalize_phone).and_call_original
+
+      customer = described_class.new(name: 'Ivan Petrov', phone: '+79001234567', operator:).resolve!
+
+      expect(customer).to eq(existing)
+      # The requested phone, then phone and mobile of the one candidate.
+      expect(described_class).to have_received(:normalize_phone).exactly(3).times
     end
 
     it 'rejects a phone that cannot be normalized' do
