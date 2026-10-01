@@ -31,8 +31,10 @@ class DomServis::Dispatch::ClientResolver
 
     matches = matching_users(normalized_phone)
     if matches.many?
+      # Names the users, so the dispatcher knows which records to fix.
+      users = matches.map { |user| "#{user.fullname} (##{user.id})" }.join(', ')
       raise Exceptions::UnprocessableEntity,
-            __('More than one user has this normalized phone. Select or correct the client before creating the dispatch job.')
+            "#{__('More than one user has this normalized phone. Select or correct the client before creating the dispatch job.')} #{users}"
     end
 
     customer = matches.first || create_customer!(normalized_phone)
@@ -42,10 +44,19 @@ class DomServis::Dispatch::ClientResolver
 
   private
 
+  # Normalization only changes the leading digits, so a match always ends with
+  # the same ten digits. The database narrows the users down to those; the
+  # exact normalization then runs on these few instead of every user with a
+  # phone.
   def matching_users(normalized_phone)
+    tail = normalized_phone.delete_prefix('+').last(10)
+
     User
-      .where.not(phone: [nil, ''])
-      .or(User.where.not(mobile: [nil, '']))
+      .where(
+        "RIGHT(REGEXP_REPLACE(COALESCE(users.phone, ''), '[^0-9]', '', 'g'), 10) = :tail OR " \
+        "RIGHT(REGEXP_REPLACE(COALESCE(users.mobile, ''), '[^0-9]', '', 'g'), 10) = :tail",
+        tail: tail,
+      )
       .reorder(:id)
       .select do |user|
         [user.phone, user.mobile]
