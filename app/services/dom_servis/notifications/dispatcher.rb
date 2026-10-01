@@ -129,7 +129,10 @@ class DomServis::Notifications::Dispatcher
 
   def push_body(_user)
     parts = [job.service_type, job.address].compact_blank
-    parts << job.job_code if job.job_code.present?
+    # Same job number as on the board: the backing ticket's number, job_code
+    # only until the ticket exists.
+    job_number = job.ticket&.number.presence || job.job_code.presence
+    parts << job_number if job_number
 
     case event_type
     when :new_pool_job, :job_released
