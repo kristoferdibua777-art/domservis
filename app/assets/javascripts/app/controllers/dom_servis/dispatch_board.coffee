@@ -54,6 +54,7 @@ class App.DomServisDispatchBoard extends App.Controller
     @dayFilter = 'all'
     @viewMode = 'board'
     @calendarDate = null
+    @calendarJobs = {}
     @selectedWeekStart = @startOfWeek(new Date())
     @effectivePolicy = null
     @policyRegistry = {}
@@ -277,6 +278,7 @@ class App.DomServisDispatchBoard extends App.Controller
         @loading = false
         @render()
         @loadEvents(@detailJobId) if @detailOpen && @detailJobId
+        @loadCalendarJobs() if @viewMode is 'calendar'
         @flushPendingRealtimeRefresh()
       error: (xhr) =>
         @jobs = []
@@ -1161,20 +1163,51 @@ class App.DomServisDispatchBoard extends App.Controller
     mode = $(e.currentTarget).data('mode')
     @viewMode = if mode is 'calendar' && @calendarAvailable() then 'calendar' else 'board'
     @render()
+    @loadCalendarJobs() if @viewMode is 'calendar'
 
   shiftCalendarDay: (e) =>
     @preventDefaultAndStopPropagation(e)
     offset = parseInt($(e.currentTarget).data('offset'), 10) || 0
-    @calendarDate = App.DomServisDispatchCalendar.shiftDate(@calendarDate || @companyNow().date, offset)
+    @calendarDate = App.DomServisDispatchCalendar.shiftDate(@currentCalendarDate(), offset)
     @render()
+    @loadCalendarJobs()
 
   resetCalendarDay: (e) =>
     @preventDefaultAndStopPropagation(e)
     @calendarDate = null
     @render()
+    @loadCalendarJobs()
 
   companyNow: ->
     App.DomServisDispatchCalendar.zonedNow(App.Config.get('timezone_default'))
+
+  currentCalendarDate: ->
+    @calendarDate || @companyNow().date
+
+  # The board list holds only the newest jobs, so the calendar asks the
+  # server for the chosen day; until the answer comes it shows what the
+  # board already has. An open create or edit form is never re-rendered.
+  loadCalendarJobs: =>
+    return if !@calendarAvailable()
+
+    date = @currentCalendarDate()
+
+    @ajax(
+      id: 'dom_servis_dispatch_calendar_jobs'
+      type: 'GET'
+      url: "#{@apiPath}/dom_servis/dispatch/jobs"
+      data:
+        expand: true
+        visit_date: date
+        per_page: 500
+      processData: true
+      success: (data) =>
+        @calendarJobs[date] = data || []
+        return if @viewMode isnt 'calendar' || @createOpen || @editOpen
+        @render() if @currentCalendarDate() is date
+      error: (xhr) =>
+        @notify(type: 'error', msg: @extractError(xhr, 'Не удалось загрузить заявки дня.'), timeout: 4000)
+    )
 
   buildCalendarView: ->
     return null if @viewMode isnt 'calendar' || @loading || !@calendarAvailable()
@@ -1182,7 +1215,8 @@ class App.DomServisDispatchBoard extends App.Controller
     calendar = App.DomServisDispatchCalendar
     now = @companyNow()
     date = @calendarDate || now.date
-    jobs = _.filter(@jobs || [], (job) -> "#{job.visit_date || ''}" is date && job.status not in calendar.HIDDEN_STATUSES)
+    source = @calendarJobs?[date] || @jobs || []
+    jobs = _.filter(source, (job) -> "#{job.visit_date || ''}" is date && job.status not in calendar.HIDDEN_STATUSES)
     columns = calendar.buildDay(jobs, @calendarColumns(jobs))
 
     start = calendar.DAY_START_MINUTES
@@ -2304,8 +2338,18 @@ class App.DomServisDispatchBoard extends App.Controller
         @notify(type: 'error', msg: @extractError(xhr, 'Не удалось удалить вложение.'), timeout: 5000)
     )
 
+  # A calendar day loaded from the server may hold jobs older than the
+  # board's newest page, and their card must open too.
   findJob: (id) ->
-    _.find @jobs, (job) -> "#{job.id}" is "#{id}"
+    matches = (job) -> "#{job.id}" is "#{id}"
+    found = _.find(@jobs || [], matches)
+    return found if found
+
+    for date, jobs of @calendarJobs || {}
+      found = _.find(jobs, matches)
+      return found if found
+
+    undefined
 
   filteredJobs: ->
     list = @jobsForDayAndStatusFilters()
