@@ -58,6 +58,45 @@
     <section class="dom-servis-dispatch-admin__section">
       <div class="dom-servis-dispatch-admin__section-head">
         <div>
+          <h2>История заявок</h2>
+          <p>История каждой заявки хранится, в том числе после удаления заявки. Раз в 30 дней выгружайте её в Excel: сразу после скачивания файла появится запрос на удаление выгруженных событий.</p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__settings-card">
+        <% if @history: %>
+          <% if @history.due: %>
+            <div class="alert alert-warning">С прошлой выгрузки прошло больше <%= @history.reminderDays %> дней — выгрузите историю заявок.</div>
+          <% end %>
+          <p>Событий в истории: <strong><%= @history.eventCount %></strong></p>
+          <% if @history.lastExport: %>
+            <p class="dom-servis-dispatch-admin__setting-hint">
+              Последняя выгрузка: <%= @history.lastExport.createdAt %>, <%= @history.lastExport.createdBy %>, событий: <%= @history.lastExport.eventCount %>.
+              <% if @history.lastExport.purgedAt: %>
+                Удалено событий: <%= @history.lastExport.purgedCount %> (<%= @history.lastExport.purgedAt %>, <%= @history.lastExport.purgedBy %>).
+              <% else if !@history.lastExport.downloaded: %>
+                Файл не был скачан.
+              <% else: %>
+                Выгруженные события ещё не удалены.
+              <% end %>
+            </p>
+          <% else: %>
+            <p class="dom-servis-dispatch-admin__setting-hint">Выгрузок ещё не было.</p>
+          <% end %>
+        <% end %>
+
+        <div class="dom-servis-dispatch-admin__actions">
+          <button class="btn btn--primary js-history-export"<%= ' disabled' if !@history || @history.busy || @history.eventCount is 0 %>>Выгрузить историю в Excel</button>
+          <% if @history?.lastExport?.purgeable: %>
+            <button class="btn btn--danger js-history-purge"<%= ' disabled' if @history.busy %>>Удалить выгруженную историю</button>
+          <% end %>
+        </div>
+      </div>
+    </section>
+
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
           <h2><%- @T('Deadline warning') %></h2>
           <p><%- @T('Set how many minutes before the visit deadline a pool job should turn red on the board.') %></p>
         </div>
