@@ -581,4 +581,26 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
       expect(json_response.last['actor_name']).to eq(master_user.fullname)
     end
   end
+
+  describe 'GET /api/v1/dom_servis/dispatch/jobs?visit_date=', authenticated_as: :dispatcher_user do
+    it 'lists only the jobs of that day', :aggregate_failures do
+      day_job = job
+      next_day_job = DomServis::DispatchJob.create!(
+        service_type: 'Boiler repair',
+        address:      'Lenina 12',
+        client_phone: '+79001234568',
+        visit_day:    'tue',
+        visit_date:   '2026-03-24',
+        priority:     'medium',
+        status:       'pool',
+        source:       'manual',
+      )
+
+      get '/api/v1/dom_servis/dispatch/jobs?visit_date=2026-03-23&expand=true&per_page=500', as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response.pluck('id')).to include(day_job.id)
+      expect(json_response.pluck('id')).not_to include(next_day_job.id)
+    end
+  end
 end

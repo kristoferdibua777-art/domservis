@@ -126,3 +126,68 @@ QUnit.test('board calendar view for a dispatcher', assert => {
   board.mobileView = true
   assert.strictEqual(board.buildCalendarView(), null, 'not on the mobile layout')
 });
+
+QUnit.test('calendar uses the day loaded from the server', assert => {
+  const board = Object.create(App.DomServisDispatchBoard.prototype)
+
+  Object.assign(board, {
+    viewMode: 'calendar',
+    loading: false,
+    mobileView: false,
+    calendarDate: '2026-09-28',
+    dispatcherAccess: () => true,
+    adminAccess: () => false,
+    companyNow: () => ({ date: '2026-09-27', minutes: 0 }),
+    masterAssigneeOptions: () => [],
+    jobs: [{ id: 1, visit_date: '2026-09-28', visit_time: '09:00', status: 'pool', service_type: 'From the board page' }],
+    calendarJobs: { '2026-09-28': [{ id: 2, visit_date: '2026-09-28', visit_time: '10:00', status: 'pool', service_type: 'From the server' }] },
+  })
+
+  assert.deepEqual(board.buildCalendarView().columns[0].entries.map((entry) => entry.title), ['From the server'])
+});
+
+QUnit.test('calendar asks the server for the chosen day', assert => {
+  const requests = []
+  let renders = 0
+  const board = Object.create(App.DomServisDispatchBoard.prototype)
+
+  Object.assign(board, {
+    apiPath: '/api/v1',
+    viewMode: 'calendar',
+    mobileView: false,
+    calendarDate: '2026-09-28',
+    calendarJobs: {},
+    dispatcherAccess: () => true,
+    adminAccess: () => false,
+    ajax: (options) => requests.push(options),
+    render: () => { renders += 1 },
+  })
+
+  board.loadCalendarJobs()
+
+  assert.equal(requests[0].url, '/api/v1/dom_servis/dispatch/jobs')
+  assert.deepEqual(requests[0].data, { expand: true, visit_date: '2026-09-28', per_page: 500 })
+
+  requests[0].success([{ id: 2 }])
+  assert.deepEqual(board.calendarJobs['2026-09-28'], [{ id: 2 }])
+  assert.equal(renders, 1)
+
+  board.editOpen = true
+  board.loadCalendarJobs()
+  requests[1].success([])
+  assert.equal(renders, 1, 'an open editor is not re-rendered')
+  assert.deepEqual(board.calendarJobs['2026-09-28'], [], 'but the day is updated')
+});
+
+QUnit.test('the card of a job from a loaded calendar day opens', assert => {
+  const board = Object.create(App.DomServisDispatchBoard.prototype)
+
+  Object.assign(board, {
+    jobs: [{ id: 1, service_type: 'On the board page' }],
+    calendarJobs: { '2026-09-28': [{ id: 7, service_type: 'Older than the board page' }] },
+  })
+
+  assert.equal(board.findJob(1).service_type, 'On the board page')
+  assert.equal(board.findJob('7').service_type, 'Older than the board page')
+  assert.strictEqual(board.findJob(9), undefined)
+});

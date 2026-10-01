@@ -25,8 +25,13 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     'work_tags'       => 'tags_changed',
   }.freeze
 
+  # visit_date (YYYY-MM-DD) narrows the list to one day, e.g. for the
+  # dispatcher calendar, which must not depend on the board's newest page.
   def index
-    model_index_render(dispatch_job_scope.ordered_recent, params)
+    scope = dispatch_job_scope.ordered_recent
+    scope = scope.where(visit_date: params[:visit_date].to_s) if params[:visit_date].present?
+
+    model_index_render(scope, params)
   end
 
   def show
