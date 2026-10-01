@@ -261,7 +261,74 @@
   <% end %>
   </div>
 
-  <% if @loading: %>
+  <% if @calendarAvailable: %>
+    <div class="dom-servis-dispatch-board__view-toggle">
+      <button class="btn btn--text js-view-mode<%= ' is-active' if @viewMode isnt 'calendar' %>" data-mode="board">Доска</button>
+      <button class="btn btn--text js-view-mode<%= ' is-active' if @viewMode is 'calendar' %>" data-mode="calendar">Календарь</button>
+    </div>
+  <% end %>
+
+  <% if @calendar: %>
+    <section class="dom-servis-dispatch-calendar">
+      <div class="dom-servis-dispatch-calendar__toolbar">
+        <button class="btn btn--text js-calendar-day-shift" data-offset="-1" aria-label="Предыдущий день">←</button>
+        <button class="btn btn--text js-calendar-today<%= ' is-active' if @calendar.isToday %>">Сегодня</button>
+        <button class="btn btn--text js-calendar-day-shift" data-offset="1" aria-label="Следующий день">→</button>
+        <strong class="dom-servis-dispatch-calendar__date"><%= @calendar.dateLabel %></strong>
+        <span class="dom-servis-dispatch-calendar__summary">Заявок: <%= @calendar.jobCount %></span>
+        <% if @calendar.conflictCount > 0: %>
+          <span class="dom-servis-dispatch-calendar__warning">Пересекаются по времени: <%= @calendar.conflictCount %></span>
+        <% end %>
+      </div>
+
+      <div class="dom-servis-dispatch-calendar__grid">
+        <div class="dom-servis-dispatch-calendar__column dom-servis-dispatch-calendar__column--hours">
+          <div class="dom-servis-dispatch-calendar__head"></div>
+          <div class="dom-servis-dispatch-calendar__body">
+            <% for hour in @calendar.hours: %>
+              <div class="dom-servis-dispatch-calendar__hour" style="top: <%= hour.top %>%"><%= hour.label %></div>
+            <% end %>
+          </div>
+        </div>
+
+        <% for column in @calendar.columns: %>
+          <div class="dom-servis-dispatch-calendar__column">
+            <div class="dom-servis-dispatch-calendar__head" title="<%= column.label %>"><%= column.label %></div>
+            <div class="dom-servis-dispatch-calendar__body">
+              <% for hour in @calendar.hours: %>
+                <div class="dom-servis-dispatch-calendar__line" style="top: <%= hour.top %>%"></div>
+              <% end %>
+              <% if @calendar.nowTop?: %>
+                <div class="dom-servis-dispatch-calendar__now" style="top: <%= @calendar.nowTop %>%"></div>
+              <% end %>
+              <% for entry in column.entries: %>
+                <button class="dom-servis-dispatch-calendar__entry dom-servis-dispatch-calendar__entry--<%= entry.status %><%= ' is-conflict' if entry.conflict %> js-job-card" data-id="<%= entry.id %>" title="<%= entry.tooltip %>" style="top: <%= entry.top %>%; height: <%= entry.height %>%; left: <%= entry.left %>%; width: <%= entry.width %>%">
+                  <span class="dom-servis-dispatch-calendar__entry-time"><%= entry.timeLabel %></span>
+                  <span class="dom-servis-dispatch-calendar__entry-title"><%= entry.title %></span>
+                  <% if entry.conflict: %>
+                    <span class="dom-servis-dispatch-calendar__entry-flag">Пересечение</span>
+                  <% end %>
+                </button>
+              <% end %>
+            </div>
+            <% for group in [{ label: 'Вне 08:00–20:00', items: column.outside }, { label: 'Без времени', items: column.untimed }]: %>
+              <% if group.items.length > 0: %>
+                <div class="dom-servis-dispatch-calendar__extra">
+                  <div class="dom-servis-dispatch-calendar__extra-label"><%= group.label %></div>
+                  <% for entry in group.items: %>
+                    <button class="dom-servis-dispatch-calendar__extra-item<%= ' is-conflict' if entry.conflict %> js-job-card" data-id="<%= entry.id %>" title="<%= entry.tooltip %>">
+                      <span><%= entry.timeLabel %></span>
+                      <span><%= entry.title %></span>
+                    </button>
+                  <% end %>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% else if @loading: %>
     <div class="dom-servis-dispatch-board__empty">
       <div class="spinner spinner--small"></div>
       <span>Загрузка заявок...</span>
