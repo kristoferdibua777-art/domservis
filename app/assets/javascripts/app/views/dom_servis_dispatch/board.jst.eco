@@ -482,20 +482,14 @@
               <section class="dom-servis-dispatch-drawer__section">
                 <div class="dom-servis-dispatch-drawer__section-title"><%= group.label %></div>
                 <div class="dom-servis-dispatch-drawer__grid">
-                  <% for item, itemIndex in group.items: %>
-                    <% displayLabel = item.label %>
-                    <% if group.id is 'job': %>
-                      <% displayLabel = ['Адрес', 'Дата визита', 'Время визита', 'День недели', 'Статус', 'Приоритет', 'Исполнитель'][itemIndex] || displayLabel %>
-                    <% else if group.id is 'client': %>
-                      <% displayLabel = ['Имя', 'Телефон', 'Заказчик'][itemIndex] || displayLabel %>
-                    <% else if group.id is 'content': %>
-                      <% displayLabel = ['Тип работ', 'Теги', 'Описание', 'Комментарий диспетчера'][itemIndex] || displayLabel %>
-                    <% else if group.id is 'meta': %>
-                      <% displayLabel = ['Код заявки', 'Источник', 'Backing Ticket'][itemIndex] || displayLabel %>
-                    <% end %>
+                  <% for item in group.items: %>
                     <div class="dom-servis-dispatch-drawer__item<%= ' dom-servis-dispatch-drawer__item--wide' if item.wide %>">
-                      <div class="dom-servis-dispatch-drawer__item-label"><%= displayLabel %></div>
-                      <div class="dom-servis-dispatch-drawer__item-value"><%= item.value %></div>
+                      <div class="dom-servis-dispatch-drawer__item-label"><%= item.label %></div>
+                      <% if item.href: %>
+                        <div class="dom-servis-dispatch-drawer__item-value"><a href="<%= item.href %>"><%= item.value %></a></div>
+                      <% else: %>
+                        <div class="dom-servis-dispatch-drawer__item-value"><%= item.value %></div>
+                      <% end %>
                     </div>
                   <% end %>
                 </div>

@@ -1364,7 +1364,7 @@ class App.DomServisDispatchBoard extends App.Controller
 
       card =
         id: job.id
-        jobCode: job.job_code || @fallbackJobCode(job)
+        jobCode: @jobNumber(job)
         serviceType: job.service_type || 'Без названия'
         address: job.address || 'Адрес не указан'
         clientName: job.client_name || 'Клиент не указан'
@@ -1424,7 +1424,7 @@ class App.DomServisDispatchBoard extends App.Controller
 
     {
       id: job.id
-      jobCode: job.job_code || @fallbackJobCode(job)
+      jobCode: @jobNumber(job)
       title: job.service_type || 'Без названия'
       statusLabel: @statusLabel(job.status)
       scheduleLabel: @scheduleLabel(job)
@@ -1448,7 +1448,7 @@ class App.DomServisDispatchBoard extends App.Controller
 
     {
       id: job.id
-      jobCode: job.job_code || @fallbackJobCode(job)
+      jobCode: @jobNumber(job)
       title: job.service_type || 'Без названия'
       serviceType: job.service_type || 'Без названия'
       address: job.address || 'Адрес не указан'
@@ -1521,10 +1521,10 @@ class App.DomServisDispatchBoard extends App.Controller
         id: 'meta'
         label: 'Системное'
         items: _.compact([
-          @detailItem('Код заявки', job.job_code || @fallbackJobCode(job))
           @detailItem('Источник', @sourceLabel(job.source || 'manual'))
           @detailItem('Партнёр', job.request_source_label || job.request_source_partner_key || 'Не задан')
-          @detailItem(__('Backing Ticket'), job.ticket_id || 'Ещё не создан')
+          @detailItem('Тикет Zammad', @ticketLabel(job), false, @ticketHref(job))
+          (@detailItem('Старый код заявки', job.job_code) if job.ticket_number)
         ])
       }
     ]
@@ -1546,13 +1546,14 @@ class App.DomServisDispatchBoard extends App.Controller
       .compact()
       .value()
 
-  detailItem: (label, value, wide = false) ->
+  detailItem: (label, value, wide = false, href = null) ->
     return null if !value? || value is ''
 
     {
       label: label
       value: value
       wide: wide
+      href: href
     }
 
   buildEditGroups: (job) ->
@@ -2575,6 +2576,24 @@ class App.DomServisDispatchBoard extends App.Controller
       chip = $(element)
       tagName = chip.data('tag')?.toString()?.trim()
       chip.toggleClass('is-active', _.contains(selectedTags, tagName))
+
+  # Ticket.number is the job number people see; job_code (or its fallback)
+  # only stands in until the backing ticket exists.
+  jobNumber: (job) ->
+    return "#{job.ticket_number}" if job.ticket_number
+    job.job_code || @fallbackJobCode(job)
+
+  ticketLabel: (job) ->
+    return "#{job.ticket_number}" if job.ticket_number
+    return "##{job.ticket_id}" if job.ticket_id
+    'Ещё не создан'
+
+  # Masters may lack access to the backing ticket's group, so only
+  # dispatchers and admins get the link.
+  ticketHref: (job) ->
+    return null if !job.ticket_id
+    return null if !@dispatcherAccess() && !@adminAccess()
+    "#ticket/zoom/#{job.ticket_id}"
 
   fallbackJobCode: (job) ->
     createdAt = new Date(job.created_at || Date.now())

@@ -2542,10 +2542,6 @@ msgstr ""
 msgid "Background process did not start or has not finished! Please contact your support."
 msgstr ""
 
-#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:1446
-msgid "Backing Ticket"
-msgstr ""
-
 #: app/models/report.rb:38
 msgid "Backlog"
 msgstr ""
