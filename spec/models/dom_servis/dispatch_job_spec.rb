@@ -36,8 +36,9 @@ RSpec.describe DomServis::DispatchJob, current_user_id: 1, type: :model do
   end
 
   after do
-    described_class.delete_all
+    # Events first: they reference their jobs until a job is destroyed.
     DomServis::DispatchEvent.delete_all
+    described_class.delete_all
     private_organization.delete if private_organization.persisted?
   end
 
@@ -172,6 +173,15 @@ RSpec.describe DomServis::DispatchJob, current_user_id: 1, type: :model do
     end
   end
 
+  it 'keeps its history, detached and with the job code, when destroyed' do
+    job   = described_class.create!(dispatch_job_attrs)
+    event = DomServis::DispatchEvent.create!(dispatch_job: job, event_type: 'created', meta: {})
+
+    job.destroy!
+
+    expect(event.reload).to have_attributes(dispatch_job_id: nil, job_code: job.job_code)
+  end
+
   it 'sends an authenticated push after destroy commit' do
     job = described_class.create!(dispatch_job_attrs)
     job_id = job.id
@@ -186,5 +196,37 @@ RSpec.describe DomServis::DispatchJob, current_user_id: 1, type: :model do
                                                           data:  hash_including(id: job_id, updated_at: updated_at),
                                                         ),
                                                       ))
+  end
+
+  describe 'pool escalation', performs_jobs: true do
+    it 'is scheduled when the job is created in the pool' do
+      expect { described_class.create!(dispatch_job_attrs) }.to have_enqueued_job(DomServis::DispatchEscalationJob)
+    end
+
+    it 'starts over when a master returns the job to the pool' do
+      job = described_class.create!(dispatch_job_attrs)
+      job.update!(status: 'taken', assignee_id: 1)
+
+      expect { job.update!(status: 'pool', assignee_id: nil) }.to have_enqueued_job(DomServis::DispatchEscalationJob).with(job.id)
+    end
+
+    it 'starts over when a cancelled job is reopened' do
+      job = described_class.create!(dispatch_job_attrs)
+      job.update!(status: 'cancelled')
+
+      expect { job.update!(status: 'pool') }.to have_enqueued_job(DomServis::DispatchEscalationJob).with(job.id)
+    end
+
+    it 'is not scheduled again while the job stays where it is' do
+      job = described_class.create!(dispatch_job_attrs)
+
+      expect { job.update!(priority: 'high') }.not_to have_enqueued_job(DomServis::DispatchEscalationJob)
+    end
+
+    it 'is not scheduled when the job leaves the pool' do
+      job = described_class.create!(dispatch_job_attrs)
+
+      expect { job.update!(status: 'taken', assignee_id: 1) }.not_to have_enqueued_job(DomServis::DispatchEscalationJob)
+    end
   end
 end

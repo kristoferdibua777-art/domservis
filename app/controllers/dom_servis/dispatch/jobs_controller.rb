@@ -25,8 +25,13 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     'work_tags'       => 'tags_changed',
   }.freeze
 
+  # visit_date (YYYY-MM-DD) narrows the list to one day, e.g. for the
+  # dispatcher calendar, which must not depend on the board's newest page.
   def index
-    model_index_render(dispatch_job_scope.ordered_recent, params)
+    scope = dispatch_job_scope.ordered_recent
+    scope = scope.where(visit_date: params[:visit_date].to_s) if params[:visit_date].present?
+
+    model_index_render(scope, params)
   end
 
   def show
@@ -104,7 +109,13 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     job = dispatch_job_scope.find(params[:id])
     authorize job, :destroy?
     ensure_action_allowed!('delete_job')
-    job.destroy!
+
+    # The history outlives the job: the last event says who deleted it and
+    # what it was, and all events stay detached with the job code.
+    job.transaction do
+      create_event!(job, 'deleted', deleted_job_snapshot(job))
+      job.destroy!
+    end
 
     model_destroy_render_item
   end
@@ -250,6 +261,17 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     }, status: :ok
   end
 
+  # Syncs the backing ticket again after a failure was recorded on the job.
+  def resync_ticket
+    job = dispatch_job_scope.find(params[:id])
+    authorize job, :resync_ticket?
+
+    sync_backing_ticket!(job)
+    raise Exceptions::UnprocessableEntity, "Тикет не обновлён: #{job.ticket_sync_error}" if job.ticket_sync_failed_at.present?
+
+    model_item_render(job)
+  end
+
   private
 
   def job_create_params
@@ -393,6 +415,20 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     )
   end
 
+  def deleted_job_snapshot(job)
+    {
+      job_code:      job.job_code,
+      ticket_number: job.ticket&.number,
+      status:        job.status,
+      service_type:  job.service_type,
+      address:       job.address,
+      client_name:   job.client_name,
+      assignee_name: job.assignee&.fullname,
+      visit_date:    job.visit_date,
+      visit_time:    job.visit_time,
+    }
+  end
+
   def ensure_dispatch_tags_exist!(tag_names)
     missing_tags = DomServis::DispatchTagCatalog.missing_names(tag_names)
     return if missing_tags.blank?
@@ -517,8 +553,14 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     service_class
       .new(dispatch_job: job, operator: current_user, changes: changes)
       .execute
+    job.clear_ticket_sync_failure!
   rescue => e
     Rails.logger.error("[dom_servis.backing_ticket] sync failed for job=#{job.id}: #{e.class}: #{e.message}")
     raise if strict
+
+    # The job keeps its change; the failure is shown on the board and
+    # retried once automatically.
+    job.record_ticket_sync_failure!(e)
+    DomServis::BackingTicketResyncJob.set(wait: DomServis::BackingTicketResyncJob::RETRY_DELAY).perform_later(job.id)
   end
 end

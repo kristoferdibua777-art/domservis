@@ -10,6 +10,13 @@ Zammad::Application.routes.draw do
         end
         resources :tags, only: %i[index], controller: :tags
 
+        resources :history_exports, only: %i[index create], controller: :history_exports do
+          member do
+            get :download
+            post :purge
+          end
+        end
+
         resources :jobs, only: %i[index show create update destroy] do
           collection do
             post :parse_input
@@ -22,6 +29,7 @@ Zammad::Application.routes.draw do
             post :status, action: :update_status
             post :move_day
             post :change_priority
+            post :resync_ticket
           end
 
           resources :events, only: %i[index]

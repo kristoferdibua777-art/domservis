@@ -1,5 +1,5 @@
-// Job history in the Dom-Servis dispatch board card: DispatchEvent records
-// rendered as a title, the changed values and who did it when.
+// Job history in the Dom-Servis dispatch board card: one short line per action
+// (time, action, author); the old and new values open on click.
 
 function historyBoard(overrides) {
   const board = Object.create(App.DomServisDispatchBoard.prototype)
@@ -24,7 +24,7 @@ QUnit.test('history shows old and new values of a field update', assert => {
     },
   })
 
-  assert.equal(entry.title, 'Изменены данные заявки')
+  assert.equal(entry.title, 'Изменены: Адрес, Время визита, Исполнитель', 'the short line names the changed fields')
   assert.deepEqual(entry.lines, [
     'Адрес: Lenina 10 → Lenina 12',
     'Время визита: — → 09:00-11:30',
@@ -47,7 +47,7 @@ QUnit.test('history shows the master and the status change of assign and release
   const board = historyBoard()
 
   const assigned = board.historyEntry({ event_type: 'assigned', meta: { from: null, to: 13, status: { from: 'pool', to: 'taken' } } })
-  assert.equal(assigned.title, 'Назначен мастер')
+  assert.equal(assigned.title, 'Назначен мастер: Пётр Мастер')
   assert.deepEqual(assigned.lines, ['Мастер: — → Пётр Мастер', 'Статус: В пуле → Взята'])
 
   const released = board.historyEntry({ event_type: 'released', meta: { from: 12, status: { from: 'in_progress', to: 'pool' } } })
@@ -83,9 +83,9 @@ QUnit.test('history copes with events written before the full audit trail', asse
 });
 
 QUnit.test('history lists the loaded events of the open job only', assert => {
-  const board = historyBoard({ eventCollections: { 5: [{ event_type: 'published', meta: {} }] } })
+  const board = historyBoard({ eventCollections: { 5: [{ event_type: 'published', meta: {} }, { event_type: 'created', meta: {} }] } })
 
-  assert.deepEqual(board.buildHistoryEntries({ id: 5 }).map((entry) => entry.title), ['Опубликована в пул'])
+  assert.deepEqual(board.buildHistoryEntries({ id: 5 }).map((entry) => entry.title), ['Заявка создана'], 'published only repeats created')
   assert.deepEqual(board.buildHistoryEntries({ id: 6 }), [])
   assert.deepEqual(board.buildHistoryEntries(null), [])
 });

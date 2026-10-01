@@ -3146,6 +3146,66 @@ Setting.create_if_not_exists(
   frontend:    false,
 )
 
+# The Dom-Servis settings below were created only by migrations that skip a
+# system without system_init_done, i.e. every fresh install (migrations run
+# before the seeds there); see also
+# db/migrate/20261001120000_ensure_dom_servis_settings.rb for such systems.
+Setting.create_if_not_exists(
+  title:       __('Dom-Servis dispatch policy'),
+  name:        'dom_servis_dispatch_policy',
+  area:        'DomServis::Dispatch',
+  description: __('Stores the dispatch board role matrices for actions, statuses and fields.'),
+  options:     {},
+  state:       {},
+  preferences: {
+    prio:       3600,
+    permission: ['dom_servis.admin'],
+  },
+  frontend:    false,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Dom-Servis Web Push VAPID public key'),
+  name:        'dom_servis_webpush_vapid_public_key',
+  area:        'DomServis::WebPush',
+  description: __('Base64url-encoded VAPID public key used by the dispatch board to subscribe browsers for Web Push.'),
+  options:     {},
+  state:       '',
+  preferences: {
+    prio:       3650,
+    permission: ['dom_servis.admin'],
+  },
+  frontend:    true,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Dom-Servis Web Push VAPID private key'),
+  name:        'dom_servis_webpush_vapid_private_key',
+  area:        'DomServis::WebPush',
+  description: __('Base64url-encoded VAPID private key used to sign outgoing dispatch Web Push messages. Keep secret.'),
+  options:     {},
+  state:       '',
+  preferences: {
+    prio:       3651,
+    permission: ['dom_servis.admin'],
+  },
+  frontend:    false,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Dom-Servis Web Push subject'),
+  name:        'dom_servis_webpush_subject',
+  area:        'DomServis::WebPush',
+  description: __('Contact URI included in VAPID JWT claims (mailto: or https: URL).'),
+  options:     {},
+  state:       'mailto:admin@example.com',
+  preferences: {
+    prio:       3652,
+    permission: ['dom_servis.admin'],
+  },
+  frontend:    false,
+)
+
 Setting.create_if_not_exists(
   title:       __('Limit tickets by IP per hour'),
   name:        'form_ticket_create_by_ip_per_hour',

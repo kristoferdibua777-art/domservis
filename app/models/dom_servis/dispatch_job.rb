@@ -35,10 +35,13 @@ class DomServis::DispatchJob < ApplicationModel
   belongs_to :organization, optional: true
   belongs_to :request_source, class_name: 'DomServis::RequestSource', optional: true
 
+  # The history outlives the job (decision 2026-09-28): on deletion the
+  # events are detached and keep the job code (see #keep_job_code_on_events);
+  # only a history purge after an export removes them.
   has_many :events,
            class_name: 'DomServis::DispatchEvent',
            inverse_of: :dispatch_job,
-           dependent:  :destroy
+           dependent:  :nullify
 
   validates :status, inclusion: { in: STATUSES }
   validates :priority, inclusion: { in: PRIORITIES }
@@ -57,6 +60,8 @@ class DomServis::DispatchJob < ApplicationModel
   before_validation :normalize_work_tags
   before_validation :normalize_intake_metadata
   before_validation :sync_lifecycle_timestamps
+  # Prepended so it runs before `dependent: :nullify` detaches the events.
+  before_destroy :keep_job_code_on_events, prepend: true
   after_commit :notify_dispatch_board_created, on: :create
   after_commit :notify_dispatch_board_updated, on: :update
   after_commit :notify_dispatch_board_destroyed, on: :destroy
@@ -65,6 +70,9 @@ class DomServis::DispatchJob < ApplicationModel
   # never blocks the board itself.
   after_commit :notify_recipients_on_create, on: :create
   after_commit :notify_recipients_on_assignment, on: :update
+  # A job back in the pool (released or reopened) waits for a master again,
+  # so its escalation starts over; a still pending one is rescheduled.
+  after_commit :schedule_pool_escalation, on: :update, if: :returned_to_pool?
 
   scope :ordered_recent, -> { order(created_at: :desc, id: :desc) }
   scope :pool_visible, -> { where(status: 'pool', assignee_id: nil) }
@@ -89,15 +97,38 @@ class DomServis::DispatchJob < ApplicationModel
     "#manage/dom_servis_dispatch/id:#{id}"
   end
 
+  # ticket_number is the job number people see (Ticket.number); job_code is
+  # kept only for compatibility.
   def attributes_with_association_ids
     super.merge(
+      ticket_number:                 ticket&.number,
       request_source_label:          request_source&.display_name,
       request_source_partner_key:    request_source&.partner_key,
       request_source_transport_kind: request_source&.transport_kind,
     ).compact
   end
 
+  # The backing ticket is a projection: when updating it fails, the job keeps
+  # its change and remembers the failure until a later sync succeeds. Columns
+  # are written directly so that recording never fails the original request.
+  def record_ticket_sync_failure!(error)
+    update_columns( # rubocop:disable Rails/SkipsModelValidations
+      ticket_sync_failed_at: Time.zone.now,
+      ticket_sync_error:     "#{error.class}: #{error.message}".truncate(500),
+    )
+  end
+
+  def clear_ticket_sync_failure!
+    return if ticket_sync_failed_at.nil? && ticket_sync_error.nil?
+
+    update_columns(ticket_sync_failed_at: nil, ticket_sync_error: nil) # rubocop:disable Rails/SkipsModelValidations
+  end
+
   private
+
+  def keep_job_code_on_events
+    events.update_all(job_code: job_code) # rubocop:disable Rails/SkipsModelValidations
+  end
 
   def notify_dispatch_board_created
     notify_dispatch_board_clients(:create)
@@ -164,6 +195,10 @@ class DomServis::DispatchJob < ApplicationModel
       recipients: recipients,
       actor:      updated_by,
     ).deliver
+  end
+
+  def returned_to_pool?
+    saved_change_to_status? && status == 'pool'
   end
 
   # Schedules a delayed escalation job that fires if this dispatch job

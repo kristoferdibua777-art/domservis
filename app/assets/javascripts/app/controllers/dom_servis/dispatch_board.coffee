@@ -35,6 +35,7 @@ class App.DomServisDispatchBoard extends App.Controller
     'click .js-take-job': 'takeJob'
     'click .js-release-job': 'releaseJob'
     'click .js-set-status': 'setStatus'
+    'click .js-resync-ticket': 'resyncTicket'
     'click .js-trigger-attachment-upload': 'triggerAttachmentUpload'
     'change .js-upload-attachment-input': 'uploadAttachments'
     'click .js-remove-attachment': 'removeAttachment'
@@ -42,12 +43,18 @@ class App.DomServisDispatchBoard extends App.Controller
     'change .js-change-visit-day': 'changeVisitDay'
     'click .js-enable-push': 'enablePushNotifications'
     'click .js-test-push': 'testPushNotification'
+    'click .js-view-mode': 'setViewMode'
+    'click .js-calendar-day-shift': 'shiftCalendarDay'
+    'click .js-calendar-today': 'resetCalendarDay'
 
   constructor: ->
     super
 
     @statusFilter = 'open'
     @dayFilter = 'all'
+    @viewMode = 'board'
+    @calendarDate = null
+    @calendarJobs = {}
     @selectedWeekStart = @startOfWeek(new Date())
     @effectivePolicy = null
     @policyRegistry = {}
@@ -148,6 +155,9 @@ class App.DomServisDispatchBoard extends App.Controller
       tagFilters: @buildTagFilters()
       createOpen: @createOpen
       editOpen: @editOpen
+      calendarAvailable: @calendarAvailable()
+      viewMode: @viewMode
+      calendar: @buildCalendarView()
       editSaving: @editSaving
       detailOpen: @detailOpen
       detailEditing: detailEditing
@@ -268,6 +278,7 @@ class App.DomServisDispatchBoard extends App.Controller
         @loading = false
         @render()
         @loadEvents(@detailJobId) if @detailOpen && @detailJobId
+        @loadCalendarJobs() if @viewMode is 'calendar'
         @flushPendingRealtimeRefresh()
       error: (xhr) =>
         @jobs = []
@@ -303,6 +314,17 @@ class App.DomServisDispatchBoard extends App.Controller
 
     @scheduleRealtimeRefresh()
 
+  # Admins export the job history every 30 days (decision 2026-09-28); the
+  # server says when it is due, the board reminds once per visit.
+  remindHistoryExport: ->
+    return if @historyExportReminded
+    @historyExportReminded = true
+    @notify(
+      type: 'info'
+      msg: 'Пора выгрузить историю заявок: с прошлой выгрузки прошло больше 30 дней. Выгрузка — в Dispatch Admin, раздел «История заявок».'
+      timeout: 10000
+    )
+
   loadEffectivePolicy: =>
     @ajax(
       id: 'dom_servis_dispatch_effective_policy'
@@ -312,6 +334,7 @@ class App.DomServisDispatchBoard extends App.Controller
         data ||= {}
         @policyRegistry = data.registry || {}
         @policySettings = data.settings || {}
+        App.DomServisDispatchCalendar.configure(@policySettings)
         @effectivePolicy =
           role_key: data.role_key
           actions: data.actions || {}
@@ -319,9 +342,11 @@ class App.DomServisDispatchBoard extends App.Controller
           fields: data.fields || {}
           settings: data.settings || {}
         @render() if !@loading
+        @remindHistoryExport() if data.history_export_due
       error: =>
         @policyRegistry = {}
         @policySettings = {}
+        App.DomServisDispatchCalendar.configure(@policySettings)
         @effectivePolicy = null
         @render() if !@loading
     )
@@ -504,6 +529,7 @@ class App.DomServisDispatchBoard extends App.Controller
     @detailAssignAssigneeId = if job.assignee_id? then "#{job.assignee_id}" else ''
     @loadAttachments(job.id)
     @loadEvents(job.id)
+    @loadCalendarJobs(job.visit_date) if job.visit_date
     @render()
 
   closeDetail: (e) =>
@@ -804,6 +830,7 @@ class App.DomServisDispatchBoard extends App.Controller
 
   setAssignAssignee: (e) =>
     @detailAssignAssigneeId = $(e.currentTarget).val()
+    @render()
 
   assignJob: (e) =>
     @preventDefault(e)
@@ -885,6 +912,35 @@ class App.DomServisDispatchBoard extends App.Controller
         @loadJobs(manualRefresh: true)
       error: (xhr) =>
         @notify(type: 'error', msg: @extractError(xhr, 'Не удалось обновить статус.'), timeout: 6000)
+        @loadJobs(manualRefresh: true)
+    )
+
+  # The backing ticket did not take the last change (the server records the
+  # failure and retries once by itself); a dispatcher can retry right away.
+  ticketSyncErrorLabel: (job) ->
+    return null if !job?.ticket_sync_failed_at
+
+    [@formatHistoryTime(job.ticket_sync_failed_at), job.ticket_sync_error].filter((part) -> part).join(' · ')
+
+  resyncTicket: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    id = $(e.currentTarget).data('id')
+    return if !id || @ticketResyncingId
+
+    @ticketResyncingId = id
+    @render()
+
+    @ajax(
+      id: "dom_servis_dispatch_resync_ticket_#{id}"
+      type: 'POST'
+      url: "#{@apiPath}/dom_servis/dispatch/jobs/#{id}/resync_ticket"
+      success: =>
+        @ticketResyncingId = null
+        @notify(type: 'success', msg: 'Тикет Zammad обновлён.', timeout: 3000)
+        @loadJobs(manualRefresh: true)
+      error: (xhr) =>
+        @ticketResyncingId = null
+        @notify(type: 'error', msg: @extractError(xhr, 'Не удалось обновить тикет Zammad.'), timeout: 6000)
         @loadJobs(manualRefresh: true)
     )
 
@@ -1109,6 +1165,164 @@ class App.DomServisDispatchBoard extends App.Controller
       return currentId isnt nextId
 
     "#{currentValue || ''}" isnt "#{nextValue || ''}"
+
+  # ---------------------------------------------------------------------
+  # Dispatcher calendar: one day, a column per master (see
+  # App.DomServisDispatchCalendar for the scheduling rules).
+  # ---------------------------------------------------------------------
+
+  calendarAvailable: ->
+    !@mobileView && (@dispatcherAccess() || @adminAccess())
+
+  setViewMode: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    mode = $(e.currentTarget).data('mode')
+    @viewMode = if mode is 'calendar' && @calendarAvailable() then 'calendar' else 'board'
+    @render()
+    @loadCalendarJobs() if @viewMode is 'calendar'
+
+  shiftCalendarDay: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    offset = parseInt($(e.currentTarget).data('offset'), 10) || 0
+    @calendarDate = App.DomServisDispatchCalendar.shiftDate(@currentCalendarDate(), offset)
+    @render()
+    @loadCalendarJobs()
+
+  resetCalendarDay: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    @calendarDate = null
+    @render()
+    @loadCalendarJobs()
+
+  companyNow: ->
+    App.DomServisDispatchCalendar.zonedNow(App.Config.get('timezone_default'))
+
+  currentCalendarDate: ->
+    @calendarDate || @companyNow().date
+
+  # The board list holds only the newest jobs, so the calendar asks the
+  # server for the chosen day; until the answer comes it shows what the
+  # board already has. An open create or edit form is never re-rendered.
+  # Also used by the job card: the assignment warning needs the whole day.
+  loadCalendarJobs: (date = @currentCalendarDate()) =>
+    return if !@dispatcherAccess() && !@adminAccess()
+    return if !date
+
+    @ajax(
+      id: "dom_servis_dispatch_calendar_jobs_#{date}"
+      type: 'GET'
+      url: "#{@apiPath}/dom_servis/dispatch/jobs"
+      data:
+        expand: true
+        visit_date: date
+        per_page: 500
+      processData: true
+      success: (data) =>
+        @calendarJobs[date] = data || []
+        return if @createOpen || @editOpen
+
+        calendarDay = @viewMode is 'calendar' && @calendarAvailable() && @currentCalendarDate() is date
+        cardDay = @detailOpen && "#{@currentDetailJob()?.visit_date || ''}" is date
+        @render() if calendarDay || cardDay
+      error: (xhr) =>
+        @notify(type: 'error', msg: @extractError(xhr, 'Не удалось загрузить заявки дня.'), timeout: 4000)
+    )
+
+  dayJobs: (date) ->
+    @calendarJobs?[date] || @jobs || []
+
+  assignmentConflicts: (job, masterId) ->
+    return [] if !job || !masterId
+    App.DomServisDispatchCalendar.overlappingJobs(job, masterId, @dayJobs(job.visit_date))
+
+  # Warn, never block (decision 2026-09-28): before assigning, the dispatcher
+  # sees the master's visits that overlap this one.
+  assignmentWarning: (job, masterId) ->
+    conflicts = @assignmentConflicts(job, masterId)
+    return null if conflicts.length is 0
+
+    visits = _.map(conflicts, (conflict) -> [conflict.timeLabel, conflict.job.service_type || 'Без названия'].join(' · '))
+    "У мастера в это время: #{visits.join('; ')}"
+
+  assignOptionsFor: (job) ->
+    _.map(@masterAssigneeOptions(), (option) =>
+      return option if @assignmentConflicts(job, option.id).length is 0
+      _.extend({}, option, { label: "#{option.label} — занят в это время" })
+    )
+
+  buildCalendarView: ->
+    return null if @viewMode isnt 'calendar' || @loading || !@calendarAvailable()
+
+    calendar = App.DomServisDispatchCalendar
+    now = @companyNow()
+    date = @calendarDate || now.date
+    source = @calendarJobs?[date] || @jobs || []
+    jobs = _.filter(source, (job) -> "#{job.visit_date || ''}" is date && job.status not in calendar.HIDDEN_STATUSES)
+    columns = calendar.buildDay(jobs, @calendarColumns(jobs))
+
+    start = calendar.DAY_START_MINUTES
+    span = calendar.DAY_END_MINUTES - start
+    percent = (minutes) -> Math.round((minutes - start) / span * 10000) / 100
+    pad = (number) -> ("0#{number}").slice(-2)
+    showNow = date is now.date && now.minutes >= start && now.minutes <= calendar.DAY_END_MINUTES
+
+    {
+      date: date
+      dateLabel: "#{@weekdayLabel(calendar.weekdayKey(date))}, #{@formatDate(date)}"
+      isToday: date is now.date
+      nowTop: if showNow then percent(now.minutes) else null
+      hours: _.map([(start / 60)..(calendar.DAY_END_MINUTES / 60)], (hour) -> { label: "#{pad(hour)}:00", top: percent(hour * 60) })
+      # 56 px per visible hour, as many hours as the policy settings show.
+      bodyHeight: span / 60 * 56
+      jobCount: jobs.length
+      conflictCount: _.reduce(columns, ((sum, column) -> sum + _.filter(column.entries.concat(column.outside), (entry) -> entry.conflict).length), 0)
+      columns: _.map(columns, (column) => @calendarColumnView(column))
+    }
+
+  # Jobs without a master first, then every active master (free ones too,
+  # so the dispatcher sees who can take a visit), then any other assignee.
+  calendarColumns: (jobs) ->
+    columns = [{ id: null, label: 'Без мастера' }]
+    known = {}
+
+    _.each @masterAssigneeOptions(), (option) ->
+      known[option.id] = true
+      columns.push({ id: parseInt(option.id, 10), label: option.label })
+
+    _.each jobs, (job) =>
+      return if !job.assignee_id? || known["#{job.assignee_id}"]
+      known["#{job.assignee_id}"] = true
+      columns.push({ id: job.assignee_id, label: @resolveAssigneeName(job) })
+
+    columns
+
+  calendarColumnView: (column) ->
+    round = (value) -> Math.round(value * 100) / 100
+    entryView = (entry, timeLabel = entry.timeLabel) =>
+      job = entry.job
+      title = job.service_type || 'Без названия'
+
+      {
+        id: job.id
+        title: title
+        address: job.address || ''
+        status: job.status
+        statusLabel: @statusLabel(job.status)
+        timeLabel: timeLabel
+        tooltip: _.compact([timeLabel, title, job.address, @statusLabel(job.status)]).join(' · ')
+        conflict: entry.conflict is true
+        top: round(entry.top || 0)
+        height: round(entry.height || 0)
+        left: round(entry.left || 0)
+        width: round(entry.width || 100)
+      }
+
+    {
+      label: column.label
+      entries: _.map(column.entries, (entry) -> entryView(entry))
+      outside: _.map(column.outside, (entry) -> entryView(entry))
+      untimed: _.map(column.untimed, (entry) -> entryView(entry, entry.job.visit_time || 'Без времени'))
+    }
 
   buildStats: ->
     currentUserId = App.User.current()?.id
@@ -1364,7 +1578,7 @@ class App.DomServisDispatchBoard extends App.Controller
 
       card =
         id: job.id
-        jobCode: job.job_code || @fallbackJobCode(job)
+        jobCode: @jobNumber(job)
         serviceType: job.service_type || 'Без названия'
         address: job.address || 'Адрес не указан'
         clientName: job.client_name || 'Клиент не указан'
@@ -1424,7 +1638,7 @@ class App.DomServisDispatchBoard extends App.Controller
 
     {
       id: job.id
-      jobCode: job.job_code || @fallbackJobCode(job)
+      jobCode: @jobNumber(job)
       title: job.service_type || 'Без названия'
       statusLabel: @statusLabel(job.status)
       scheduleLabel: @scheduleLabel(job)
@@ -1442,13 +1656,14 @@ class App.DomServisDispatchBoard extends App.Controller
     currentUserId = App.User.current()?.id
     canOperate = @dispatcherAccess() || job.assignee_id is currentUserId
     deadlineState = @jobDeadlineState(job)
-    assignOptions = @masterAssigneeOptions()
+    assignOptions = @assignOptionsFor(job)
     canAssign = @dispatcherAccess() && @actionAllowed('change_assignee') && assignOptions.length > 0 && job.status in ['pool', 'taken', 'in_progress']
+    assignAssigneeId = @detailAssignAssigneeId || if job.assignee_id? then "#{job.assignee_id}" else ''
     canTransfer = @dispatcherAccess() && @actionAllowed('transfer_to_partner') && @statusAllowed('transferred_to_partner') && job.status in ['pool', 'taken', 'in_progress']
 
     {
       id: job.id
-      jobCode: job.job_code || @fallbackJobCode(job)
+      jobCode: @jobNumber(job)
       title: job.service_type || 'Без названия'
       serviceType: job.service_type || 'Без названия'
       address: job.address || 'Адрес не указан'
@@ -1465,7 +1680,8 @@ class App.DomServisDispatchBoard extends App.Controller
       deadlineLabel: deadlineState?.label || null
       assigneeName: @resolveAssigneeName(job)
       assigneeOptions: assignOptions
-      assignAssigneeId: @detailAssignAssigneeId || if job.assignee_id? then "#{job.assignee_id}" else ''
+      assignAssigneeId: assignAssigneeId
+      assignWarning: if canAssign then @assignmentWarning(job, assignAssigneeId) else null
       visibleTags: @tagBadgeItems(tags, 4)
       hiddenTagsCount: Math.max(tags.length - 4, 0)
       description: job.description || ''
@@ -1479,6 +1695,9 @@ class App.DomServisDispatchBoard extends App.Controller
       canFinish: canOperate && job.status is 'in_progress' && @actionAllowed('set_status_done') && @statusAllowed('done')
       canCancel: @dispatcherAccess() && job.status in ['pool', 'taken', 'in_progress'] && @actionAllowed('cancel_job') && @statusAllowed('cancelled')
       canClose: @dispatcherAccess() && job.status is 'done' && @actionAllowed('close_job') && @statusAllowed('closed')
+      ticketSyncError: @ticketSyncErrorLabel(job)
+      canResyncTicket: @dispatcherAccess()
+      ticketResyncing: "#{@ticketResyncingId}" is "#{job.id}"
     }
 
   buildDetailGroups: (job) ->
@@ -1521,10 +1740,10 @@ class App.DomServisDispatchBoard extends App.Controller
         id: 'meta'
         label: 'Системное'
         items: _.compact([
-          @detailItem('Код заявки', job.job_code || @fallbackJobCode(job))
           @detailItem('Источник', @sourceLabel(job.source || 'manual'))
           @detailItem('Партнёр', job.request_source_label || job.request_source_partner_key || 'Не задан')
-          @detailItem(__('Backing Ticket'), job.ticket_id || 'Ещё не создан')
+          @detailItem('Тикет Zammad', @ticketLabel(job), false, @ticketHref(job))
+          (@detailItem('Старый код заявки', job.job_code) if job.ticket_number)
         ])
       }
     ]
@@ -1546,13 +1765,14 @@ class App.DomServisDispatchBoard extends App.Controller
       .compact()
       .value()
 
-  detailItem: (label, value, wide = false) ->
+  detailItem: (label, value, wide = false, href = null) ->
     return null if !value? || value is ''
 
     {
       label: label
       value: value
       wide: wide
+      href: href
     }
 
   buildEditGroups: (job) ->
@@ -1905,9 +2125,13 @@ class App.DomServisDispatchBoard extends App.Controller
     return [] if !job
     @attachmentCollections["#{job.id}"] || []
 
+  # Short history: one line per action with its time and author; the old and
+  # new values open on click. 'published' only repeats 'created'.
   buildHistoryEntries: (job) ->
     return [] if !job
-    _.map(@eventCollections["#{job.id}"] || [], (event) => @historyEntry(event))
+
+    events = _.reject(@eventCollections["#{job.id}"] || [], (event) -> event.event_type is 'published')
+    _.map(events, (event) => @historyEntry(event))
 
   historyEntry: (event) ->
     meta = event.meta || {}
@@ -1925,23 +2149,29 @@ class App.DomServisDispatchBoard extends App.Controller
     transition = (label, field) =>
       return label if !_.has(meta, 'from') && !_.has(meta, 'to')
       "#{label}: #{@historyValue(field, meta.from)} → #{@historyValue(field, meta.to)}"
+    changedFields = _.keys(meta.changes || {})
 
     switch eventType
       when 'created' then 'Заявка создана'
       when 'published' then 'Опубликована в пул'
       when 'taken' then 'Взята мастером'
-      when 'assigned' then 'Назначен мастер'
+      when 'assigned'
+        if meta.to? then "Назначен мастер: #{@historyValue('assignee_id', meta.to)}" else 'Назначен мастер'
       when 'released' then 'Возвращена в пул'
       when 'status_changed' then transition('Статус', 'status')
       when 'moved_weekday' then transition('День визита', 'visit_day')
       when 'priority_changed' then transition('Приоритет', 'priority')
       when 'organization_changed' then transition('Заказчик', 'organization_id')
-      when 'comment_added' then 'Изменён комментарий диспетчера'
+      when 'comment_added' then 'Изменён комментарий'
       when 'description_updated' then 'Изменено описание'
-      when 'tags_changed' then 'Изменены теги работ'
+      when 'tags_changed' then 'Изменены теги'
       when 'attachment_added' then "Добавлено вложение: #{meta.filename || '—'}"
       when 'attachment_removed' then "Удалено вложение: #{meta.filename || '—'}"
-      when 'updated' then 'Изменены данные заявки'
+      when 'updated'
+        if changedFields.length > 0
+          "Изменены: #{_.map(changedFields, (field) => @fieldLabel(field)).join(', ')}"
+        else
+          'Изменены данные заявки'
       when 'ai_parsed' then 'Заявка разобрана автоматически'
       else eventType
 
@@ -2153,8 +2383,18 @@ class App.DomServisDispatchBoard extends App.Controller
         @notify(type: 'error', msg: @extractError(xhr, 'Не удалось удалить вложение.'), timeout: 5000)
     )
 
+  # A calendar day loaded from the server may hold jobs older than the
+  # board's newest page, and their card must open too.
   findJob: (id) ->
-    _.find @jobs, (job) -> "#{job.id}" is "#{id}"
+    matches = (job) -> "#{job.id}" is "#{id}"
+    found = _.find(@jobs || [], matches)
+    return found if found
+
+    for date, jobs of @calendarJobs || {}
+      found = _.find(jobs, matches)
+      return found if found
+
+    undefined
 
   filteredJobs: ->
     list = @jobsForDayAndStatusFilters()
@@ -2575,6 +2815,24 @@ class App.DomServisDispatchBoard extends App.Controller
       chip = $(element)
       tagName = chip.data('tag')?.toString()?.trim()
       chip.toggleClass('is-active', _.contains(selectedTags, tagName))
+
+  # Ticket.number is the job number people see; job_code (or its fallback)
+  # only stands in until the backing ticket exists.
+  jobNumber: (job) ->
+    return "#{job.ticket_number}" if job.ticket_number
+    job.job_code || @fallbackJobCode(job)
+
+  ticketLabel: (job) ->
+    return "#{job.ticket_number}" if job.ticket_number
+    return "##{job.ticket_id}" if job.ticket_id
+    'Ещё не создан'
+
+  # Masters may lack access to the backing ticket's group, so only
+  # dispatchers and admins get the link.
+  ticketHref: (job) ->
+    return null if !job.ticket_id
+    return null if !@dispatcherAccess() && !@adminAccess()
+    "#ticket/zoom/#{job.ticket_id}"
 
   fallbackJobCode: (job) ->
     createdAt = new Date(job.created_at || Date.now())

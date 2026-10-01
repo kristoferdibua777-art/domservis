@@ -570,6 +570,201 @@
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 
+.dom-servis-dispatch-board__view-toggle {
+  display: inline-flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.dom-servis-dispatch-board__view-toggle .btn,
+.dom-servis-dispatch-calendar__toolbar .btn {
+  background: rgba(40, 44, 55, 0.86);
+  border: 1px solid rgba(77, 84, 102, 0.7);
+  border-radius: 12px;
+  color: #c8cfdb;
+  padding: 6px 12px;
+}
+
+.dom-servis-dispatch-board__view-toggle .btn.is-active,
+.dom-servis-dispatch-calendar__toolbar .btn.is-active {
+  background: linear-gradient(135deg, #657cff, #7c5cff);
+  border-color: transparent;
+  color: #fff;
+}
+
+.dom-servis-dispatch-calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dom-servis-dispatch-calendar__toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dom-servis-dispatch-calendar__date {
+  color: #eef2f9;
+  font-size: 16px;
+  margin-left: 6px;
+}
+
+.dom-servis-dispatch-calendar__summary {
+  color: #99a6ba;
+  font-size: 13px;
+}
+
+.dom-servis-dispatch-calendar__warning {
+  background: rgba(215, 95, 124, 0.16);
+  border: 1px solid rgba(215, 95, 124, 0.6);
+  border-radius: 999px;
+  color: #ffb3c4;
+  font-size: 12px;
+  padding: 3px 10px;
+}
+
+.dom-servis-dispatch-calendar__grid {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.dom-servis-dispatch-calendar__column {
+  flex: 1 0 180px;
+  min-width: 180px;
+}
+
+.dom-servis-dispatch-calendar__column--hours {
+  flex: 0 0 48px;
+  min-width: 48px;
+}
+
+.dom-servis-dispatch-calendar__head {
+  color: #eef2f9;
+  font-size: 13px;
+  font-weight: 700;
+  height: 28px;
+  line-height: 28px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 56 px per visible hour: the board sets the height for the calendar hours
+   in the dispatch policy settings; 672 px are the default 12 hours. */
+.dom-servis-dispatch-calendar__body {
+  background: rgba(19, 23, 31, 0.42);
+  border: 1px solid rgba(76, 84, 103, 0.3);
+  border-radius: 12px;
+  height: 672px;
+  position: relative;
+}
+
+.dom-servis-dispatch-calendar__column--hours .dom-servis-dispatch-calendar__body {
+  background: transparent;
+  border-color: transparent;
+}
+
+.dom-servis-dispatch-calendar__hour {
+  color: #99a6ba;
+  font-size: 11px;
+  position: absolute;
+  right: 6px;
+  transform: translateY(-50%);
+}
+
+.dom-servis-dispatch-calendar__line {
+  border-top: 1px solid rgba(76, 84, 103, 0.25);
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+.dom-servis-dispatch-calendar__now {
+  border-top: 2px solid #ff6b6b;
+  left: 0;
+  position: absolute;
+  right: 0;
+  z-index: 2;
+}
+
+.dom-servis-dispatch-calendar__entry {
+  background: rgba(59, 214, 145, 0.18);
+  border: 1px solid rgba(59, 214, 145, 0.7);
+  border-radius: 8px;
+  color: #eef2f9;
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  gap: 2px;
+  overflow: hidden;
+  padding: 4px 6px;
+  position: absolute;
+  text-align: left;
+  z-index: 1;
+}
+
+.dom-servis-dispatch-calendar__entry--taken,
+.dom-servis-dispatch-calendar__entry--in_progress {
+  background: rgba(244, 187, 73, 0.18);
+  border-color: rgba(244, 187, 73, 0.78);
+}
+
+.dom-servis-dispatch-calendar__entry--done,
+.dom-servis-dispatch-calendar__entry--closed {
+  background: rgba(72, 144, 255, 0.16);
+  border-color: rgba(72, 144, 255, 0.7);
+}
+
+.dom-servis-dispatch-calendar__entry.is-conflict,
+.dom-servis-dispatch-calendar__extra-item.is-conflict {
+  box-shadow: 0 0 0 2px rgba(215, 95, 124, 0.9);
+}
+
+.dom-servis-dispatch-calendar__entry-time {
+  color: #aab4c8;
+  font-size: 11px;
+}
+
+.dom-servis-dispatch-calendar__entry-title {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dom-servis-dispatch-calendar__entry-flag {
+  color: #ffb3c4;
+  font-size: 11px;
+}
+
+.dom-servis-dispatch-calendar__extra {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.dom-servis-dispatch-calendar__extra-label {
+  color: #99a6ba;
+  font-size: 11px;
+}
+
+.dom-servis-dispatch-calendar__extra-item {
+  background: rgba(40, 44, 55, 0.86);
+  border: 1px solid rgba(77, 84, 102, 0.7);
+  border-radius: 8px;
+  color: #c8cfdb;
+  display: flex;
+  font-size: 12px;
+  gap: 6px;
+  padding: 4px 6px;
+  text-align: left;
+}
+
 .dom-servis-dispatch-card {
   background: linear-gradient(180deg, rgba(29, 34, 44, 0.96), rgba(36, 42, 52, 0.96));
   border: 1px solid rgba(87, 96, 118, 0.56);
@@ -1165,29 +1360,53 @@
 .dom-servis-dispatch-drawer__history-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .dom-servis-dispatch-drawer__history-item {
   background: rgba(19, 23, 31, 0.42);
   border: 1px solid rgba(76, 84, 103, 0.3);
-  border-radius: 14px;
-  padding: 12px;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.dom-servis-dispatch-drawer__history-row {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+summary.dom-servis-dispatch-drawer__history-row {
+  cursor: pointer;
+}
+
+.dom-servis-dispatch-drawer__history-time {
+  color: #99a6ba;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .dom-servis-dispatch-drawer__history-title {
   color: #eef2f9;
-  font-size: 14px;
-  font-weight: 700;
+  flex: 1 1 auto;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.4;
-  margin-bottom: 4px;
+  min-width: 0;
+}
+
+.dom-servis-dispatch-drawer__history-actor {
+  color: #99a6ba;
+  font-size: 12px;
 }
 
 .dom-servis-dispatch-drawer__history-line {
   color: #aab4c8;
   font-size: 13px;
   line-height: 1.45;
-  margin-bottom: 4px;
+  margin-top: 6px;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -1201,6 +1420,17 @@
 
 .dom-servis-dispatch-drawer__assignment-control {
   margin-bottom: 0;
+}
+
+.dom-servis-dispatch-drawer__assignment-warning {
+  background: rgba(215, 95, 124, 0.16);
+  border: 1px solid rgba(215, 95, 124, 0.6);
+  border-radius: 10px;
+  color: #ffb3c4;
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 8px;
+  padding: 6px 10px;
 }
 
 .dom-servis-dispatch-drawer__assignment-control label {

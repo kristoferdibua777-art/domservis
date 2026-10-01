@@ -33,7 +33,7 @@
 
 | Метод | Путь | Назначение |
 | --- | --- | --- |
-| GET | /jobs | Список в разрешённой области |
+| GET | /jobs | Список в разрешённой области; visit_date=YYYY-MM-DD — только заявки этого дня |
 | GET | /jobs/:id | Запись |
 | POST | /jobs | Создание |
 | PUT/PATCH | /jobs/:id | Generic update, без смены исполнителя |
@@ -45,6 +45,7 @@
 | POST | /jobs/:id/status | Изменить статус |
 | POST | /jobs/:id/move_day | Изменить день |
 | POST | /jobs/:id/change_priority | Изменить приоритет |
+| POST | /jobs/:id/resync_ticket | Повторить синхронизацию backing ticket (диспетчер, администратор); 422, если снова не удалось |
 | GET | /jobs/:job_id/events | История |
 | GET/POST | /jobs/:job_id/attachments | Список / добавление файла |
 | GET/DELETE | /jobs/:job_id/attachments/:id | Чтение / удаление файла |
@@ -121,18 +122,24 @@ event_type, actor_user_id, actor_name (имя автора), meta, created_at.
 | comment_added, description_updated | новое значение (comment / description) и прежнее в from |
 | tags_changed | from, to |
 | updated | changes: { поле: { from, to } } для остальных полей: адрес, клиент, телефон, услуга, дата и время визита, источник, снятый при возврате в pool мастер |
+| deleted | снимок удалённой заявки: job_code, ticket_number, status, service_type, address, client_name, assignee_name, visit_date, visit_time |
 
 Запрос, который ничего не изменил, событие не создаёт.
-Удаление заявки удаляет и её историю.
+Удаление заявки сохраняет историю: последним пишется deleted, события отвязываются от заявки
+(dispatch_job_id = null) и хранят её код в job_code.
 
 ## Политика, теги и источники
 
 | Метод | Путь | Назначение |
 | --- | --- | --- |
-| GET | /api/v1/dom_servis/dispatch/policy | Эффективные правила текущего пользователя |
+| GET | /api/v1/dom_servis/dispatch/policy | Эффективные правила текущего пользователя; администратору ещё history_export_due |
 | GET/PUT/PATCH | /api/v1/dom_servis/dispatch/admin_policy | Чтение / сохранение административной политики |
 | POST | /api/v1/dom_servis/dispatch/admin_policy/reset | Сброс политики |
 | GET | /api/v1/dom_servis/dispatch/tags | Общий словарь и использование тегов |
+| GET | /api/v1/dom_servis/dispatch/history_exports | Администратор: число событий истории, пора ли выгружать (due), последняя выгрузка |
+| POST | /api/v1/dom_servis/dispatch/history_exports | Администратор: новая выгрузка всех событий до текущего последнего |
+| GET | /api/v1/dom_servis/dispatch/history_exports/:id/download | Администратор: файл выгрузки (.xlsx) |
+| POST | /api/v1/dom_servis/dispatch/history_exports/:id/purge | Администратор: удалить события скачанной выгрузки |
 | GET/POST | /api/v1/dom_servis/request_sources | Список / создание источника |
 | GET/PUT/PATCH/DELETE | /api/v1/dom_servis/request_sources/:id | Работа с источником |
 | GET/POST | /api/v1/dom_servis/request_sources/search | Поиск источников |
@@ -143,7 +150,6 @@ event_type, actor_user_id, actor_name (имя автора), meta, created_at.
 ## Push-подписки
 
 Фактический префикс: /api/v1/dom_servis/dispatch/push_subscriptions.
-В комментариях controller встречается старый путь без dispatch — ориентируйтесь на routes.
 
 | Метод | Путь относительно префикса | Назначение |
 | --- | --- | --- |

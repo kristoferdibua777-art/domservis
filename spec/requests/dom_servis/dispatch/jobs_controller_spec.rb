@@ -139,6 +139,29 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
     end
   end
 
+  describe 'GET /api/v1/dom_servis/dispatch/jobs', authenticated_as: :dispatcher_user do
+    it 'returns the backing ticket number as the job number', :aggregate_failures do
+      ticket = create(:ticket)
+      job.update!(ticket_id: ticket.id)
+
+      get '/api/v1/dom_servis/dispatch/jobs?expand=true', as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response.find { |item| item['id'] == job.id }).to include('ticket_id' => ticket.id, 'ticket_number' => ticket.number)
+
+      get "/api/v1/dom_servis/dispatch/jobs/#{job.id}", as: :json
+
+      expect(json_response).to include('ticket_number' => ticket.number)
+    end
+
+    it 'has no ticket number before the backing ticket exists', :aggregate_failures do
+      get "/api/v1/dom_servis/dispatch/jobs/#{job.id}", as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response).not_to have_key('ticket_number')
+    end
+  end
+
   describe 'POST /api/v1/dom_servis/dispatch/jobs/:id/assign' do
     it 'assigns a master and turns a pool job into taken' do
       post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/assign", params: { assignee_id: master_user.id }, as: :json
@@ -236,6 +259,68 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
     end
   end
 
+  describe 'backing ticket sync failures', :aggregate_failures, authenticated_as: :dispatcher_user, performs_jobs: true do
+    let(:ticket_sync) { instance_double(DomServis::Dispatch::BackingTicket::SyncFromDispatch) }
+
+    before do
+      allow_any_instance_of(DomServis::Dispatch::JobsController).to receive(:sync_backing_ticket!).and_call_original
+      allow(DomServis::Dispatch::BackingTicket::SyncFromDispatch).to receive(:new).and_return(ticket_sync)
+    end
+
+    it 'keeps the change, records the failure and retries it later' do
+      allow(ticket_sync).to receive(:execute).and_raise(StandardError, 'ticket store down')
+
+      expect do
+        post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/change_priority", params: { priority: 'high' }, as: :json
+      end.to have_enqueued_job(DomServis::BackingTicketResyncJob).with(job.id)
+
+      expect(response).to have_http_status(:ok)
+      expect(job.reload.priority).to eq('high')
+      expect(job.ticket_sync_failed_at).to be_present
+      expect(job.ticket_sync_error).to eq('StandardError: ticket store down')
+      expect(json_response['ticket_sync_error']).to eq('StandardError: ticket store down')
+    end
+
+    it 'clears a recorded failure once a later sync succeeds' do
+      allow(ticket_sync).to receive(:execute).and_return(true)
+      job.record_ticket_sync_failure!(StandardError.new('earlier failure'))
+
+      post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/change_priority", params: { priority: 'high' }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(job.reload).to have_attributes(ticket_sync_failed_at: nil, ticket_sync_error: nil)
+    end
+
+    it 'lets a dispatcher retry the sync' do
+      allow(ticket_sync).to receive(:execute).and_return(true)
+      job.record_ticket_sync_failure!(StandardError.new('earlier failure'))
+
+      post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/resync_ticket", as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(job.reload.ticket_sync_failed_at).to be_nil
+    end
+
+    it 'reports a retry that fails again' do
+      allow(ticket_sync).to receive(:execute).and_raise(StandardError, 'still down')
+      job.record_ticket_sync_failure!(StandardError.new('earlier failure'))
+
+      post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/resync_ticket", as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response['error']).to include('still down')
+      expect(job.reload.ticket_sync_error).to eq('StandardError: still down')
+    end
+
+    context 'when logged in as a master', authenticated_as: -> { master_user } do
+      it 'does not let a master retry the sync' do
+        post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/resync_ticket", as: :json
+
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+  end
+
   describe 'POST /api/v1/dom_servis/dispatch/jobs/:id/take', authenticated_as: -> { master_user } do
     it 'takes a pool job', :aggregate_failures do
       post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/take", as: :json
@@ -271,6 +356,31 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
         expect(response).to have_http_status(:unprocessable_entity)
         expect(cancelled_job.reload).to have_attributes(status: 'cancelled', assignee_id: nil)
       end
+    end
+  end
+
+  describe 'DELETE /api/v1/dom_servis/dispatch/jobs/:id', authenticated_as: :dispatcher_user do
+    it 'keeps the history of the deleted job', :aggregate_failures do
+      DomServis::DispatchEvent.create!(dispatch_job: job, actor_user: master_user, event_type: 'created', meta: { source: 'manual' })
+      job_id   = job.id
+      job_code = job.job_code
+
+      delete "/api/v1/dom_servis/dispatch/jobs/#{job_id}", as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(DomServis::DispatchJob.exists?(job_id)).to be(false)
+
+      history = DomServis::DispatchEvent.where(job_code: job_code).reorder(:id)
+      expect(history.pluck(:event_type)).to eq(%w[created deleted])
+      expect(history.pluck(:dispatch_job_id)).to eq([nil, nil])
+      expect(history.last.actor_user_id).to eq(dispatcher_user.id)
+      expect(history.last.meta).to include(
+        'job_code'     => job_code,
+        'status'       => 'pool',
+        'service_type' => 'Boiler repair',
+        'address'      => 'Lenina 10',
+        'visit_date'   => '2026-03-23',
+      )
     end
   end
 
@@ -494,6 +604,28 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
         'meta'          => { 'from' => 'medium', 'to' => 'high' },
       )
       expect(json_response.last['actor_name']).to eq(master_user.fullname)
+    end
+  end
+
+  describe 'GET /api/v1/dom_servis/dispatch/jobs?visit_date=', authenticated_as: :dispatcher_user do
+    it 'lists only the jobs of that day', :aggregate_failures do
+      day_job = job
+      next_day_job = DomServis::DispatchJob.create!(
+        service_type: 'Boiler repair',
+        address:      'Lenina 12',
+        client_phone: '+79001234568',
+        visit_day:    'tue',
+        visit_date:   '2026-03-24',
+        priority:     'medium',
+        status:       'pool',
+        source:       'manual',
+      )
+
+      get '/api/v1/dom_servis/dispatch/jobs?visit_date=2026-03-23&expand=true&per_page=500', as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response.pluck('id')).to include(day_job.id)
+      expect(json_response.pluck('id')).not_to include(next_day_job.id)
     end
   end
 end

@@ -21,11 +21,14 @@ class DomServis::DispatchEvent < ApplicationModel
     attachment_removed
     ai_parsed
     updated
+    deleted
   ].freeze
 
+  # Empty once the job is deleted: the event then keeps the job code.
   belongs_to :dispatch_job,
              class_name: 'DomServis::DispatchJob',
-             inverse_of: :events
+             inverse_of: :events,
+             optional:   true
   belongs_to :actor_user, class_name: 'User', optional: true
 
   validates :event_type, inclusion: { in: EVENT_TYPES }

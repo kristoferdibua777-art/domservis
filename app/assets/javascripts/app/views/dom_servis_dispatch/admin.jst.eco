@@ -33,6 +33,12 @@
       <span><%- @T('Done') %></span>
       <strong><%= @stats.done %></strong>
     </div>
+    <% if @stats.ticket_sync_failed > 0: %>
+      <div class="dom-servis-dispatch-admin-card" title="Изменения этих заявок не дошли до тикетов Zammad. Повторить синхронизацию можно в карточке заявки на доске.">
+        <span>Тикет не обновлён</span>
+        <strong><%= @stats.ticket_sync_failed %></strong>
+      </div>
+    <% end %>
   </div>
 
   <div class="dom-servis-dispatch-admin__note">
@@ -52,6 +58,45 @@
     <section class="dom-servis-dispatch-admin__section">
       <div class="dom-servis-dispatch-admin__section-head">
         <div>
+          <h2>История заявок</h2>
+          <p>История каждой заявки хранится, в том числе после удаления заявки. Раз в 30 дней выгружайте её в Excel: сразу после скачивания файла появится запрос на удаление выгруженных событий.</p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__settings-card">
+        <% if @history: %>
+          <% if @history.due: %>
+            <div class="alert alert-warning">С прошлой выгрузки прошло больше <%= @history.reminderDays %> дней — выгрузите историю заявок.</div>
+          <% end %>
+          <p>Событий в истории: <strong><%= @history.eventCount %></strong></p>
+          <% if @history.lastExport: %>
+            <p class="dom-servis-dispatch-admin__setting-hint">
+              Последняя выгрузка: <%= @history.lastExport.createdAt %>, <%= @history.lastExport.createdBy %>, событий: <%= @history.lastExport.eventCount %>.
+              <% if @history.lastExport.purgedAt: %>
+                Удалено событий: <%= @history.lastExport.purgedCount %> (<%= @history.lastExport.purgedAt %>, <%= @history.lastExport.purgedBy %>).
+              <% else if !@history.lastExport.downloaded: %>
+                Файл не был скачан.
+              <% else: %>
+                Выгруженные события ещё не удалены.
+              <% end %>
+            </p>
+          <% else: %>
+            <p class="dom-servis-dispatch-admin__setting-hint">Выгрузок ещё не было.</p>
+          <% end %>
+        <% end %>
+
+        <div class="dom-servis-dispatch-admin__actions">
+          <button class="btn btn--primary js-history-export"<%= ' disabled' if !@history || @history.busy || @history.eventCount is 0 %>>Выгрузить историю в Excel</button>
+          <% if @history?.lastExport?.purgeable: %>
+            <button class="btn btn--danger js-history-purge"<%= ' disabled' if @history.busy %>>Удалить выгруженную историю</button>
+          <% end %>
+        </div>
+      </div>
+    </section>
+
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
           <h2><%- @T('Deadline warning') %></h2>
           <p><%- @T('Set how many minutes before the visit deadline a pool job should turn red on the board.') %></p>
         </div>
@@ -68,6 +113,60 @@
             data-setting="deadline_warning_minutes"
             value="<%= @policy.settings.deadline_warning_minutes %>">
           <p class="dom-servis-dispatch-admin__setting-hint"><%- @T('Recommended default: 120 minutes. Used only for the board highlight, not for status transitions.') %></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
+          <h2><%- @T('Dispatcher calendar') %></h2>
+          <p><%- @T('Set the visit length and the hours the dispatcher calendar shows (by default 120 minutes, from 8 to 20). Jobs outside these hours are listed under the grid.') %></p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__settings-card">
+        <div class="form-group dom-servis-dispatch-admin__setting">
+          <label><%- @T('Visit length in minutes') %></label>
+          <input
+            class="form-control js-policy-setting"
+            type="number"
+            min="15"
+            max="720"
+            step="15"
+            data-setting="visit_duration_minutes"
+            value="<%= @policy.settings.visit_duration_minutes %>">
+          <p class="dom-servis-dispatch-admin__setting-hint"><%- @T('How long a visit with an exact start time but no end lasts in the dispatcher calendar.') %></p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__settings-card">
+        <div class="form-group dom-servis-dispatch-admin__setting">
+          <label><%- @T('Calendar day starts at (hour)') %></label>
+          <input
+            class="form-control js-policy-setting"
+            type="number"
+            min="0"
+            max="23"
+            step="1"
+            data-setting="calendar_day_start_hour"
+            value="<%= @policy.settings.calendar_day_start_hour %>">
+          <p class="dom-servis-dispatch-admin__setting-hint"><%- @T('First hour shown in the dispatcher calendar.') %></p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__settings-card">
+        <div class="form-group dom-servis-dispatch-admin__setting">
+          <label><%- @T('Calendar day ends at (hour)') %></label>
+          <input
+            class="form-control js-policy-setting"
+            type="number"
+            min="1"
+            max="24"
+            step="1"
+            data-setting="calendar_day_end_hour"
+            value="<%= @policy.settings.calendar_day_end_hour %>">
+          <p class="dom-servis-dispatch-admin__setting-hint"><%- @T('Last hour shown in the dispatcher calendar. Must be later than the start.') %></p>
         </div>
       </div>
     </section>

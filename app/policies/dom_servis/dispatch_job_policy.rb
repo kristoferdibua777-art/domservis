@@ -43,6 +43,10 @@ class DomServis::DispatchJobPolicy < ApplicationPolicy
     dispatcher_access?
   end
 
+  def resync_ticket?
+    dispatcher_access?
+  end
+
   def take?
     return true if dispatcher_access?
 

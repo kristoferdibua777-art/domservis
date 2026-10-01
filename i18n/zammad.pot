@@ -2542,10 +2542,6 @@ msgstr ""
 msgid "Background process did not start or has not finished! Please contact your support."
 msgstr ""
 
-#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:1446
-msgid "Backing Ticket"
-msgstr ""
-
 #: app/models/report.rb:38
 msgid "Backlog"
 msgstr ""
@@ -2574,6 +2570,14 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:114
 msgid "Base role"
+msgstr ""
+
+#: db/seeds/settings.rb:3185
+msgid "Base64url-encoded VAPID private key used to sign outgoing dispatch Web Push messages. Keep secret."
+msgstr ""
+
+#: db/seeds/settings.rb:3171
+msgid "Base64url-encoded VAPID public key used by the dispatch board to subscribe browsers for Web Push."
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/_ui_element/object_manager_attribute.coffee:729
@@ -2819,6 +2823,16 @@ msgstr ""
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingCalendar.vue:28
 #: db/seeds/permissions.rb:65
 msgid "Calendar"
+msgstr ""
+
+#: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:115
+#: app/models/dom_servis/dispatch_policy.rb:131
+msgid "Calendar day ends at (hour)"
+msgstr ""
+
+#: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:100
+#: app/models/dom_servis/dispatch_policy.rb:122
+msgid "Calendar day starts at (hour)"
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/calendar.coffee:3
@@ -3893,6 +3907,10 @@ msgstr ""
 
 #: lib/ai/vectordb.rb:153
 msgid "Connection to Elasticsearch Vector DB failed"
+msgstr ""
+
+#: db/seeds/settings.rb:3199
+msgid "Contact URI included in VAPID JWT claims (mailto: or https: URL)."
 msgstr ""
 
 #: app/assets/javascripts/app/views/widget/two_factor_login/help_text.jst.eco:8
@@ -6052,6 +6070,10 @@ msgstr ""
 msgid "Dispatcher"
 msgstr ""
 
+#: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:78
+msgid "Dispatcher calendar"
+msgstr ""
+
 #: app/assets/javascripts/app/models/object_manager_attribute.coffee:7
 #: app/assets/javascripts/app/views/object_manager/attribute/boolean.jst.eco:7
 #: app/assets/javascripts/app/views/object_manager/attribute/multiselect.jst.eco:8
@@ -6149,6 +6171,18 @@ msgstr ""
 msgid "Dom-Servis Web Push VAPID keys are not configured. Run `rake dom_servis:webpush:generate_keys`."
 msgstr ""
 
+#: db/seeds/settings.rb:3182
+msgid "Dom-Servis Web Push VAPID private key"
+msgstr ""
+
+#: db/seeds/settings.rb:3168
+msgid "Dom-Servis Web Push VAPID public key"
+msgstr ""
+
+#: db/seeds/settings.rb:3196
+msgid "Dom-Servis Web Push subject"
+msgstr ""
+
 #: app/controllers/dispatch_board_controller.rb:39
 msgid "Dom-Servis dispatch board for masters and dispatchers."
 msgstr ""
@@ -6159,6 +6193,10 @@ msgstr ""
 
 #: app/services/dom_servis/dispatch/backing_ticket/mapper.rb:89
 msgid "Dom-Servis dispatch job updated"
+msgstr ""
+
+#: db/seeds/settings.rb:3154
+msgid "Dom-Servis dispatch policy"
 msgstr ""
 
 #: app/services/dom_servis/intake/dispatch_job_creator.rb:33
@@ -7639,6 +7677,11 @@ msgstr ""
 msgid "First Steps"
 msgstr ""
 
+#: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:109
+#: app/models/dom_servis/dispatch_policy.rb:123
+msgid "First hour shown in the dispatcher calendar."
+msgstr ""
+
 #: app/assets/javascripts/app/models/user.coffee:9
 #: app/frontend/apps/desktop/composables/authentication/useSignupForm.ts:14
 #: db/seeds/object_manager_attributes.rb:818
@@ -8604,6 +8647,11 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/whatsapp/account_phone_number.jst.eco:28
 msgid "How can we help?"
+msgstr ""
+
+#: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:94
+#: app/models/dom_servis/dispatch_policy.rb:114
+msgid "How long a visit with an exact start time but no end lasts in the dispatcher calendar."
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/_dashboard/stats/ticket_waiting_time.coffee:10
@@ -9739,6 +9787,11 @@ msgstr ""
 
 #: app/models/system_report/plugin/entities/last_created_at.rb:4
 msgid "Last created at of database objects (e.g. when was the last trigger created)"
+msgstr ""
+
+#: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:124
+#: app/models/dom_servis/dispatch_policy.rb:132
+msgid "Last hour shown in the dispatcher calendar. Must be later than the start."
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/_ui_element/object_selector.coffee:224
@@ -15355,6 +15408,10 @@ msgstr ""
 msgid "Set security keys as default"
 msgstr ""
 
+#: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:79
+msgid "Set the visit length and the hours the dispatcher calendar shows (by default 120 minutes, from 8 to 20). Jobs outside these hours are listed under the grid."
+msgstr ""
+
 #: db/seeds/settings.rb:5644
 msgid "Set timeframe in seconds. If it's set to 0 you can delete notes without time limits."
 msgstr ""
@@ -16139,6 +16196,10 @@ msgstr ""
 
 #: db/seeds/settings.rb:5113
 msgid "Stores the GitLab configuration."
+msgstr ""
+
+#: db/seeds/settings.rb:3157
+msgid "Stores the dispatch board role matrices for actions, statuses and fields."
 msgstr ""
 
 #: db/seeds/settings.rb:6151
@@ -20278,6 +20339,11 @@ msgstr ""
 
 #: app/models/dom_servis/dispatch_policy.rb:118
 msgid "Visit day"
+msgstr ""
+
+#: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:85
+#: app/models/dom_servis/dispatch_policy.rb:113
+msgid "Visit length in minutes"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_dispatch_job.coffee:12
