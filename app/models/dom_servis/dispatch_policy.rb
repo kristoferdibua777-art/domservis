@@ -108,6 +108,33 @@ class DomServis::DispatchPolicy
       min:         1,
       step:        5,
     },
+    {
+      key:         'visit_duration_minutes',
+      label:       __('Visit length in minutes'),
+      description: __('How long a visit with an exact start time but no end lasts in the dispatcher calendar.'),
+      default:     120,
+      min:         15,
+      max:         720,
+      step:        15,
+    },
+    {
+      key:         'calendar_day_start_hour',
+      label:       __('Calendar day starts at (hour)'),
+      description: __('First hour shown in the dispatcher calendar.'),
+      default:     8,
+      min:         0,
+      max:         23,
+      step:        1,
+    },
+    {
+      key:         'calendar_day_end_hour',
+      label:       __('Calendar day ends at (hour)'),
+      description: __('Last hour shown in the dispatcher calendar. Must be later than the start.'),
+      default:     20,
+      min:         1,
+      max:         24,
+      step:        1,
+    },
   ].freeze
 
   FIELD_METADATA = {
@@ -433,26 +460,42 @@ class DomServis::DispatchPolicy
     def normalize_settings(raw_settings, default_settings)
       raw_settings = (raw_settings || {}).deep_stringify_keys
 
-      default_settings.each_with_object({}) do |(key, default_value), memo|
+      settings = default_settings.each_with_object({}) do |(key, default_value), memo|
         memo[key] = normalize_setting_value(key, raw_settings.key?(key) ? raw_settings[key] : default_value)
       end
+
+      normalize_calendar_hours(settings)
     end
 
+    # A whole number within the registry bounds, otherwise the default.
     def normalize_setting_value(key, value)
-      case key
-      when 'deadline_warning_minutes'
-        minutes = value.to_i
-        minutes.positive? ? minutes : setting_default(key)
-      else
-        value
-      end
+      entry = setting_entry(key)
+      return value if !entry
+
+      number = value.to_s.to_i
+      return entry[:default] if number < entry[:min]
+      return entry[:default] if entry[:max] && number > entry[:max]
+
+      number
+    end
+
+    # The calendar hours only change as a pair, so the day never ends before
+    # it starts (App.DomServisDispatchCalendar.configure applies the same rule).
+    def normalize_calendar_hours(settings)
+      return settings if settings['calendar_day_end_hour'] > settings['calendar_day_start_hour']
+
+      settings.merge(
+        'calendar_day_start_hour' => setting_default('calendar_day_start_hour'),
+        'calendar_day_end_hour'   => setting_default('calendar_day_end_hour'),
+      )
     end
 
     def setting_default(key)
-      case key
-      when 'deadline_warning_minutes'
-        120
-      end
+      setting_entry(key)&.dig(:default)
+    end
+
+    def setting_entry(key)
+      SETTINGS_REGISTRY.find { |setting| setting[:key] == key }
     end
 
     def humanize_field(field_name)

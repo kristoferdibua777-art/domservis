@@ -31,6 +31,9 @@ class DomServisDispatch extends App.ControllerSubContent
       fields: {}
       settings:
         deadline_warning_minutes: 120
+        visit_duration_minutes: 120
+        calendar_day_start_hour: 8
+        calendar_day_end_hour: 20
 
     @tags = []
     @loading = true
@@ -190,6 +193,9 @@ class DomServisDispatch extends App.ControllerSubContent
     policy.fields ?= {}
     policy.settings ?= {}
     policy.settings.deadline_warning_minutes ?= 120
+    policy.settings.visit_duration_minutes ?= 120
+    policy.settings.calendar_day_start_hour ?= 8
+    policy.settings.calendar_day_end_hour ?= 20
     policy
 
 App.Config.set('DomServisDispatch', { prio: 3600, name: __('Dispatch Admin'), parent: '#manage', target: '#manage/dom_servis_dispatch', controller: DomServisDispatch, permission: ['dom_servis.admin'] }, 'NavBarAdmin')
