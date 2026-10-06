@@ -30,7 +30,12 @@ class DomServis::Notifications::WebPushSender
       auth:         subscription.auth_key,
       vapid:        vapid_credentials,
       ttl:          DEFAULT_TTL,
-      urgency:      'normal',
+      # Dispatch pushes are time-sensitive (a master should take a job
+      # now). With 'normal' urgency FCM may hold the message while an
+      # Android phone is in Doze, so it only shows up when the screen
+      # is turned on. 'high' asks FCM to deliver immediately.
+      # https://firebase.google.com/docs/cloud-messaging/customize-messages/setting-message-priority
+      urgency:      'high',
       ssl_timeout:  5,
       open_timeout: 5,
       read_timeout: 5,

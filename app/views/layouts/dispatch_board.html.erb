@@ -101,60 +101,97 @@
   </div>
 
 
+  <%# Web Push onboarding ----------------------------------------------------
+      Bottom sheet that asks a master to turn on notifications.
+      Shown only after the user is signed in (a subscription saved before
+      login is rejected with 401 and never reaches the backend), and never
+      again for a few days after «Позже». %>
   <style nonce="<%= content_security_policy_nonce %>">
     #dom-servis-push-onboarding {
+      --dsp-bg: #fffaf4;
+      --dsp-ink: #2b2620;
+      --dsp-muted: #6f655a;
+      --dsp-accent: #b8571a;
+      --dsp-accent-ink: #ffffff;
+      --dsp-soft: #fbe9da;
+      --dsp-line: #efe2d4;
+      --dsp-error: #b3412a;
       display: none;
       position: fixed;
       inset: 0;
       z-index: 99999;
-      background: rgba(0,0,0,.58);
-      align-items: center;
+      background: rgba(32, 28, 24, .45);
+      align-items: flex-end;
       justify-content: center;
-      padding: 20px;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
+    #dom-servis-push-onboarding.is-open { display: flex; }
     #dom-servis-push-onboarding-card {
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       box-sizing: border-box;
-      background: #fff;
-      color: #222;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 18px 60px rgba(0,0,0,.28);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--dsp-bg);
+      color: var(--dsp-ink);
+      border-radius: 24px 24px 0 0;
+      padding: 12px 22px calc(22px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -12px 40px rgba(43, 38, 32, .18);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      animation: dsp-rise .28s cubic-bezier(.2, .8, .2, 1);
     }
-    #dom-servis-push-onboarding-card h2 {
-      margin: 0 0 10px;
-      font-size: 22px;
+    @media (min-width: 600px) {
+      #dom-servis-push-onboarding { align-items: center; padding: 20px; }
+      #dom-servis-push-onboarding-card { border-radius: 24px; padding-bottom: 24px; }
     }
-    #dom-servis-push-onboarding-card p {
-      margin: 0 0 18px;
-      line-height: 1.45;
+    @keyframes dsp-rise { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { #dom-servis-push-onboarding-card { animation: none; } }
+    .dsp-grabber { width: 40px; height: 4px; border-radius: 2px; background: var(--dsp-line); margin: 0 auto 16px; }
+    .dsp-icon {
+      width: 56px; height: 56px; border-radius: 18px;
+      background: var(--dsp-soft); color: var(--dsp-accent);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
     }
-    #dom-servis-push-onboarding-enable {
-      width: 100%;
-      border: 0;
-      border-radius: 10px;
-      padding: 14px 18px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
+    .dsp-icon svg { width: 28px; height: 28px; }
+    #dom-servis-push-onboarding-card h2 { margin: 0 0 8px; font-size: 21px; line-height: 1.25; font-weight: 700; }
+    #dom-servis-push-onboarding-card p { margin: 0 0 14px; font-size: 15px; line-height: 1.45; color: var(--dsp-muted); }
+    .dsp-points { list-style: none; margin: 0 0 18px; padding: 0; }
+    .dsp-points li { position: relative; padding: 6px 0 6px 26px; font-size: 15px; line-height: 1.35; }
+    .dsp-points li::before {
+      content: ""; position: absolute; left: 4px; top: 12px;
+      width: 9px; height: 9px; border-radius: 50%; background: var(--dsp-accent);
     }
+    .dsp-status { min-height: 0; margin: 0 0 12px; font-size: 14px; line-height: 1.4; color: var(--dsp-error); }
+    .dsp-status:empty { display: none; }
+    .dsp-status.is-help { color: var(--dsp-muted); background: var(--dsp-soft); border-radius: 12px; padding: 10px 12px; }
+    #dom-servis-push-onboarding-enable,
     #dom-servis-push-onboarding-later {
-      width: 100%;
-      margin-top: 8px;
-      border: 0;
-      background: transparent;
-      padding: 10px;
-      cursor: pointer;
+      display: block; width: 100%; min-height: 48px; box-sizing: border-box;
+      border: 0; border-radius: 14px; font-size: 16px; font-weight: 600;
+      font-family: inherit; cursor: pointer; touch-action: manipulation;
     }
+    #dom-servis-push-onboarding-enable { background: var(--dsp-accent); color: var(--dsp-accent-ink); padding: 14px 18px; }
+    #dom-servis-push-onboarding-enable:disabled { opacity: .6; cursor: default; }
+    #dom-servis-push-onboarding-later { margin-top: 6px; background: transparent; color: var(--dsp-muted); font-weight: 500; }
+    #dom-servis-push-onboarding-enable:focus-visible,
+    #dom-servis-push-onboarding-later:focus-visible { outline: 3px solid var(--dsp-ink); outline-offset: 2px; }
   </style>
 
-  <div id="dom-servis-push-onboarding">
+  <div id="dom-servis-push-onboarding" role="dialog" aria-modal="true" aria-labelledby="dom-servis-push-onboarding-title" aria-describedby="dom-servis-push-onboarding-text">
     <div id="dom-servis-push-onboarding-card">
-      <h2>Включите уведомления</h2>
-      <p>Получайте новые заявки сразу, даже когда диспетчеризация не открыта.</p>
-      <button type="button" id="dom-servis-push-onboarding-enable">Включить уведомления</button>
+      <div class="dsp-grabber" aria-hidden="true"></div>
+      <div class="dsp-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <h2 id="dom-servis-push-onboarding-title">Не пропускайте заявки</h2>
+      <p id="dom-servis-push-onboarding-text">Включите уведомления — телефон сообщит, даже если приложение закрыто.</p>
+      <ul class="dsp-points">
+        <li>Новая заявка на стенде</li>
+        <li>Вам назначили заявку</li>
+        <li>Заявку отменили или она осталась без мастера</li>
+      </ul>
+      <div class="dsp-status" id="dom-servis-push-onboarding-status" role="status" aria-live="polite"></div>
+      <button type="button" id="dom-servis-push-onboarding-enable">Разрешить уведомления</button>
       <button type="button" id="dom-servis-push-onboarding-later">Позже</button>
     </div>
   </div>
@@ -164,10 +201,51 @@
       var overlay = document.getElementById('dom-servis-push-onboarding');
       var enableButton = document.getElementById('dom-servis-push-onboarding-enable');
       var laterButton = document.getElementById('dom-servis-push-onboarding-later');
+      var statusBox = document.getElementById('dom-servis-push-onboarding-status');
+
+      var ENABLE_LABEL = 'Разрешить уведомления';
+      var SNOOZE_KEY = 'domServisPushSnoozedUntil';
+      var SNOOZE_MS = 3 * 24 * 60 * 60 * 1000;
+      var LOGIN_POLL_MS = 5000;
+      var LOGIN_POLL_LIMIT = 240; // ~20 minutes on the login screen
 
       function vapidKey() {
         var meta = document.querySelector('meta[name="dom-servis-vapid-public-key"]');
         return meta ? meta.content : '';
+      }
+
+      function supported() {
+        return 'serviceWorker' in navigator &&
+          'PushManager' in window &&
+          'Notification' in window &&
+          !!vapidKey();
+      }
+
+      function snoozed() {
+        try {
+          return Number(window.localStorage.getItem(SNOOZE_KEY) || 0) > Date.now();
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function snooze() {
+        try {
+          window.localStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_MS));
+        } catch (e) {}
+      }
+
+      function show() { overlay.classList.add('is-open'); }
+      function hide() { overlay.classList.remove('is-open'); }
+
+      function setStatus(text, help) {
+        statusBox.textContent = text || '';
+        statusBox.className = 'dsp-status' + (help ? ' is-help' : '');
+      }
+
+      function resetButton() {
+        enableButton.disabled = false;
+        enableButton.textContent = ENABLE_LABEL;
       }
 
       function urlBase64ToUint8Array(base64String) {
@@ -183,11 +261,12 @@
         return output;
       }
 
-      function persist(subscription) {
+      function request(method, url, body) {
         return new Promise(function (resolve, reject) {
           var xhr = new XMLHttpRequest();
-          xhr.open('POST', '/api/v1/dom_servis/dispatch/push_subscriptions', true);
+          xhr.open(method, url, true);
           xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
           var csrf = document.querySelector('meta[name="csrf-token"]');
           if (csrf) xhr.setRequestHeader('X-CSRF-Token', csrf.content);
@@ -196,9 +275,11 @@
 
           xhr.onload = function () {
             if (xhr.status >= 200 && xhr.status < 300) {
-              resolve();
+              resolve(xhr);
             } else {
-              reject(new Error('HTTP ' + xhr.status));
+              var error = new Error('HTTP ' + xhr.status);
+              error.status = xhr.status;
+              reject(error);
             }
           };
 
@@ -206,8 +287,31 @@
             reject(new Error('Network error'));
           };
 
-          xhr.send(JSON.stringify(subscription.toJSON()));
+          xhr.send(body ? JSON.stringify(body) : null);
         });
+      }
+
+      // Resolves once the user has a session. The shell is served before
+      // login, and saving a subscription without a session fails with 401,
+      // which previously left masters "subscribed" in the browser but
+      // unknown to the server, so no push ever reached their phone.
+      function whenSignedIn() {
+        var attempts = 0;
+
+        return new Promise(function (resolve) {
+          (function check() {
+            request('GET', '/api/v1/users/me')
+              .then(function () { resolve(); })
+              .catch(function () {
+                attempts += 1;
+                if (attempts < LOGIN_POLL_LIMIT) setTimeout(check, LOGIN_POLL_MS);
+              });
+          })();
+        });
+      }
+
+      function persist(subscription) {
+        return request('POST', '/api/v1/dom_servis/dispatch/push_subscriptions', subscription.toJSON());
       }
 
       function subscribe(registration) {
@@ -220,44 +324,37 @@
               applicationServerKey: urlBase64ToUint8Array(vapidKey())
             });
           })
-          .then(function (subscription) {
-            return persist(subscription);
-          })
-          .then(function () {
-            overlay.style.display = 'none';
-          });
+          .then(persist);
+      }
+
+      function showDenied() {
+        enableButton.disabled = true;
+        enableButton.textContent = 'Уведомления запрещены';
+        setStatus('Чтобы включить: нажмите на значок замка слева от адреса сайта → «Разрешения» → «Уведомления» → «Разрешить», затем обновите страницу.', true);
+        show();
       }
 
       function initialisePush() {
-        if (!('serviceWorker' in navigator) ||
-            !('PushManager' in window) ||
-            !('Notification' in window) ||
-            !vapidKey()) {
-          return;
-        }
+        if (!supported()) return;
 
-        overlay.style.display = 'flex';
-
-        if (Notification.permission === 'denied') {
-          enableButton.textContent = 'Уведомления запрещены в настройках';
-          enableButton.disabled = true;
-          return;
-        }
-
-        navigator.serviceWorker.ready
+        whenSignedIn()
+          .then(function () { return navigator.serviceWorker.ready; })
           .then(function (registration) {
-            return registration.pushManager.getSubscription()
-              .then(function (subscription) {
-                if (subscription) {
-                  return persist(subscription).then(function () {
-                    overlay.style.display = 'none';
-                  });
-                }
-
-                if (Notification.permission === 'granted') {
-                  return subscribe(registration);
-                }
+            if (Notification.permission === 'granted') {
+              // Already allowed: make sure the server knows this device,
+              // silently, without flashing the sheet.
+              return subscribe(registration).catch(function (error) {
+                if (window.console) console.warn('Push re-sync:', error);
+                if (!snoozed()) show();
               });
+            }
+
+            if (Notification.permission === 'denied') {
+              if (!snoozed()) showDenied();
+              return;
+            }
+
+            if (!snoozed()) show();
           })
           .catch(function (error) {
             if (window.console) console.warn('Push onboarding:', error);
@@ -266,25 +363,41 @@
 
       enableButton.addEventListener('click', function () {
         enableButton.disabled = true;
-        enableButton.textContent = 'Включение...';
+        enableButton.textContent = 'Включаем…';
+        setStatus('');
 
+        // requestPermission must run directly in the tap handler: Chrome on
+        // Android ignores permission prompts that are not a user gesture.
         Notification.requestPermission()
           .then(function (permission) {
+            if (permission === 'denied') {
+              showDenied();
+              return null;
+            }
             if (permission !== 'granted') {
-              throw new Error('Permission denied');
+              resetButton();
+              return null;
             }
 
-            return navigator.serviceWorker.ready;
+            return navigator.serviceWorker.ready
+              .then(subscribe)
+              .then(function () {
+                enableButton.textContent = 'Готово ✓';
+                setTimeout(hide, 900);
+              });
           })
-          .then(subscribe)
-          .catch(function () {
-            enableButton.disabled = false;
-            enableButton.textContent = 'Включить уведомления';
+          .catch(function (error) {
+            if (window.console) console.warn('Push enable:', error);
+            resetButton();
+            setStatus(error && error.status === 401
+              ? 'Сначала войдите в систему, затем повторите.'
+              : 'Не получилось включить уведомления. Проверьте интернет и попробуйте ещё раз.');
           });
       });
 
       laterButton.addEventListener('click', function () {
-        overlay.style.display = 'none';
+        snooze();
+        hide();
       });
 
       window.addEventListener('load', function () {
