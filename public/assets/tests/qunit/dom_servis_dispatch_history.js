@@ -48,11 +48,11 @@ QUnit.test('history shows the master and the status change of assign and release
 
   const assigned = board.historyEntry({ event_type: 'assigned', meta: { from: null, to: 13, status: { from: 'pool', to: 'taken' } } })
   assert.equal(assigned.title, 'Назначен мастер: Пётр Мастер')
-  assert.deepEqual(assigned.lines, ['Мастер: — → Пётр Мастер', 'Статус: В пуле → Взята'])
+  assert.deepEqual(assigned.lines, ['Мастер: — → Пётр Мастер', 'Статус: На стенде → Взята'])
 
   const released = board.historyEntry({ event_type: 'released', meta: { from: 12, status: { from: 'in_progress', to: 'pool' } } })
-  assert.equal(released.title, 'Возвращена в пул')
-  assert.deepEqual(released.lines, ['Мастер: Иван Мастер', 'Статус: В работе → В пуле'])
+  assert.equal(released.title, 'Возвращена на стенд')
+  assert.deepEqual(released.lines, ['Мастер: Иван Мастер', 'Статус: В работе → На стенде'])
 });
 
 QUnit.test('history keeps the previous comment and the intake source', assert => {

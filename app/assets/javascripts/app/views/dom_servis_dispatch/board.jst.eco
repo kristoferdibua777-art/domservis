@@ -116,7 +116,7 @@
     <div class="dom-servis-dispatch-board__hero-copy">
       <div class="dom-servis-dispatch-board__eyebrow">Дом-Сервис</div>
       <h1>Диспетчеризация заявок</h1>
-      <p>Главное рабочее поле для публикации заявок в общий пул, захвата мастерами и ежедневного контроля по дням недели.</p>
+      <p>Главное рабочее поле для публикации заявок на общий стенд, захвата мастерами и ежедневного контроля по дням недели.</p>
       <% if @mobileView: %>
         <div class="dom-servis-dispatch-board__mobile-summary">
           <div class="dom-servis-dispatch-board__mobile-summary-card">
@@ -186,7 +186,7 @@
       <strong class="dom-servis-dispatch-stat__value"><%= @stats.total %></strong>
     </div>
     <div class="dom-servis-dispatch-stat">
-      <span class="dom-servis-dispatch-stat__label">В пуле</span>
+      <span class="dom-servis-dispatch-stat__label">На стенде</span>
       <strong class="dom-servis-dispatch-stat__value"><%= @stats.pool %></strong>
     </div>
     <div class="dom-servis-dispatch-stat">
@@ -686,7 +686,7 @@
                 <button class="btn btn--success js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="closed">Закрыть</button>
               <% end %>
               <% if @detailJob.canRelease: %>
-                <button class="btn js-release-job js-no-detail" data-id="<%= @detailJob.id %>">В пул</button>
+                <button class="btn js-release-job js-no-detail" data-id="<%= @detailJob.id %>">На стенд</button>
               <% end %>
               <% if @detailJob.canCancel: %>
                 <button class="btn btn--danger js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="cancelled">Отмена</button>
@@ -705,7 +705,7 @@
         <div class="dom-servis-dispatch-modal__header">
           <div>
             <h2>Новая заявка</h2>
-            <p>После сохранения заявка сразу попадёт в общий пул мастеров.</p>
+            <p>После сохранения заявка сразу попадёт на общий стенд мастеров.</p>
           </div>
           <button class="btn btn--text js-close-create">Закрыть</button>
         </div>
@@ -838,7 +838,7 @@
           <div class="dom-servis-dispatch-modal__hint">Если дату не менять, заявка будет поставлена в выбранный день открытой недели.</div>
           <div class="dom-servis-dispatch-modal__footer-actions">
             <button class="btn js-close-create">Отмена</button>
-            <button class="btn btn--success js-create-job">Опубликовать в пул</button>
+            <button class="btn btn--success js-create-job">Опубликовать на стенд</button>
           </div>
         </div>
       </div>

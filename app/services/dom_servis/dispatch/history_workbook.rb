@@ -15,10 +15,10 @@ class DomServis::Dispatch::HistoryWorkbook
 
   EVENT_LABELS = {
     'created'              => 'Заявка создана',
-    'published'            => 'Опубликована в пул',
+    'published'            => 'Опубликована на стенд',
     'taken'                => 'Взята мастером',
     'assigned'             => 'Назначен мастер',
-    'released'             => 'Возвращена в пул',
+    'released'             => 'Возвращена на стенд',
     'status_changed'       => 'Изменён статус',
     'moved_weekday'        => 'Перенесён день визита',
     'priority_changed'     => 'Изменён приоритет',
@@ -61,7 +61,7 @@ class DomServis::Dispatch::HistoryWorkbook
   }.freeze
 
   STATUS_LABELS = {
-    'pool'                   => 'В пуле',
+    'pool'                   => 'На стенде',
     'taken'                  => 'Взята',
     'in_progress'            => 'В работе',
     'done'                   => 'Готово',

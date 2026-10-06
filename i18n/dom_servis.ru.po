@@ -35,7 +35,7 @@ msgid "Total jobs"
 msgstr "Всего заявок"
 
 msgid "Pool"
-msgstr "Пул"
+msgstr "Стенд"
 
 msgid "Active"
 msgstr "Активные"
@@ -83,7 +83,7 @@ msgid "Admin"
 msgstr "Администратор"
 
 msgid "Takes jobs from the shared pool and moves owned jobs through the master workflow."
-msgstr "Берёт заявки из общего пула и проводит свои заявки по рабочему процессу мастера."
+msgstr "Берёт заявки с общего стенда и проводит свои заявки по рабочему процессу мастера."
 
 msgid "Creates, edits, reschedules and coordinates jobs across the board."
 msgstr "Создаёт, редактирует, перепланирует и координирует заявки по всей доске."
@@ -113,22 +113,22 @@ msgid "Open and submit a new dispatch job into the board."
 msgstr "Открыть и отправить новую заявку диспетчеризации на доску."
 
 msgid "Publish to pool"
-msgstr "Опубликовать в пул"
+msgstr "Опубликовать на стенд"
 
 msgid "Expose a newly created job to the shared master pool."
-msgstr "Сделать новую заявку доступной в общем пуле мастеров."
+msgstr "Сделать новую заявку доступной на общем стенде мастеров."
 
 msgid "Take job"
 msgstr "Взять заявку"
 
 msgid "Claim a shared pool job."
-msgstr "Забрать заявку из общего пула."
+msgstr "Забрать заявку с общего стенда."
 
 msgid "Release to pool"
-msgstr "Вернуть в пул"
+msgstr "Вернуть на стенд"
 
 msgid "Return an owned job back into the pool."
-msgstr "Вернуть взятую заявку обратно в пул."
+msgstr "Вернуть взятую заявку обратно на стенд."
 
 msgid "Set in progress"
 msgstr "Перевести в работу"
@@ -224,7 +224,7 @@ msgid "Status"
 msgstr "Статус"
 
 msgid "Shared pool state before a master claims the job."
-msgstr "Состояние общего пула до того, как мастер заберёт заявку."
+msgstr "Состояние общего стенда до того, как мастер заберёт заявку."
 
 msgid "Taken"
 msgstr "Взята"
