@@ -42,9 +42,7 @@ class DomServis::Notifications::WebPushSender
     )
 
     :delivered
-  rescue WebPush::ExpiredSubscription,
-         WebPush::InvalidSubscription,
-         WebPush::SubscriptionNotFoundError => e
+  rescue WebPush::ExpiredSubscription, WebPush::InvalidSubscription => e
     # Push service confirmed the subscription is gone. Deactivate it
     # so subsequent dispatches skip it without an HTTP round-trip.
     subscription.update!(active: false)
