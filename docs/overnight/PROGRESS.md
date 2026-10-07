@@ -298,6 +298,26 @@ ended on 2026-10-07», устаревший отпечаток `98b26f60…`, `e
 
 **Не проверено:** реальный ответ живого Zammad; QUnit/RSpec не запускались (Zammad не поднят).
 
+### 2026-10-07 ~17:00–17:15 (автозапуск)
+
+CI #57 на `088d53d` по логу job `112905977581`: `CI` — failure только из-за Brakeman `EOLRails`
+(«Support for Rails 8.0.4 ended on 2026-10-07», устаревший отпечаток `98b26f60…`, `exit code 3`) — ждёт PR #58
+(draft, mergeable clean). `docker-ci` — success, `test-diagnostic` — шёл. Код не менялся.
+
+**Задача 1 — сверка чек-листа диагностики по коду** (без правок, всё уже в порядке):
+
+| Пункт | Где | Итог |
+|---|---|---|
+| manifest: name, short_name, display `standalone`, start_url/scope `/dispatch/` | `DispatchBoardController#manifest` | ок |
+| иконки 192/512 + maskable 512 | `public/assets/dispatch/icon-*.png` (`file`: 192×192, 512×512, 512×512 RGBA) | ок, пути `../assets/dispatch/…` от `/dispatch/manifest.webmanifest` верны |
+| регистрация SW и scope | `layouts/dispatch_board.html.erb`: `/dispatch/sw.js`, `scope: '/dispatch/'`; заголовок `Service-Worker-Allowed: /dispatch` | ок, SW лежит в своём scope |
+| обработчики `push` / `notificationclick` | `public/assets/dispatch/sw.js` | ок (JSON + запасной текст; без `badge`; клик фокусирует открытую доску) |
+| `requestPermission` только по жесту | `push-sheet-test.js`: `userActivation.isActive = true` | ок |
+| VAPID | `WebPushSender#vapid_credentials` из настроек; без ключей — `ConfigurationError` | на сервере не проверено (нет доступа к VPS) |
+| TTL / urgency | `WebPushSender`: TTL 28 дней, `urgency: 'high'` | ок |
+
+Осталось только то, что требует Ивана: деплой ветки на тестовый стенд, VAPID-ключи на сервере, проверка на Android, решение по #58.
+
 ## Подсказки следующему запуску
 
 - Задача 4 (остаток): по желанию — QUnit/Vitest для мастера нет, проверка только Playwright-скриптом.
