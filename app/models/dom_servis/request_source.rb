@@ -67,8 +67,11 @@ class DomServis::RequestSource < ApplicationModel
   # Standalone step-by-step page a customer opens directly (link in a
   # messenger, QR code, social profile). It submits through the same form
   # channel as the embed, so the request lands as a DispatchJob of this
-  # source's partner organization.
+  # source's partner organization. The page reports our own origin, so a
+  # source restricted to partner domains would reject it: no link then.
   def client_form_url
+    return if allowed_domains.present?
+
     query = {
       request_source_token: embed_token,
       v:                    embed_cache_bust,

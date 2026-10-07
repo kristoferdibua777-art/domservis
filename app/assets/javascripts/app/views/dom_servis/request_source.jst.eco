@@ -54,6 +54,7 @@
     </div>
     <% else: %>
     <div class="js-code-fields">
+      <% if @item.client_form_url: %>
       <div class="form-group form-group--block">
         <div class="formGroup-label">
           <label for="dom-servis-client-form-url">
@@ -75,6 +76,7 @@
           <span class="help-block"><%- @T('Пошаговая форма на нашем домене: что сломалось, адрес, когда удобно, имя и телефон.') %></span>
         </div>
       </div>
+      <% end %>
 
       <div class="form-group form-group--block">
         <div class="formGroup-label">
