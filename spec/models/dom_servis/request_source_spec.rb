@@ -29,4 +29,21 @@ RSpec.describe DomServis::RequestSource, current_user_id: 1 do
       expect(source.embed_js_snippet).to include('dom-servis:resize')
     end
   end
+
+  describe '#client_form_url' do
+    it 'points to the standalone client page with the source token' do
+      source = described_class.create!(
+        name:           'Client Link',
+        partner_key:    'client-link',
+        transport_kind: 'zammad_form',
+        status:         'paused',
+      )
+
+      url = source.client_form_url
+
+      expect(url).to include('/assets/form/dom-servis-client-request.html?')
+      expect(url).to include("request_source_token=#{CGI.escape(source.embed_token)}")
+      expect(source.attributes_with_association_ids.with_indifferent_access[:client_form_url]).to eq(url)
+    end
+  end
 end

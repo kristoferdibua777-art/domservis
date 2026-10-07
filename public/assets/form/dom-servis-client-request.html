@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#2d6a58">
+  <meta name="robots" content="noindex">
+  <title>Свиб-Дом Сервис | Заявка на ремонт</title>
+  <style>
+    /* Standalone client request page: one calm card, one question at a time.
+       Submits through the same Zammad form channel as the partner embed
+       (form_config -> form_submit with request_source_token). */
+    :root {
+      --bg: #eef3ef;
+      --card: #ffffff;
+      --ink: #1f2b27;
+      --muted: #5f6f69;
+      --line: #d8e2dc;
+      --accent: #2d6a58;
+      --accent-ink: #ffffff;
+      --soft: #f6dcc8;
+      --chip: #f4f7f5;
+      --chip-on: #e3efe9;
+      --danger: #b4432f;
+      --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-head: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+      color-scheme: light;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #151c19;
+        --card: #1e2723;
+        --ink: #e8efeb;
+        --muted: #9fb0a9;
+        --line: #33413b;
+        --accent: #7cc4ab;
+        --accent-ink: #0f1a16;
+        --soft: #5a4334;
+        --chip: #25302b;
+        --chip-on: #2c4239;
+        --danger: #f08a74;
+        color-scheme: dark;
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font: 16px/1.5 var(--font);
+      padding: max(24px, env(safe-area-inset-top)) 16px max(40px, env(safe-area-inset-bottom));
+    }
+
+    .wrap { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+    header { display: flex; align-items: center; gap: 12px; }
+    .mark { width: 44px; height: 44px; border-radius: 12px; background: var(--accent); display: grid; place-items: center; flex: none; }
+    .mark svg { width: 26px; height: 26px; stroke: var(--accent-ink); }
+    .brand { font-family: var(--font-head); font-weight: 700; font-size: 18px; line-height: 1.2; }
+    .tag { color: var(--muted); font-size: 13.5px; }
+
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 22px 20px 20px; display: flex; flex-direction: column; gap: 18px; }
+
+    .progress { display: flex; flex-direction: column; gap: 8px; }
+    .progress small { color: var(--muted); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; }
+    .bar { height: 6px; border-radius: 6px; background: var(--chip); overflow: hidden; }
+    .bar i { display: block; height: 100%; background: var(--accent); border-radius: 6px; transition: width .3s ease; }
+
+    h1 { font-family: var(--font-head); font-weight: 600; font-size: 22px; line-height: 1.25; margin: 0; text-wrap: balance; }
+    .hint { color: var(--muted); margin: -8px 0 0; font-size: 14.5px; }
+
+    .step { display: flex; flex-direction: column; gap: 16px; animation: in .25s ease; }
+    @keyframes in { from { opacity: .4; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .step { animation: none; } .bar i { transition: none; } }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .tile { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; padding: 14px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--chip); color: var(--ink); font: inherit; cursor: pointer; min-height: 92px; }
+    .tile svg { width: 26px; height: 26px; stroke: var(--accent); }
+    .tile b { font-weight: 600; font-size: 15px; line-height: 1.25; }
+    .tile:hover, .chip:hover { border-color: var(--accent); }
+    .tile[aria-pressed="true"] { border-color: var(--accent); background: var(--chip-on); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { padding: 9px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--chip); color: var(--ink); font: inherit; font-size: 15px; cursor: pointer; }
+    .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--chip-on); font-weight: 600; }
+
+    .group { display: flex; flex-direction: column; gap: 8px; }
+    .label { font-size: 14px; font-weight: 600; }
+    .label span { font-weight: 400; color: var(--muted); }
+
+    input[type="text"], input[type="tel"], textarea { width: 100%; font: inherit; color: var(--ink); background: var(--chip); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+    textarea { min-height: 76px; resize: vertical; }
+    input:focus, textarea:focus { outline: none; border-color: var(--accent); background: var(--card); }
+    button:focus-visible, a:focus-visible, input[type="checkbox"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    .phone { display: flex; align-items: stretch; }
+    .phone span { display: grid; place-items: center; padding: 0 12px; border: 1.5px solid var(--line); border-right: 0; border-radius: 12px 0 0 12px; background: var(--chip); color: var(--muted); font-weight: 600; }
+    .phone input { border-radius: 0 12px 12px 0 !important; }
+
+    .consent { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--muted); }
+    .consent input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--accent); flex: none; }
+    .consent a { color: var(--accent); }
+
+    .err { color: var(--danger); font-size: 14px; margin: 0; }
+    .banner { background: var(--soft); border-radius: 14px; padding: 12px 14px; font-size: 14.5px; margin: 0; }
+
+    .nav { display: flex; gap: 10px; align-items: center; }
+    .btn { appearance: none; border: 0; border-radius: 14px; padding: 14px 20px; font: inherit; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+    .btn[disabled] { opacity: .55; cursor: default; }
+    .primary { background: var(--accent); color: var(--accent-ink); flex: 1; }
+    .ghost { background: transparent; color: var(--muted); padding-inline: 12px; }
+    .ghost:hover { color: var(--ink); }
+
+    .summary { background: var(--chip); border-radius: 14px; padding: 14px 16px; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14.5px; margin: 0; }
+    .summary dt { color: var(--muted); }
+    .summary dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+
+    .done { display: flex; flex-direction: column; gap: 12px; }
+    .done .num { font-family: var(--font-head); font-size: 20px; font-weight: 600; }
+
+    footer { text-align: center; color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 360px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M12 17c-1.6 0-2.5-1.1-2.5-2.4 0-1.6 1.6-2.4 2.5-4.1.9 1.7 2.5 2.5 2.5 4.1 0 1.3-.9 2.4-2.5 2.4z"/></svg>
+      </div>
+      <div>
+        <div class="brand">Свиб-Дом Сервис</div>
+        <div class="tag">Честный сервис для вашего дома · Калининград и область</div>
+      </div>
+    </header>
+
+    <main class="card" id="card" aria-live="polite">
+      <p class="hint">Загружаем форму…</p>
+    </main>
+
+    <footer>Мастер перезвонит, уточнит детали и назовёт цену до начала работ.</footer>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      var params = new URLSearchParams(window.location.search);
+      var API_ORIGIN = /^https?:$/i.test(window.location.protocol) ? window.location.origin : 'https://master.svib-dom-service.ru';
+      var TOTAL = 4;
+      var DRAFT_KEY = 'dom-servis-client-request-draft';
+
+      var ICON = {
+        boiler: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="15" rx="2"/><path d="M9 21v-3M15 21v-3"/><path d="M12 14c-1.4 0-2.2-.9-2.2-2 0-1.4 1.4-2 2.2-3.5.8 1.5 2.2 2.1 2.2 3.5 0 1.1-.8 2-2.2 2z"/></svg>',
+        heater: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="17" rx="6"/><path d="M10 22v-2.5M14 22v-2.5M12 8v5"/></svg>',
+        pipe: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h9a3 3 0 0 1 3 3v3"/><path d="M3 11h7a1 1 0 0 1 1 1v1"/><path d="M13 13h4v2h-4z"/><path d="M15 18.5c0 1-.7 1.7-1.5 1.7S12 19.5 12 18.5c0-.9 1.5-2.5 1.5-2.5s1.5 1.6 1.5 2.5z"/></svg>',
+        bolt: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 5 13.5h6L10 22l8-11.5h-6z"/></svg>',
+        wash: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2"/><circle cx="12" cy="13" r="4.5"/><path d="M7 6h2"/></svg>',
+        tool: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3z"/><path d="M14.5 6.5 17 4l3 3-2.5 2.5"/></svg>'
+      };
+
+      var CATS = [
+        { id: 'boiler', name: 'Газовый котёл', icon: 'boiler',
+          brands: ['Baxi', 'Navien', 'Vaillant', 'Bosch', 'Ariston', 'Protherm', 'Buderus', 'Viessmann', 'Kiturami', 'Immergas'],
+          issues: ['Не греет отопление', 'Нет горячей воды', 'Ошибка на дисплее', 'Не включается', 'Течёт или капает', 'Шумит, хлопает', 'Падает давление', 'Плановое обслуживание'] },
+        { id: 'heater', name: 'Бойлер, колонка', icon: 'heater',
+          brands: ['Ariston', 'Thermex', 'Electrolux', 'Neva', 'Bosch', 'Gorenje', 'Oasis'],
+          issues: ['Не греет воду', 'Течёт', 'Не зажигается колонка', 'Выбивает автомат', 'Чистка от накипи', 'Установка или замена'] },
+        { id: 'plumb', name: 'Сантехника', icon: 'pipe',
+          issues: ['Протечка', 'Засор', 'Кран или смеситель', 'Унитаз', 'Радиатор отопления', 'Установка или замена'] },
+        { id: 'electric', name: 'Электрика', icon: 'bolt',
+          issues: ['Нет света', 'Выбивает автомат', 'Розетка или выключатель', 'Подключить прибор', 'Люстра или светильник'] },
+        { id: 'appliance', name: 'Бытовая техника', icon: 'wash',
+          brands: ['Bosch', 'Samsung', 'LG', 'Indesit', 'Electrolux', 'Haier', 'Atlant', 'Beko'],
+          issues: ['Стиральная машина', 'Посудомойка', 'Холодильник', 'Варочная панель', 'Не включается', 'Течёт'] },
+        { id: 'other', name: 'Другое по дому', icon: 'tool',
+          issues: ['Мелкий ремонт', 'Повесить или собрать', 'Двери, замки', 'Окна', 'Нужна консультация'] }
+      ];
+
+      var WHEN = [
+        { id: 'today', label: 'Срочно, сегодня' },
+        { id: 'tomorrow', label: 'Завтра' },
+        { id: 'soon', label: 'В ближайшие дни' },
+        { id: 'call', label: 'Договоримся по телефону' }
+      ];
+
+      function emptyState() {
+        return { step: 1, cat: null, issues: [], brand: '', details: '', address: '', when: '', name: '', phone: '', consent: false };
+      }
+
+      var S = emptyState();
+      var app = {
+        token: params.get('request_source_token') || params.get('t') || '',
+        fingerprint: ensureFingerprint(),
+        config: null,
+        submitting: false,
+        ticketNumber: '',
+        fatal: ''
+      };
+
+      try {
+        var draft = JSON.parse(window.localStorage.getItem(DRAFT_KEY) || 'null');
+        if (draft && draft.step && draft.step <= TOTAL) S = Object.assign(S, draft);
+      } catch (e) { /* draft is a convenience only */ }
+
+      var card = document.getElementById('card');
+
+      function save() {
+        try { window.localStorage.setItem(DRAFT_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ }
+      }
+
+      function clearDraft() {
+        try { window.localStorage.removeItem(DRAFT_KEY); } catch (e) { /* ignore */ }
+      }
+
+      function ensureFingerprint() {
+        var key = 'dom-servis-client-fingerprint';
+        try {
+          var existing = window.localStorage.getItem(key);
+          if (existing && existing.length > 30) return existing;
+        } catch (e) { /* fall through */ }
+
+        var bytes = new Uint8Array(32);
+        window.crypto.getRandomValues(bytes);
+        var value = Array.prototype.map.call(bytes, function(b) { return b.toString(16).padStart(2, '0'); }).join('') + Date.now().toString(16);
+        try { window.localStorage.setItem(key, value); } catch (e) { /* ignore */ }
+        return value;
+      }
+
+      function esc(value) {
+        return String(value)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+
+      function cat() {
+        return CATS.find(function(c) { return c.id === S.cat; });
+      }
+
+      function whenLabel() {
+        var w = WHEN.find(function(x) { return x.id === S.when; });
+        return w ? w.label : '';
+      }
+
+      function normalizePhone(raw) {
+        var digits = String(raw || '').replace(/\D/g, '');
+        if (digits.length === 11 && (digits[0] === '8' || digits[0] === '7')) digits = digits.slice(1);
+        return digits.slice(0, 10);
+      }
+
+      function formatPhone(raw) {
+        var d = normalizePhone(raw);
+        if (!d) return '';
+        if (d.length <= 3) return '(' + d;
+        if (d.length <= 6) return '(' + d.slice(0, 3) + ') ' + d.slice(3);
+        if (d.length <= 8) return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
+        return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6, 8) + '-' + d.slice(8, 10);
+      }
+
+      function localDate(offsetDays) {
+        var date = new Date();
+        date.setDate(date.getDate() + offsetDays);
+        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+      }
+
+      function weekdayKey(dateValue) {
+        var date = new Date(dateValue + 'T00:00:00');
+        return ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getDay()] || 'mon';
+      }
+
+      function head(title, hint) {
+        var done = S.step > TOTAL;
+        var pct = Math.min(S.step, TOTAL) / TOTAL * 100;
+        return '<div class="progress"><small>' + (done ? 'Готово' : 'Шаг ' + S.step + ' из ' + TOTAL) + '</small>' +
+          '<div class="bar"><i style="width:' + pct + '%"></i></div></div>' +
+          '<h1>' + title + '</h1>' + (hint ? '<p class="hint">' + hint + '</p>' : '');
+      }
+
+      function nav(next, back) {
+        return '<p class="err" id="err" hidden></p><div class="nav">' +
+          (back === false ? '' : '<button class="btn ghost" type="button" data-act="back">← Назад</button>') +
+          (next ? '<button class="btn primary" type="button" data-act="next" id="next">' + next + '</button>' : '') +
+          '</div>';
+      }
+
+      function chips(list, selected, key, multi) {
+        return '<div class="chips">' + list.map(function(item) {
+          var value = typeof item === 'string' ? item : item.id;
+          var label = typeof item === 'string' ? item : item.label;
+          var on = multi ? selected.indexOf(value) !== -1 : selected === value;
+          return '<button type="button" class="chip" data-key="' + key + '" data-val="' + esc(value) + '" data-multi="' + (multi ? 1 : 0) + '" aria-pressed="' + on + '">' + esc(label) + '</button>';
+        }).join('') + '</div>';
+      }
+
+      function consentMarkup() {
+        var policy = app.config && app.config.request_source && app.config.request_source.privacy_policy_url;
+        var text = policy
+          ? 'Согласен с <a href="' + esc(policy) + '" target="_blank" rel="noopener noreferrer">политикой конфиденциальности</a> и обработкой персональных данных'
+          : 'Согласен на обработку персональных данных для связи по заявке';
+        return '<label class="consent"><input type="checkbox" id="consent"' + (S.consent ? ' checked' : '') + '><span>' + text + '</span></label>';
+      }
+
+      function render() {
+        if (app.fatal) {
+          card.innerHTML = '<div class="step"><h1>Форма временно недоступна</h1><p class="banner">' + esc(app.fatal) + '</p></div>';
+          return;
+        }
+
+        if (S.step <= TOTAL) save();
+        var h = '';
+
+        if (S.step === 1) {
+          h = head('Что нужно сделать?', 'Выберите, с чем помочь. Займёт меньше минуты.') +
+            '<div class="grid">' + CATS.map(function(c) {
+              return '<button type="button" class="tile" data-cat="' + c.id + '" aria-pressed="' + (S.cat === c.id) + '">' + ICON[c.icon] + '<b>' + c.name + '</b></button>';
+            }).join('') + '</div>';
+        } else if (S.step === 2) {
+          var c = cat();
+          h = head(esc(c.name) + ': что случилось?', 'Можно выбрать несколько вариантов.') +
+            '<div class="group">' + chips(c.issues, S.issues, 'issues', true) + '</div>' +
+            (c.brands ? '<div class="group"><div class="label">Марка <span>(если знаете)</span></div>' + chips(c.brands.concat(['Не знаю']), S.brand, 'brand', false) + '</div>' : '') +
+            '<div class="group"><label class="label" for="details">Подробнее <span>(код ошибки, модель, что уже пробовали)</span></label>' +
+            '<textarea id="details" maxlength="1000" placeholder="Например: ошибка E10, давление 0,5 бар">' + esc(S.details) + '</textarea></div>' +
+            nav('Дальше');
+        } else if (S.step === 3) {
+          h = head('Куда приехать и когда?') +
+            '<div class="group"><label class="label" for="address">Адрес</label>' +
+            '<input id="address" type="text" maxlength="300" autocomplete="street-address" placeholder="Город, улица, дом, квартира" value="' + esc(S.address) + '"></div>' +
+            '<div class="group"><div class="label">Когда удобно</div>' + chips(WHEN, S.when, 'when', false) + '</div>' +
+            nav('Дальше');
+        } else if (S.step === 4) {
+          h = head('Как с вами связаться?', 'Мастер перезвонит в рабочее время.') +
+            '<div class="group"><label class="label" for="name">Имя</label>' +
+            '<input id="name" type="text" maxlength="100" autocomplete="given-name" placeholder="Как к вам обращаться" value="' + esc(S.name) + '"></div>' +
+            '<div class="group"><label class="label" for="phone">Телефон</label>' +
+            '<div class="phone"><span>+7</span><input id="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(900) 000-00-00" value="' + esc(formatPhone(S.phone)) + '"></div></div>' +
+            summaryMarkup() + consentMarkup() +
+            nav(app.submitting ? 'Отправляем…' : 'Отправить заявку');
+        } else {
+          h = head('Заявка принята') +
+            '<div class="done">' +
+            (app.ticketNumber ? '<div>Номер заявки: <span class="num">#' + esc(app.ticketNumber) + '</span></div>' : '') +
+            '<p class="banner">Мастер перезвонит вам в рабочее время, уточнит детали и назовёт стоимость до начала работ.</p>' +
+            '<div class="nav"><button class="btn ghost" type="button" data-act="reset">Оставить ещё одну заявку</button></div></div>';
+        }
+
+        card.innerHTML = '<div class="step">' + h + '</div>';
+        if (S.step === 4) {
+          var nextBtn = document.getElementById('next');
+          if (nextBtn) nextBtn.disabled = app.submitting;
+        }
+      }
+
+      function summaryMarkup() {
+        var c = cat();
+        var rows = [['Что', c.name + (S.issues.length ? ': ' + S.issues.join(', ') : '')]];
+        if (S.brand) rows.push(['Марка', S.brand]);
+        rows.push(['Адрес', S.address.trim()]);
+        if (S.when) rows.push(['Когда', whenLabel()]);
+        return '<dl class="summary">' + rows.map(function(r) { return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('') + '</dl>';
+      }
+
+      function fail(message) {
+        var el = document.getElementById('err');
+        if (el) { el.textContent = message; el.hidden = false; }
+      }
+
+      function readFields() {
+        ['details', 'address', 'name'].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) S[id] = el.value;
+        });
+        var phone = document.getElementById('phone');
+        if (phone) S.phone = normalizePhone(phone.value);
+        var consent = document.getElementById('consent');
+        if (consent) S.consent = consent.checked;
+      }
+
+      function serviceType() {
+        var c = cat();
+        return c.name + (S.issues.length ? ': ' + S.issues.join(', ') : '');
+      }
+
+      function descriptionText(phoneText) {
+        var lines = ['Заявка клиента через форму по ссылке.', 'Что: ' + serviceType()];
+        if (S.brand) lines.push('Марка: ' + S.brand);
+        if (S.details.trim()) lines.push('Подробнее: ' + S.details.trim());
+        lines.push('Адрес: ' + S.address.trim());
+        if (S.when) lines.push('Когда удобно: ' + whenLabel());
+        lines.push('Имя: ' + S.name.trim());
+        lines.push('Телефон: ' + phoneText);
+        return lines.join('\n');
+      }
+
+      async function submit() {
+        if (app.submitting) return;
+
+        var phoneText = '+7 ' + formatPhone(S.phone);
+        var visitDate = localDate(S.when === 'tomorrow' ? 1 : 0);
+        var description = descriptionText(phoneText);
+        var comment = [
+          S.brand ? 'Марка: ' + S.brand + '.' : '',
+          S.when ? 'Клиенту удобно: ' + whenLabel() + '.' : '',
+          'Время визита согласовать с клиентом.'
+        ].filter(Boolean).join(' ');
+
+        var payload = new FormData();
+        payload.set('fingerprint', app.fingerprint);
+        payload.set('token', app.config.token || '');
+        payload.set('request_source_token', app.token);
+        payload.set('request_source_origin', window.location.origin);
+        payload.set('name', S.name.trim());
+        payload.set('title', serviceType().slice(0, 200));
+        payload.set('body', description);
+        payload.set('dom_servis_client_name', S.name.trim());
+        payload.set('dom_servis_client_phone', phoneText);
+        payload.set('dom_servis_service_type', serviceType().slice(0, 250));
+        payload.set('dom_servis_address', S.address.trim());
+        payload.set('dom_servis_visit_date', visitDate);
+        payload.set('dom_servis_visit_day', weekdayKey(visitDate));
+        payload.set('dom_servis_visit_time', 'Уточнить у клиента');
+        payload.set('dom_servis_dispatch_priority', S.when === 'today' ? 'high' : 'medium');
+        payload.set('dom_servis_description', description);
+        payload.set('dom_servis_comment', comment);
+
+        app.submitting = true;
+        render();
+
+        try {
+          var response = await fetch(app.config.endpoint || API_ORIGIN + '/api/v1/form_submit', {
+            method: 'POST',
+            body: payload,
+            credentials: 'same-origin'
+          });
+          var data = await response.json().catch(function() { return {}; });
+
+          if (!response.ok || data.errors) {
+            app.submitting = false;
+            render();
+            fail(serverError(data.errors));
+            return;
+          }
+
+          app.ticketNumber = data.ticket && data.ticket.number ? data.ticket.number : '';
+          app.submitting = false;
+          S.step = TOTAL + 1;
+          clearDraft();
+          render();
+        } catch (error) {
+          app.submitting = false;
+          render();
+          fail('Не удалось отправить заявку. Проверьте интернет и попробуйте ещё раз.');
+        }
+      }
+
+      function serverError(errors) {
+        if (!errors) return 'Не удалось отправить заявку. Попробуйте ещё раз через минуту.';
+        if (errors.name) return 'Проверьте имя.';
+        if (errors.base) return 'Не удалось отправить заявку: ' + errors.base;
+        return 'Не удалось отправить заявку. Проверьте поля и попробуйте ещё раз.';
+      }
+
+      card.addEventListener('input', function(event) {
+        var target = event.target;
+        var err = document.getElementById('err');
+        if (err) err.hidden = true;
+        if (target.id === 'phone') {
+          target.value = formatPhone(target.value);
+          S.phone = normalizePhone(target.value);
+        } else if (target.id === 'consent') {
+          S.consent = target.checked;
+        } else if (target.id) {
+          S[target.id] = target.value;
+        }
+        save();
+      });
+
+      card.addEventListener('click', function(event) {
+        var b = event.target.closest('button');
+        if (!b) return;
+
+        if (b.dataset.cat) {
+          if (S.cat !== b.dataset.cat) { S.issues = []; S.brand = ''; }
+          S.cat = b.dataset.cat;
+          S.step = 2;
+          render();
+          return;
+        }
+
+        if (b.dataset.key) {
+          var key = b.dataset.key;
+          var value = b.dataset.val;
+          if (b.dataset.multi === '1') {
+            var idx = S[key].indexOf(value);
+            if (idx === -1) S[key].push(value); else S[key].splice(idx, 1);
+            b.setAttribute('aria-pressed', String(S[key].indexOf(value) !== -1));
+          } else {
+            S[key] = S[key] === value ? '' : value;
+            b.parentNode.querySelectorAll('.chip').forEach(function(x) { x.setAttribute('aria-pressed', String(x.dataset.val === S[key])); });
+          }
+          save();
+          return;
+        }
+
+        var act = b.dataset.act;
+        if (act === 'back') { readFields(); S.step = Math.max(1, S.step - 1); render(); }
+        if (act === 'reset') { S = emptyState(); app.ticketNumber = ''; render(); }
+        if (act === 'next') {
+          readFields();
+          if (S.step === 2 && !S.issues.length && !S.details.trim()) return fail('Выберите вариант или опишите проблему в поле «Подробнее».');
+          if (S.step === 3 && S.address.trim().length < 5) return fail('Укажите адрес: улицу и дом.');
+          if (S.step === 4) {
+            if (!S.name.trim()) return fail('Напишите, как к вам обращаться.');
+            if (normalizePhone(S.phone).length < 10) return fail('Проверьте номер телефона: нужно 10 цифр после +7.');
+            if (!S.consent) return fail('Подтвердите согласие на обработку данных, чтобы мы могли перезвонить.');
+            submit();
+            return;
+          }
+          S.step += 1;
+          render();
+        }
+      });
+
+      async function bootstrap() {
+        if (!app.token) {
+          app.fatal = 'В ссылке не хватает кода формы. Попросите у нас актуальную ссылку.';
+          render();
+          return;
+        }
+
+        try {
+          var body = new URLSearchParams();
+          body.set('fingerprint', app.fingerprint);
+          body.set('request_source_token', app.token);
+          body.set('request_source_origin', window.location.origin);
+
+          var response = await fetch(API_ORIGIN + '/api/v1/form_config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', 'Accept': 'application/json' },
+            body: body.toString(),
+            credentials: 'same-origin'
+          });
+          var data = await response.json().catch(function() { return {}; });
+
+          if (!response.ok) throw new Error('Ссылка на форму устарела или отключена. Попросите у нас актуальную ссылку.');
+          if (!data.enabled) throw new Error('Приём заявок через форму сейчас приостановлен. Попробуйте позже.');
+
+          app.config = data;
+          render();
+        } catch (error) {
+          app.fatal = error.message || 'Не удалось загрузить форму. Обновите страницу.';
+          render();
+        }
+      }
+
+      bootstrap();
+    })();
+  </script>
+</body>
+</html>

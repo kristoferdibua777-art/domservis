@@ -1,5 +1,5 @@
 class App.DomServisRequestSource extends App.Model
-  @configure 'DomServisRequestSource', 'name', 'partner_key', 'organization_id', 'organization_name', 'transport_kind', 'status', 'allowed_domains', 'privacy_policy_url', 'notes', 'embed_token', 'embed_url', 'embed_snippet', 'embed_js_snippet', 'request_source_type', 'display_name', 'rotate_embed_token', 'updated_at', 'created_at'
+  @configure 'DomServisRequestSource', 'name', 'partner_key', 'organization_id', 'organization_name', 'transport_kind', 'status', 'allowed_domains', 'privacy_policy_url', 'notes', 'embed_token', 'embed_url', 'client_form_url', 'embed_snippet', 'embed_js_snippet', 'request_source_type', 'display_name', 'rotate_embed_token', 'updated_at', 'created_at'
   @extend Spine.Model.Ajax
   @url: @apiPath + '/dom_servis/request_sources'
   @configure_attributes = [
@@ -14,6 +14,7 @@ class App.DomServisRequestSource extends App.Model
     { name: 'embed_token', display: __('Токен встраивания'), tag: 'input', type: 'text', limit: 200, null: false, readonly: 1, skipRendering: 1 }
     { name: 'rotate_embed_token', display: __('Сменить токен встраивания при сохранении'), tag: 'boolean', null: true, default: false, note: __('Создаёт новый токен. Старые ссылки и сниппеты перестанут работать.') }
     { name: 'embed_url', display: __('URL встраивания'), tag: 'copy_field', type: 'text', limit: 2000, null: true, readonly: 1, multiline: false, note: __('Готовый URL, который можно отправить партнёру или вставить в iframe.') }
+    { name: 'client_form_url', display: __('Ссылка на форму для клиентов'), tag: 'copy_field', type: 'text', limit: 2000, null: true, readonly: 1, multiline: false, note: __('Отдельная страница с пошаговой формой. Ссылку можно отправить клиенту напрямую.') }
     { name: 'embed_snippet', display: __('Iframe-код'), tag: 'copy_field', rows: 10, limit: 8000, null: true, readonly: 1, multiline: true, note: __('Готовый iframe-вариант. Его проще всего вставить на сайт партнёра.') }
     { name: 'embed_js_snippet', display: __('JS-код'), tag: 'copy_field', rows: 18, limit: 12000, null: true, readonly: 1, multiline: true, note: __('JS-вариант для сайтов, где удобнее подключать форму скриптом.') }
     { name: 'display_name', display: __('Отображаемое имя'), tag: 'input', type: 'text', limit: 250, null: true, readonly: 1, skipRendering: 1 }

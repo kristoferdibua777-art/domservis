@@ -56,6 +56,28 @@
     <div class="js-code-fields">
       <div class="form-group form-group--block">
         <div class="formGroup-label">
+          <label for="dom-servis-client-form-url">
+            <%- @T('Ссылка на форму для клиентов') %>
+          </label>
+          <div class="help-message js-helpMessage" title="<%- @T('Отправьте эту ссылку клиенту в мессенджере или разместите её в соцсетях. Заявки попадут на доску как заявки этого партнёра.') %>">
+            <%- @Icon('help') %>
+          </div>
+        </div>
+        <div class="controls controls--button ignore-readonly">
+          <input readonly id="dom-servis-client-form-url" type="text" name="client_form_url" value="<%= @item.client_form_url || '' %>" class="form-control js-select js-permanentReadonly">
+          <div class="controls-button u-clickable js-copy" role="button" data-target-field="client_form_url" aria-label="<%- @T('Copy to clipboard') %>">
+            <span class="controls-button-inner">
+              <%- @Icon('clipboard') %>
+            </span>
+          </div>
+        </div>
+        <div class="controls">
+          <span class="help-block"><%- @T('Пошаговая форма на нашем домене: что сломалось, адрес, когда удобно, имя и телефон.') %></span>
+        </div>
+      </div>
+
+      <div class="form-group form-group--block">
+        <div class="formGroup-label">
           <label for="dom-servis-embed-url">
             <%- @T('URL встраивания') %>
           </label>
