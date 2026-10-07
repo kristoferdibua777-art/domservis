@@ -374,6 +374,239 @@
       font-size: 16px;
     }
 
+    .wizard__progress {
+      display: grid;
+      gap: 10px;
+    }
+
+    .wizard__progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted-strong);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .wizard__progress-track {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      gap: 6px;
+    }
+
+    .wizard__progress-segment {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.22);
+      transition: background-color 0.25s ease;
+    }
+
+    .wizard__progress-segment.is-done {
+      background: #ffffff;
+    }
+
+    .wizard__step {
+      display: grid;
+      gap: 18px;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .wizard__step[hidden] {
+      display: none;
+    }
+
+    .wizard__step.is-entering-forward {
+      animation: step-in-forward 0.28s ease-out;
+    }
+
+    .wizard__step.is-entering-back {
+      animation: step-in-back 0.28s ease-out;
+    }
+
+    .wizard__legend {
+      float: left;
+      width: 100%;
+      margin: 0 0 2px;
+      padding: 0;
+      font-family: var(--font-head);
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1.15;
+      outline: none;
+    }
+
+    .wizard__legend + * {
+      clear: both;
+    }
+
+    .field__optional {
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .field textarea {
+      width: 100%;
+      min-height: 96px;
+      border-radius: 16px;
+      border: 1px solid var(--field-border);
+      background: var(--field-bg);
+      color: var(--field-text);
+      padding: 14px 18px;
+      font: inherit;
+      font-size: 17px;
+      line-height: 1.4;
+      resize: vertical;
+      outline: none;
+    }
+
+    .field textarea:focus {
+      border-color: rgba(226, 56, 43, 0.4);
+      box-shadow: 0 0 0 4px rgba(226, 56, 43, 0.1);
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .chip input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .chip span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    }
+
+    .chip input:checked + span {
+      background: #ffffff;
+      border-color: #ffffff;
+      color: var(--field-text);
+    }
+
+    .chip input:focus-visible + span {
+      outline: 3px solid #ffffff;
+      outline-offset: 2px;
+    }
+
+    .summary {
+      display: grid;
+      gap: 0;
+      margin: 0;
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .summary__row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: "label edit" "value edit";
+      align-items: center;
+      column-gap: 12px;
+      padding: 10px 8px 10px 16px;
+    }
+
+    .summary__row + .summary__row {
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .summary dt {
+      grid-area: label;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .summary dd {
+      grid-area: value;
+      margin: 2px 0 0;
+      font-size: 16px;
+      overflow-wrap: anywhere;
+    }
+
+    .summary__edit,
+    .wizard__back {
+      appearance: none;
+      min-height: 44px;
+      border: 0;
+      background: transparent;
+      color: #ffffff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .summary__edit {
+      grid-area: edit;
+      min-width: 44px;
+      padding: 0 10px;
+      font-size: 14px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .wizard__nav {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .wizard__nav .submit {
+      flex: 1 1 auto;
+    }
+
+    .wizard__back {
+      flex: 0 0 auto;
+      min-height: 72px;
+      padding: 0 24px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      font-size: 18px;
+    }
+
+    .wizard__back[hidden] {
+      display: none;
+    }
+
+    @keyframes step-in-forward {
+      from {
+        opacity: 0;
+        transform: translateX(24px);
+      }
+    }
+
+    @keyframes step-in-back {
+      from {
+        opacity: 0;
+        transform: translateX(-24px);
+      }
+    }
+
     .hidden {
       display: none !important;
     }
@@ -466,6 +699,20 @@
       .submit {
         min-height: 58px;
         font-size: 18px;
+      }
+
+      .wizard__back {
+        min-height: 58px;
+        padding: 0 20px;
+        font-size: 16px;
+      }
+
+      .wizard__legend {
+        font-size: 20px;
+      }
+
+      .wizard__step {
+        gap: 14px;
       }
 
       .fineprint,
@@ -731,20 +978,60 @@
         scheduleResize();
       }
 
+      const STEPS = [
+        { key: 'contacts', title: 'Контакты', fields: ['name', 'dom_servis_client_phone', 'address'] },
+        { key: 'problem', title: 'Что случилось', fields: ['problem'] },
+        { key: 'brand', title: 'Марка техники', fields: ['brand'] },
+        { key: 'confirm', title: 'Проверка', fields: ['privacy'] },
+      ];
+
+      const PROBLEM_OPTIONS = [
+        'Не включается',
+        'Не греет',
+        'Не охлаждает',
+        'Течёт вода',
+        'Сильно шумит',
+        'Ошибка на дисплее',
+      ];
+
+      const BRAND_OPTIONS = [
+        'Bosch',
+        'Samsung',
+        'LG',
+        'Indesit',
+        'Атлант',
+        'Electrolux',
+        'Haier',
+        'Beko',
+      ];
+
+      const BRAND_UNKNOWN = 'Не знаю';
+
       function humanizeServerError(field, message) {
         const value = String(message || '').toLowerCase();
         if (field === 'name' || value.includes('name')) return 'Введите имя';
         if (field === 'dom_servis_client_phone') return 'Введите телефон';
+        if (field === 'address' || field === 'dom_servis_address') return 'Укажите адрес';
         if (field === 'privacy') return 'Подтвердите согласие с политикой';
         if (value.includes('forbidden') || value.includes('paused')) return 'Форма временно недоступна';
         return 'Не удалось отправить заявку';
       }
 
-      function validate(values) {
+      function stepErrors(stepIndex, values) {
         const errors = {};
-        if (!values.name || !values.name.trim()) errors.name = 'Введите имя';
-        if (normalizePhone(values.dom_servis_client_phone).length < 10) errors.dom_servis_client_phone = 'Введите телефон полностью';
-        if (!values.privacy_accepted) errors.privacy = 'Подтвердите согласие с политикой';
+        const fields = STEPS[stepIndex].fields;
+
+        if (fields.includes('name') && !values.name) errors.name = 'Введите имя';
+        if (fields.includes('dom_servis_client_phone') && normalizePhone(values.phone).length < 10) {
+          errors.dom_servis_client_phone = 'Введите телефон полностью';
+        }
+        if (fields.includes('address') && values.address.length < 5) errors.address = 'Укажите улицу и дом';
+        if (fields.includes('problem') && !values.problem && values.problemDetails.length < 3) {
+          errors.problem = 'Выберите вариант или опишите поломку';
+        }
+        if (fields.includes('brand') && !values.brand) errors.brand = 'Выберите марку или нажмите «Не знаю»';
+        if (fields.includes('privacy') && !values.privacyAccepted) errors.privacy = 'Подтвердите согласие с политикой';
+
         return errors;
       }
 
@@ -762,12 +1049,19 @@
         scheduleResize();
       }
 
-      function submitDescription(name, phone) {
+      function problemSummary(values) {
+        return [values.problem, values.problemDetails].filter(Boolean).join('. ');
+      }
+
+      function submitDescription(values, phone) {
         return [
-          'Клиент оставил заявку на обратный звонок через сайт партнёра.',
-          `Имя клиента: ${name}.`,
+          'Клиент оставил заявку через сайт партнёра.',
+          `Имя клиента: ${values.name}.`,
           `Телефон клиента: ${phone}.`,
-          'Нужно уточнить услугу, адрес, дату и время визита.'
+          `Адрес: ${values.address}.`,
+          `Поломка: ${problemSummary(values)}.`,
+          `Марка техники: ${values.brand}.`,
+          'Нужно уточнить дату и время визита.'
         ].join(' ');
       }
 
@@ -780,53 +1074,226 @@
         return 'Нажимая на кнопку, вы соглашаетесь с обработкой персональных данных';
       }
 
+      function chipsMarkup(name, options) {
+        return options.map((option) => `
+          <label class="chip">
+            <input type="radio" name="${name}" value="${escapeHtml(option)}">
+            <span>${escapeHtml(option)}</span>
+          </label>
+        `).join('');
+      }
+
       function buildForm() {
         const form = document.createElement('form');
-        form.className = 'form';
+        form.className = 'form wizard';
         form.noValidate = true;
         form.innerHTML = `
-          <div class="contact-grid">
-            <div class="field">
-              <label for="name">Имя</label>
-              <input id="name" name="name" type="text" autocomplete="name" placeholder="Имя">
-              <div class="field-error" data-error-for="name"></div>
+          <div class="wizard__progress">
+            <div class="wizard__progress-label"><span class="js-step-counter"></span><span class="js-step-title"></span></div>
+            <div class="wizard__progress-track" role="progressbar" aria-valuemin="1" aria-valuemax="${STEPS.length}">
+              ${STEPS.map(() => '<span class="wizard__progress-segment"></span>').join('')}
             </div>
+          </div>
 
-            <div class="field">
-              <label for="dom_servis_client_phone">Телефон</label>
-              <div class="phone-field">
-                <div class="phone-field__prefix" aria-hidden="true">
-                  <span class="phone-field__flag"></span>
-                  <span>+7</span>
-                </div>
-                <input id="dom_servis_client_phone" name="dom_servis_client_phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(900) 000-00-00">
+          <fieldset class="wizard__step" data-step="0">
+            <legend class="wizard__legend">Как с вами связаться</legend>
+            <div class="contact-grid">
+              <div class="field">
+                <label for="name">Имя</label>
+                <input id="name" name="name" type="text" autocomplete="name" placeholder="Имя" maxlength="120">
+                <div class="field-error" data-error-for="name"></div>
               </div>
-              <div class="field-error" data-error-for="dom_servis_client_phone"></div>
+
+              <div class="field">
+                <label for="dom_servis_client_phone">Телефон</label>
+                <div class="phone-field">
+                  <div class="phone-field__prefix" aria-hidden="true">
+                    <span class="phone-field__flag"></span>
+                    <span>+7</span>
+                  </div>
+                  <input id="dom_servis_client_phone" name="dom_servis_client_phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(900) 000-00-00">
+                </div>
+                <div class="field-error" data-error-for="dom_servis_client_phone"></div>
+              </div>
             </div>
-          </div>
 
-          <div class="checkbox">
-            <input id="privacy_accepted" name="privacy_accepted" type="checkbox" value="1">
-            <label class="checkbox__copy" for="privacy_accepted">${consentMarkup()}</label>
-          </div>
-          <div class="field-error" data-error-for="privacy"></div>
+            <div class="field">
+              <label for="address">Адрес</label>
+              <input id="address" name="address" type="text" autocomplete="street-address" placeholder="Улица, дом, квартира" maxlength="300">
+              <div class="field-error" data-error-for="address"></div>
+            </div>
+          </fieldset>
 
-          <button type="submit" class="submit" disabled>Отправить</button>
-          <div class="fineprint">После отправки мастер перезвонит и уточнит детали заявки.</div>
+          <fieldset class="wizard__step" data-step="1" hidden>
+            <legend class="wizard__legend">Что случилось с техникой?</legend>
+            <div class="chips" role="radiogroup" aria-label="Причина поломки">
+              ${chipsMarkup('problem', PROBLEM_OPTIONS)}
+            </div>
+            <div class="field">
+              <label for="problem_details">Опишите подробнее <span class="field__optional">— если хотите</span></label>
+              <textarea id="problem_details" name="problem_details" rows="3" maxlength="1000" placeholder="Например: стиральная машина не сливает воду, на экране ошибка E18"></textarea>
+            </div>
+            <div class="field-error" data-error-for="problem"></div>
+          </fieldset>
+
+          <fieldset class="wizard__step" data-step="2" hidden>
+            <legend class="wizard__legend">Какой марки техника?</legend>
+            <div class="chips" role="radiogroup" aria-label="Марка техники">
+              ${chipsMarkup('brand', BRAND_OPTIONS.concat(BRAND_UNKNOWN))}
+            </div>
+            <div class="field">
+              <label for="brand_other">Другая марка</label>
+              <input id="brand_other" name="brand_other" type="text" placeholder="Например: Gorenje" maxlength="80">
+            </div>
+            <div class="field-error" data-error-for="brand"></div>
+          </fieldset>
+
+          <fieldset class="wizard__step" data-step="3" hidden>
+            <legend class="wizard__legend">Проверьте заявку</legend>
+            <dl class="summary js-summary"></dl>
+
+            <div class="checkbox">
+              <input id="privacy_accepted" name="privacy_accepted" type="checkbox" value="1">
+              <label class="checkbox__copy" for="privacy_accepted">${consentMarkup()}</label>
+            </div>
+            <div class="field-error" data-error-for="privacy"></div>
+          </fieldset>
+
+          <div class="wizard__nav">
+            <button type="button" class="wizard__back js-back">Назад</button>
+            <button type="submit" class="submit js-next">Далее</button>
+          </div>
+          <div class="fineprint">После отправки мастер перезвонит и согласует время визита.</div>
         `;
 
-        const submitButton = form.querySelector('.submit');
+        const submitButton = form.querySelector('.js-next');
+        const backButton = form.querySelector('.js-back');
         const checkbox = form.querySelector('#privacy_accepted');
         const phoneInput = form.querySelector('[name="dom_servis_client_phone"]');
+        const brandOther = form.querySelector('[name="brand_other"]');
+        const stepElements = Array.from(form.querySelectorAll('.wizard__step'));
+        const segments = Array.from(form.querySelectorAll('.wizard__progress-segment'));
+        const progress = form.querySelector('[role="progressbar"]');
+        const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let currentStep = 0;
+
+        const readValues = () => {
+          const data = new FormData(form);
+          const text = (key) => String(data.get(key) || '').trim();
+          const brandChoice = text('brand');
+          return {
+            name: text('name'),
+            phone: text('dom_servis_client_phone'),
+            address: text('address'),
+            problem: text('problem'),
+            problemDetails: text('problem_details'),
+            brand: text('brand_other') || brandChoice,
+            privacyAccepted: checkbox.checked,
+          };
+        };
+
+        const isLastStep = () => currentStep === STEPS.length - 1;
 
         const updateSubmitState = () => {
-          submitButton.disabled = !checkbox.checked || state.submitting;
+          submitButton.disabled = state.submitting || (isLastStep() && !checkbox.checked);
         };
+
+        const renderSummary = () => {
+          const values = readValues();
+          const rows = [
+            ['Имя', values.name, 0],
+            ['Телефон', submitPhoneValue(values.phone), 0],
+            ['Адрес', values.address, 0],
+            ['Поломка', problemSummary(values), 1],
+            ['Марка', values.brand, 2],
+          ];
+          form.querySelector('.js-summary').innerHTML = rows.map(([label, value, step]) => `
+            <div class="summary__row">
+              <dt>${label}</dt>
+              <dd>${escapeHtml(value)}</dd>
+              <button type="button" class="summary__edit" data-goto="${step}" aria-label="Изменить: ${label}">Изменить</button>
+            </div>
+          `).join('');
+        };
+
+        const showStep = (index, direction) => {
+          currentStep = index;
+          stepElements.forEach((element, elementIndex) => {
+            const active = elementIndex === index;
+            element.hidden = !active;
+            element.classList.remove('is-entering-forward', 'is-entering-back');
+            if (active && direction && !reduceMotion) {
+              void element.offsetWidth;
+              element.classList.add(direction > 0 ? 'is-entering-forward' : 'is-entering-back');
+            }
+          });
+          segments.forEach((segment, segmentIndex) => {
+            segment.classList.toggle('is-done', segmentIndex <= index);
+          });
+          progress.setAttribute('aria-valuenow', String(index + 1));
+          progress.setAttribute('aria-valuetext', `Шаг ${index + 1} из ${STEPS.length}: ${STEPS[index].title}`);
+          form.querySelector('.js-step-counter').textContent = `Шаг ${index + 1} из ${STEPS.length}`;
+          form.querySelector('.js-step-title').textContent = STEPS[index].title;
+          backButton.hidden = index === 0;
+          submitButton.textContent = isLastStep() ? 'Отправить заявку' : 'Далее';
+          if (isLastStep()) renderSummary();
+          updateSubmitState();
+          hideBanner();
+
+          if (direction) {
+            // Move focus to the new step so screen readers announce it and the old button loses focus.
+            const legend = stepElements[index].querySelector('legend');
+            legend.setAttribute('tabindex', '-1');
+            legend.focus({ preventScroll: true });
+          }
+          scheduleResize();
+        };
+
+        const goToStep = (index) => {
+          if (index === currentStep) return;
+          clearFieldErrors();
+          showStep(index, index > currentStep ? 1 : -1);
+        };
+
+        const stepForField = (field) => {
+          const index = STEPS.findIndex((step) => step.fields.includes(field));
+          return index === -1 ? currentStep : index;
+        };
+
+        backButton.addEventListener('click', () => {
+          if (currentStep > 0) goToStep(currentStep - 1);
+        });
+
+        form.addEventListener('click', (event) => {
+          const edit = event.target.closest('[data-goto]');
+          if (edit) goToStep(Number(edit.dataset.goto));
+        });
 
         checkbox.addEventListener('change', () => {
           setFieldError('privacy', '');
           updateSubmitState();
         });
+
+        form.querySelectorAll('[name="problem"], [name="problem_details"]').forEach((input) => {
+          input.addEventListener('input', () => setFieldError('problem', ''));
+        });
+
+        form.querySelectorAll('[name="brand"]').forEach((input) => {
+          input.addEventListener('change', () => {
+            brandOther.value = '';
+            setFieldError('brand', '');
+          });
+        });
+
+        brandOther.addEventListener('input', () => {
+          if (brandOther.value.trim()) {
+            form.querySelectorAll('[name="brand"]').forEach((input) => { input.checked = false; });
+          }
+          setFieldError('brand', '');
+        });
+
+        form.querySelector('[name="name"]').addEventListener('input', () => setFieldError('name', ''));
+        form.querySelector('[name="address"]').addEventListener('input', () => setFieldError('address', ''));
 
         phoneInput.addEventListener('input', () => {
           const cursor = phoneInput.selectionStart || 0;
@@ -852,8 +1319,8 @@
           hideBanner();
           clearFieldErrors();
 
-          const values = Object.fromEntries(new FormData(form).entries());
-          const errors = validate(values);
+          const values = readValues();
+          const errors = stepErrors(currentStep, values);
 
           if (Object.keys(errors).length) {
             renderErrors(errors);
@@ -861,10 +1328,16 @@
             return;
           }
 
+          if (!isLastStep()) {
+            showStep(currentStep + 1, 1);
+            return;
+          }
+
           const dispatchDate = currentDispatchDate();
-          const name = form.querySelector('[name="name"]').value.trim();
-          const phone = submitPhoneValue(form.querySelector('[name="dom_servis_client_phone"]').value);
-          const description = submitDescription(name, phone);
+          const name = values.name;
+          const phone = submitPhoneValue(values.phone);
+          const description = submitDescription(values, phone);
+          const serviceType = `Ремонт: ${values.problem || values.problemDetails}`.slice(0, 200);
 
           const payload = new FormData();
           payload.set('fingerprint', state.fingerprint);
@@ -873,18 +1346,18 @@
           payload.set('request_source_origin', state.requestSourceOrigin);
           payload.set('name', name);
           payload.set('email', generatedEmail());
-          payload.set('title', 'Заявка на обратный звонок');
+          payload.set('title', 'Заявка на ремонт');
           payload.set('body', description);
           payload.set('dom_servis_client_name', name);
           payload.set('dom_servis_client_phone', phone);
-          payload.set('dom_servis_service_type', 'Уточнить у клиента');
-          payload.set('dom_servis_address', 'Уточнить у клиента');
+          payload.set('dom_servis_service_type', serviceType);
+          payload.set('dom_servis_address', values.address);
           payload.set('dom_servis_visit_date', dispatchDate);
           payload.set('dom_servis_visit_day', weekdayKey(dispatchDate));
           payload.set('dom_servis_visit_time', 'Уточнить у клиента');
           payload.set('dom_servis_dispatch_priority', 'medium');
           payload.set('dom_servis_description', description);
-          payload.set('dom_servis_comment', 'Детали услуги, адрес и время нужно уточнить у клиента.');
+          payload.set('dom_servis_comment', 'Дату и время визита нужно уточнить у клиента.');
 
           state.submitting = true;
           updateSubmitState();
@@ -908,7 +1381,10 @@
                 }
               });
 
-              if (Object.keys(mapped).length) {
+              const fieldNames = Object.keys(mapped);
+              if (fieldNames.length) {
+                const targetStep = Math.min(...fieldNames.map(stepForField));
+                if (targetStep !== currentStep) showStep(targetStep, -1);
                 renderErrors(mapped);
               } else if (!refs.banner.textContent) {
                 setBanner('Не удалось отправить заявку');
@@ -921,12 +1397,12 @@
             setBanner('Не удалось отправить заявку. Проверьте соединение и попробуйте ещё раз.');
           } finally {
             state.submitting = false;
-            submitButton.textContent = 'Отправить';
+            submitButton.textContent = isLastStep() ? 'Отправить заявку' : 'Далее';
             updateSubmitState();
           }
         });
 
-        updateSubmitState();
+        showStep(0, 0);
         return form;
       }
 

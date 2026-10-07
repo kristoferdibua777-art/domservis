@@ -1,0 +1,188 @@
+[
+ {
+  "width": 360,
+  "steps": [
+   {
+    "step": "1-empty",
+    "hscroll": false,
+    "overflow": [],
+    "small": []
+   },
+   {
+    "step": "2",
+    "hscroll": false,
+    "overflow": [],
+    "small": []
+   },
+   {
+    "step": "3",
+    "hscroll": false,
+    "overflow": [],
+    "small": []
+   },
+   {
+    "step": "4",
+    "hscroll": false,
+    "overflow": [],
+    "small": []
+   }
+  ],
+  "emptyErrors": [
+   "name",
+   "dom_servis_client_phone",
+   "address"
+  ],
+  "stayedOnStep1": true,
+  "step2Error": "Выберите вариант или опишите поломку",
+  "backKeepsProblem": true,
+  "backKeepsContacts": true,
+  "step3Error": "Выберите марку или нажмите «Не знаю»",
+  "submitDisabledBeforeConsent": true,
+  "editJumps": true,
+  "payload": {
+   "fingerprint": "5bab0cb01551ef9390a2e84a9c3d3f757975cfeba2e01a0ea03c01d1370e9e2e1a1165b38d0",
+   "token": "t",
+   "request_source_token": "",
+   "request_source_origin": "https://stand.test",
+   "name": "Мария",
+   "email": "dom-servis-5bab0cb01551ef9390a2e84a@zammad.com",
+   "title": "Заявка на ремонт",
+   "body": "Клиент оставил заявку через сайт партнёра. Имя клиента: Мария. Телефон клиента: +7 (900) 123-45-67. Адрес: Калининград, ул. Ленина, 5, кв. 12. Поломка: Течёт вода. Стиральная машина течёт снизу. Марка техники: Bosch. Нужно уточнить дату и время визита.",
+   "dom_servis_client_name": "Мария",
+   "dom_servis_client_phone": "+7 (900) 123-45-67",
+   "dom_servis_service_type": "Ремонт: Течёт вода",
+   "dom_servis_address": "Калининград, ул. Ленина, 5, кв. 12",
+   "dom_servis_visit_date": "2026-10-07",
+   "dom_servis_visit_day": "wed",
+   "dom_servis_visit_time": "Уточнить у клиента",
+   "dom_servis_dispatch_priority": "medium",
+   "dom_servis_description": "Клиент оставил заявку через сайт партнёра. Имя клиента: Мария. Телефон клиента: +7 (900) 123-45-67. Адрес: Калининград, ул. Ленина, 5, кв. 12. Поломка: Течёт вода. Стиральная машина течёт снизу. Марка техники: Bosch. Нужно уточнить дату и время визита.",
+   "dom_servis_comment": "Дату и время визита нужно уточнить у клиента."
+  },
+  "errs": []
+ },
+ {
+  "width": 390,
+  "steps": [
+   {
+    "step": "1-empty",
+    "hscroll": false,
+    "overflow": [],
+    "small": []
+   },
+   {
+    "step": "2",
+    "hscroll": false,
+    "overflow": [],
+    "small": []
+   },
+   {
+    "step": "3",
+    "hscroll": false,
+    "overflow": [],
+    "small": []
+   },
+   {
+    "step": "4",
+    "hscroll": false,
+    "overflow": [],
+    "small": []
+   }
+  ],
+  "emptyErrors": [
+   "name",
+   "dom_servis_client_phone",
+   "address"
+  ],
+  "stayedOnStep1": true,
+  "step2Error": "Выберите вариант или опишите поломку",
+  "backKeepsProblem": true,
+  "backKeepsContacts": true,
+  "step3Error": "Выберите марку или нажмите «Не знаю»",
+  "submitDisabledBeforeConsent": true,
+  "editJumps": true,
+  "payload": {
+   "fingerprint": "670677b26f0cd79cdac06a341091679cd12aeff5296d6280a53f5005a4eb6ef81a1165b4d55",
+   "token": "t",
+   "request_source_token": "",
+   "request_source_origin": "https://stand.test",
+   "name": "Мария",
+   "email": "dom-servis-670677b26f0cd79cdac06a34@zammad.com",
+   "title": "Заявка на ремонт",
+   "body": "Клиент оставил заявку через сайт партнёра. Имя клиента: Мария. Телефон клиента: +7 (900) 123-45-67. Адрес: Калининград, ул. Ленина, 5, кв. 12. Поломка: Течёт вода. Стиральная машина течёт снизу. Марка техники: Bosch. Нужно уточнить дату и время визита.",
+   "dom_servis_client_name": "Мария",
+   "dom_servis_client_phone": "+7 (900) 123-45-67",
+   "dom_servis_service_type": "Ремонт: Течёт вода",
+   "dom_servis_address": "Калининград, ул. Ленина, 5, кв. 12",
+   "dom_servis_visit_date": "2026-10-07",
+   "dom_servis_visit_day": "wed",
+   "dom_servis_visit_time": "Уточнить у клиента",
+   "dom_servis_dispatch_priority": "medium",
+   "dom_servis_description": "Клиент оставил заявку через сайт партнёра. Имя клиента: Мария. Телефон клиента: +7 (900) 123-45-67. Адрес: Калининград, ул. Ленина, 5, кв. 12. Поломка: Течёт вода. Стиральная машина течёт снизу. Марка техники: Bosch. Нужно уточнить дату и время визита.",
+   "dom_servis_comment": "Дату и время визита нужно уточнить у клиента."
+  },
+  "errs": []
+ },
+ {
+  "width": 412,
+  "steps": [
+   {
+    "step": "1-empty",
+    "hscroll": false,
+    "overflow": [],
+    "small": []
+   },
+   {
+    "step": "2",
+    "hscroll": false,
+    "overflow": [],
+    "small": []
+   },
+   {
+    "step": "3",
+    "hscroll": false,
+    "overflow": [],
+    "small": []
+   },
+   {
+    "step": "4",
+    "hscroll": false,
+    "overflow": [],
+    "small": []
+   }
+  ],
+  "emptyErrors": [
+   "name",
+   "dom_servis_client_phone",
+   "address"
+  ],
+  "stayedOnStep1": true,
+  "step2Error": "Выберите вариант или опишите поломку",
+  "backKeepsProblem": true,
+  "backKeepsContacts": true,
+  "step3Error": "Выберите марку или нажмите «Не знаю»",
+  "submitDisabledBeforeConsent": true,
+  "editJumps": true,
+  "payload": {
+   "fingerprint": "8441ba7e33891a4225533845051cba61faa2a3531547d51a1978961b862c96f31a1165b606f",
+   "token": "t",
+   "request_source_token": "",
+   "request_source_origin": "https://stand.test",
+   "name": "Мария",
+   "email": "dom-servis-8441ba7e33891a4225533845@zammad.com",
+   "title": "Заявка на ремонт",
+   "body": "Клиент оставил заявку через сайт партнёра. Имя клиента: Мария. Телефон клиента: +7 (900) 123-45-67. Адрес: Калининград, ул. Ленина, 5, кв. 12. Поломка: Течёт вода. Стиральная машина течёт снизу. Марка техники: Bosch. Нужно уточнить дату и время визита.",
+   "dom_servis_client_name": "Мария",
+   "dom_servis_client_phone": "+7 (900) 123-45-67",
+   "dom_servis_service_type": "Ремонт: Течёт вода",
+   "dom_servis_address": "Калининград, ул. Ленина, 5, кв. 12",
+   "dom_servis_visit_date": "2026-10-07",
+   "dom_servis_visit_day": "wed",
+   "dom_servis_visit_time": "Уточнить у клиента",
+   "dom_servis_dispatch_priority": "medium",
+   "dom_servis_description": "Клиент оставил заявку через сайт партнёра. Имя клиента: Мария. Телефон клиента: +7 (900) 123-45-67. Адрес: Калининград, ул. Ленина, 5, кв. 12. Поломка: Течёт вода. Стиральная машина течёт снизу. Марка техники: Bosch. Нужно уточнить дату и время визита.",
+   "dom_servis_comment": "Дату и время визита нужно уточнить у клиента."
+  },
+  "errs": []
+ }
+]
