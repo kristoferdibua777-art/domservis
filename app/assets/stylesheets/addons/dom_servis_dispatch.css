@@ -2881,3 +2881,99 @@ summary.dom-servis-dispatch-drawer__history-row {
     width: auto;
   }
 }
+
+/* Mobile layout fixes found by the Playwright audit at 360/390/412 px
+   (docs/overnight/PROGRESS.md, task 3). */
+@media (max-width: 767px) {
+  /* Zammad gives .btn--text -10px side margins and `.btn + .btn` an extra
+     10px left margin. Inside these grids that shifts every pill sideways, so
+     the workspace filters overlap each other and stick out of the panel, and
+     the account menu links overlap. Grid gaps already space them. */
+  .dom-servis-dispatch-board__shell.is-mobile
+    .dom-servis-dispatch-board__mobile-workspace-filters
+    .btn,
+  .dom-servis-dispatch-mobile-menu__actions .btn {
+    margin: 0;
+  }
+
+  /* Touch targets were 40-42 px; 44 px is the WCAG 2.5.5 / Apple HIG minimum. */
+  .dom-servis-dispatch-board__shell.is-mobile .dom-servis-dispatch-board__mobile-push-action,
+  .dom-servis-dispatch-board__shell.is-mobile .dom-servis-dispatch-board__week-button {
+    height: 44px;
+    min-width: 44px;
+  }
+
+  .dom-servis-dispatch-board__shell.is-mobile .dom-servis-dispatch-board__mobile-menu-toggle {
+    height: 44px;
+    width: 44px;
+  }
+
+  .dom-servis-dispatch-board__shell.is-mobile .dom-servis-dispatch-chip {
+    min-height: 44px;
+  }
+
+  /* Zammad form controls and buttons are 40-41 px high. On the phone the
+     create/edit drawers and the filter panel need 44 px targets, and 16 px
+     text stops iOS Safari from zooming into a focused field. */
+  .dom-servis-dispatch-board.is-mobile .form-control,
+  .dom-servis-dispatch-board.is-mobile .btn,
+  .dom-servis-dispatch-board.is-mobile .dom-servis-dispatch-tag-selector__chip {
+    min-height: 44px;
+  }
+
+  .dom-servis-dispatch-board.is-mobile input.form-control,
+  .dom-servis-dispatch-board.is-mobile select.form-control,
+  .dom-servis-dispatch-board.is-mobile textarea.form-control {
+    font-size: 16px;
+  }
+
+  /* Tag buttons on the cards were 26 px high. 34 px plus a 5 px invisible
+     margin of the hit area gives 44 px; with the 10 px row gap the hit areas
+     of wrapped rows touch but do not overlap. */
+  .dom-servis-dispatch-board__shell.is-mobile button.dom-servis-dispatch-card__tag {
+    align-items: center;
+    display: inline-flex;
+    min-height: 34px;
+    position: relative;
+  }
+
+  .dom-servis-dispatch-board__shell.is-mobile button.dom-servis-dispatch-card__tag::before {
+    content: '';
+    inset: -5px 0;
+    position: absolute;
+  }
+
+  /* «НА СТЕНДЕ» is longer than the old «В ПУЛЕ» and wrapped into two lines
+     beside a long visit date. Keep the status on one line. */
+  .dom-servis-dispatch-board__shell.is-mobile .dom-servis-dispatch-card__status {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 420px) {
+  /* Week range and the three week buttons do not fit one row: «›» dropped
+     under «‹ Текущая» and the dates broke in two. Put the buttons on their
+     own full-width row instead. */
+  .dom-servis-dispatch-board__shell.is-mobile .dom-servis-dispatch-board__week-head {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dom-servis-dispatch-board__shell.is-mobile .dom-servis-dispatch-board__week-head strong {
+    white-space: nowrap;
+  }
+
+  .dom-servis-dispatch-board__shell.is-mobile
+    .dom-servis-dispatch-board__week-head
+    .dom-servis-dispatch-board__week-actions {
+    flex: 1 0 100%;
+    gap: 8px;
+  }
+
+  .dom-servis-dispatch-board__shell.is-mobile
+    .dom-servis-dispatch-board__week-head
+    .dom-servis-dispatch-board__week-button--wide {
+    flex: 1;
+  }
+}
