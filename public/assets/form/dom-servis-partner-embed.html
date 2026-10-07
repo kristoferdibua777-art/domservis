@@ -1373,8 +1373,11 @@
               Object.entries(data.errors || { base: 'Не удалось отправить заявку' }).forEach(([field, message]) => {
                 if (field === 'base') {
                   setBanner(humanizeServerError(field, message));
-                } else {
+                } else if (document.querySelector(`[data-error-for="${field}"]`)) {
                   mapped[field] = humanizeServerError(field, message);
+                } else {
+                  // Errors on fields the visitor never sees (generated email, title, body) must not fail silently.
+                  setBanner('Не удалось отправить заявку. Попробуйте ещё раз чуть позже.');
                 }
               });
 
