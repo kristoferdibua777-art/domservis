@@ -443,6 +443,12 @@
       clear: both;
     }
 
+    .wizard__hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
     .field__optional {
       color: var(--muted);
       font-weight: 400;
@@ -1011,7 +1017,6 @@
         const value = String(message || '').toLowerCase();
         if (field === 'name' || value.includes('name')) return 'Введите имя';
         if (field === 'dom_servis_client_phone') return 'Введите телефон';
-        if (field === 'address' || field === 'dom_servis_address') return 'Укажите адрес';
         if (field === 'privacy') return 'Подтвердите согласие с политикой';
         if (value.includes('forbidden') || value.includes('paused')) return 'Форма временно недоступна';
         return 'Не удалось отправить заявку';
@@ -1025,11 +1030,6 @@
         if (fields.includes('dom_servis_client_phone') && normalizePhone(values.phone).length < 10) {
           errors.dom_servis_client_phone = 'Введите телефон полностью';
         }
-        if (fields.includes('address') && values.address.length < 5) errors.address = 'Укажите улицу и дом';
-        if (fields.includes('problem') && !values.problem && values.problemDetails.length < 3) {
-          errors.problem = 'Выберите вариант или опишите поломку';
-        }
-        if (fields.includes('brand') && !values.brand) errors.brand = 'Выберите марку или нажмите «Не знаю»';
         if (fields.includes('privacy') && !values.privacyAccepted) errors.privacy = 'Подтвердите согласие с политикой';
 
         return errors;
@@ -1049,6 +1049,9 @@
         scheduleResize();
       }
 
+      const NOT_SPECIFIED = 'Не указано';
+      const ASK_CLIENT = 'Уточнить у клиента';
+
       function problemSummary(values) {
         return [values.problem, values.problemDetails].filter(Boolean).join('. ');
       }
@@ -1058,10 +1061,10 @@
           'Клиент оставил заявку через сайт партнёра.',
           `Имя клиента: ${values.name}.`,
           `Телефон клиента: ${phone}.`,
-          `Адрес: ${values.address}.`,
-          `Поломка: ${problemSummary(values)}.`,
-          `Марка техники: ${values.brand}.`,
-          'Нужно уточнить дату и время визита.'
+          `Адрес: ${values.address || 'не указан'}.`,
+          `Поломка: ${problemSummary(values) || 'не указана'}.`,
+          `Марка техники: ${values.brand || 'не указана'}.`,
+          'Нужно уточнить недостающие детали, дату и время визита.'
         ].join(' ');
       }
 
@@ -1118,9 +1121,8 @@
             </div>
 
             <div class="field">
-              <label for="address">Адрес</label>
+              <label for="address">Адрес <span class="field__optional">— если удобно</span></label>
               <input id="address" name="address" type="text" autocomplete="street-address" placeholder="Улица, дом, квартира" maxlength="300">
-              <div class="field-error" data-error-for="address"></div>
             </div>
           </fieldset>
 
@@ -1133,7 +1135,7 @@
               <label for="problem_details">Опишите подробнее <span class="field__optional">— если хотите</span></label>
               <textarea id="problem_details" name="problem_details" rows="3" maxlength="1000" placeholder="Например: стиральная машина не сливает воду, на экране ошибка E18"></textarea>
             </div>
-            <div class="field-error" data-error-for="problem"></div>
+            <p class="wizard__hint">Можно пропустить — мастер уточнит по телефону.</p>
           </fieldset>
 
           <fieldset class="wizard__step" data-step="2" hidden>
@@ -1145,7 +1147,7 @@
               <label for="brand_other">Другая марка</label>
               <input id="brand_other" name="brand_other" type="text" placeholder="Например: Gorenje" maxlength="80">
             </div>
-            <div class="field-error" data-error-for="brand"></div>
+            <p class="wizard__hint">Можно пропустить — мастер уточнит по телефону.</p>
           </fieldset>
 
           <fieldset class="wizard__step" data-step="3" hidden>
@@ -1210,7 +1212,7 @@
           form.querySelector('.js-summary').innerHTML = rows.map(([label, value, step]) => `
             <div class="summary__row">
               <dt>${label}</dt>
-              <dd>${escapeHtml(value)}</dd>
+              <dd>${escapeHtml(value || NOT_SPECIFIED)}</dd>
               <button type="button" class="summary__edit" data-goto="${step}" aria-label="Изменить: ${label}">Изменить</button>
             </div>
           `).join('');
@@ -1274,14 +1276,9 @@
           updateSubmitState();
         });
 
-        form.querySelectorAll('[name="problem"], [name="problem_details"]').forEach((input) => {
-          input.addEventListener('input', () => setFieldError('problem', ''));
-        });
-
         form.querySelectorAll('[name="brand"]').forEach((input) => {
           input.addEventListener('change', () => {
             brandOther.value = '';
-            setFieldError('brand', '');
           });
         });
 
@@ -1289,11 +1286,9 @@
           if (brandOther.value.trim()) {
             form.querySelectorAll('[name="brand"]').forEach((input) => { input.checked = false; });
           }
-          setFieldError('brand', '');
         });
 
         form.querySelector('[name="name"]').addEventListener('input', () => setFieldError('name', ''));
-        form.querySelector('[name="address"]').addEventListener('input', () => setFieldError('address', ''));
 
         phoneInput.addEventListener('input', () => {
           const cursor = phoneInput.selectionStart || 0;
@@ -1337,7 +1332,8 @@
           const name = values.name;
           const phone = submitPhoneValue(values.phone);
           const description = submitDescription(values, phone);
-          const serviceType = `Ремонт: ${values.problem || values.problemDetails}`.slice(0, 200);
+          const problem = values.problem || values.problemDetails;
+          const serviceType = problem ? `Ремонт: ${problem}`.slice(0, 200) : ASK_CLIENT;
 
           const payload = new FormData();
           payload.set('fingerprint', state.fingerprint);
@@ -1351,13 +1347,14 @@
           payload.set('dom_servis_client_name', name);
           payload.set('dom_servis_client_phone', phone);
           payload.set('dom_servis_service_type', serviceType);
-          payload.set('dom_servis_address', values.address);
+          // The dispatch intake requires an address, so an empty one becomes a call-back reminder.
+          payload.set('dom_servis_address', values.address || ASK_CLIENT);
           payload.set('dom_servis_visit_date', dispatchDate);
           payload.set('dom_servis_visit_day', weekdayKey(dispatchDate));
-          payload.set('dom_servis_visit_time', 'Уточнить у клиента');
+          payload.set('dom_servis_visit_time', ASK_CLIENT);
           payload.set('dom_servis_dispatch_priority', 'medium');
           payload.set('dom_servis_description', description);
-          payload.set('dom_servis_comment', 'Дату и время визита нужно уточнить у клиента.');
+          payload.set('dom_servis_comment', 'Недостающие детали, дату и время визита нужно уточнить у клиента.');
 
           state.submitting = true;
           updateSubmitState();
