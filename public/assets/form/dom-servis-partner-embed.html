@@ -539,7 +539,7 @@
       border-top: 1px solid rgba(255, 255, 255, 0.12);
     }
 
-    .summary dt {
+    .summary__label {
       grid-area: label;
       color: var(--muted);
       font-size: 12px;
@@ -548,7 +548,7 @@
       letter-spacing: 0.08em;
     }
 
-    .summary dd {
+    .summary__value {
       grid-area: value;
       margin: 2px 0 0;
       font-size: 16px;
@@ -1093,7 +1093,7 @@
         form.innerHTML = `
           <div class="wizard__progress">
             <div class="wizard__progress-label"><span class="js-step-counter"></span><span class="js-step-title"></span></div>
-            <div class="wizard__progress-track" role="progressbar" aria-valuemin="1" aria-valuemax="${STEPS.length}">
+            <div class="wizard__progress-track" role="progressbar" aria-label="Шаг заявки" aria-valuemin="1" aria-valuemax="${STEPS.length}">
               ${STEPS.map(() => '<span class="wizard__progress-segment"></span>').join('')}
             </div>
           </div>
@@ -1152,7 +1152,7 @@
 
           <fieldset class="wizard__step" data-step="3" hidden>
             <legend class="wizard__legend">Проверьте заявку</legend>
-            <dl class="summary js-summary"></dl>
+            <div class="summary js-summary"></div>
 
             <div class="checkbox">
               <input id="privacy_accepted" name="privacy_accepted" type="checkbox" value="1">
@@ -1211,8 +1211,8 @@
           ];
           form.querySelector('.js-summary').innerHTML = rows.map(([label, value, step]) => `
             <div class="summary__row">
-              <dt>${label}</dt>
-              <dd>${escapeHtml(value || NOT_SPECIFIED)}</dd>
+              <span class="summary__label">${label}</span>
+              <span class="summary__value">${escapeHtml(value || NOT_SPECIFIED)}</span>
               <button type="button" class="summary__edit" data-goto="${step}" aria-label="Изменить: ${label}">Изменить</button>
             </div>
           `).join('');

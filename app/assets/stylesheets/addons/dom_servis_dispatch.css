@@ -2977,3 +2977,14 @@ summary.dom-servis-dispatch-drawer__history-row {
     flex: 1;
   }
 }
+
+/* White text on Zammad's success green (hsl(145, 51%, 45%)) is 2.9:1, below
+   WCAG AA 4.5:1 (axe color-contrast on «Опубликовать на стенд»). Darker
+   shade of the same hue inside the board only: 4.9:1. */
+.dom-servis-dispatch-board__shell .btn--success:not(.btn--secondary) {
+  background: hsl(145, 55%, 32%);
+}
+
+.dom-servis-dispatch-board__shell .btn--success:not(.btn--secondary):active {
+  background: hsl(145, 55%, 25%);
+}

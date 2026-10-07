@@ -13,3 +13,9 @@ mkdir -p shots && node shoot.js $H/board.html $H/shots after board,create,detail
 
 `report.json`: горизонтальная прокрутка, выход за край, перекрытие кнопок,
 цели нажатия меньше 44×44. Chromium берётся из `/opt/pw-browsers/chromium`.
+
+Проверка доступности (axe-core, правила WCAG 2.x A/AA) — доска и все шаги мастера заявки:
+
+```sh
+npm i axe-core && node axe-test.js $H/board.html <repo> 360 > axe-360.json
+```

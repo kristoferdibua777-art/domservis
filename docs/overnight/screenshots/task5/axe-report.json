@@ -1,0 +1,140 @@
+{
+ "360": [
+  {
+   "screen": "доска / мастер",
+   "violations": []
+  },
+  {
+   "screen": "доска / диспетчер",
+   "violations": []
+  },
+  {
+   "screen": "стенд / мастер",
+   "violations": []
+  },
+  {
+   "screen": "меню",
+   "violations": []
+  },
+  {
+   "screen": "новая заявка",
+   "violations": []
+  },
+  {
+   "screen": "карточка / диспетчер",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 1",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 1 с ошибками",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 2",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 3",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 4",
+   "violations": []
+  }
+ ],
+ "390": [
+  {
+   "screen": "доска / мастер",
+   "violations": []
+  },
+  {
+   "screen": "доска / диспетчер",
+   "violations": []
+  },
+  {
+   "screen": "стенд / мастер",
+   "violations": []
+  },
+  {
+   "screen": "меню",
+   "violations": []
+  },
+  {
+   "screen": "новая заявка",
+   "violations": []
+  },
+  {
+   "screen": "карточка / диспетчер",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 1",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 1 с ошибками",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 2",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 3",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 4",
+   "violations": []
+  }
+ ],
+ "412": [
+  {
+   "screen": "доска / мастер",
+   "violations": []
+  },
+  {
+   "screen": "доска / диспетчер",
+   "violations": []
+  },
+  {
+   "screen": "стенд / мастер",
+   "violations": []
+  },
+  {
+   "screen": "меню",
+   "violations": []
+  },
+  {
+   "screen": "новая заявка",
+   "violations": []
+  },
+  {
+   "screen": "карточка / диспетчер",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 1",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 1 с ошибками",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 2",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 3",
+   "violations": []
+  },
+  {
+   "screen": "мастер заявки: шаг 4",
+   "violations": []
+  }
+ ]
+}
