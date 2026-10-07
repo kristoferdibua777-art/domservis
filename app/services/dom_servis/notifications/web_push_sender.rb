@@ -49,7 +49,7 @@ class DomServis::Notifications::WebPushSender
     Rails.logger.info("[dom_servis.web_push] deactivated stale subscription id=#{subscription.id}: #{e.class}")
     :expired
   rescue WebPush::ResponseError => e
-    if e.response.is_a?(Net::HTTPResponse) && e.response.code.to_i.in?(404, 410)
+    if e.response.is_a?(Net::HTTPResponse) && e.response.code.to_i.in?([404, 410])
       subscription.update!(active: false)
       Rails.logger.info("[dom_servis.web_push] deactivated gone subscription id=#{subscription.id}: HTTP #{e.response.code}")
       return :expired

@@ -31,7 +31,7 @@ class DomServis::PushSubscription < ApplicationModel
     return false if response_status.blank?
 
     # 404 (endpoint gone) and 410 (subscription expired) are permanent.
-    response_status.to_i.in?(404, 410)
+    response_status.to_i.in?([404, 410])
   end
 
   private

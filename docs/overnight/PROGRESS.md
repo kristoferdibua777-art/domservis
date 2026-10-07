@@ -370,10 +370,26 @@ ended on 2026-10-07», устаревший отпечаток `98b26f60…`, `e
 (первые два — наследники `ResponseError`), `defined?(WebPush::SubscriptionNotFoundError)` → `nil`.
 То есть в нынешнем `rescue` больше нет несуществующих констант. Код не менялся, новых коммитов кроме этого файла нет.
 
+### 2026-10-07 ~22:40–23:10 (автозапуск)
+
+CI #57: `test-diagnostic` run `37686118300` (коммит `d4f7758`, job `113014257181`) — **RSpec: 13776 examples, 1 failure,
+3 pending**; Minitest `166 runs, 5044 assertions, 0 failures`; Vitest — success. Исправление `rescue` из прошлого
+запуска сработало (пример «без VAPID-ключей» зелёный), но спек `web_push_sender_spec.rb:51` (ошибка 503) нашёл
+**второй настоящий баг**: `ArgumentError: wrong number of arguments (given 2, expected 1)` в `web_push_sender.rb:52`.
+`CI` на `c2e9625` — failure только из-за Brakeman `EOLRails` (ждёт #58), `docker-ci` — success.
+
+**Задача 1 — исправлено `in?(404, 410)` → `in?([404, 410])`** (Rails `Object#in?` принимает одну коллекцию).
+Ошибка возникала внутри `rescue WebPush::ResponseError`, поэтому её не ловил следующий `rescue => e`: любой ответ
+пуш-сервиса кроме 404/410 (503, 429, 401 при неверных VAPID) ронял `WebPushDeliveryJob` вместо `:failed` в лог.
+Тот же баг — в `DomServis::PushSubscription#stale?` (пока нигде не вызывается) — исправлен так же, добавлен
+`spec/models/dom_servis/push_subscription_spec.rb` (4 примера). Локально: `ruby -c` — OK; с activesupport 8.0.4
+в scratch-папке: `503.in?([404,410])` → `false`, `410.in?([404,410])` → `true`, `503.in?(404,410)` → тот же
+`ArgumentError`. RSpec/RuboCop локально не запустить (нет Zammad/гемов) — подтвердит `test-diagnostic` на этом push.
+
 ## Подсказки следующему запуску
 
-- Проверить `test-diagnostic` run `37686118300` (коммит `d4f7758`, с исправлением `rescue`; идёт >85 мин): RSpec должен быть 0 failures. Если снова
-  красный — смотреть `Failures:` (лог большой — извлекать через субагента).
+- Проверить `test-diagnostic` на коммите с исправлением `in?([404, 410])` (идёт ~100 мин): RSpec должен быть 0 failures.
+  Сводку RSpec удобно брать субагентом через `get_job_logs` (tail 2000) — прямой curl к логам режет прокси (403).
 
 - Задача 4 (остаток): по желанию — QUnit/Vitest для мастера нет, проверка только Playwright-скриптом.
 - Остаток требует Ивана: деплой ветки на тестовый стенд + проверка пушей на реальном Android (сценарий выше),
