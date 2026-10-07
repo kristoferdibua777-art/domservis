@@ -325,7 +325,24 @@ CI #57 на `5944ec7` по логу job `112928226699`: `CI` — failure тол�
 (draft, mergeable clean, не смержен). `docker-ci` — success, `test-diagnostic` — шёл. Код не менялся:
 оставшееся (деплой на тестовый стенд, VAPID на сервере, проверка на Android, решение по #58) требует Ивана.
 
+### 2026-10-07 ~19:00 (автозапуск)
+
+CI #57 на `08f4d54` по логу job `112954540933`: `CI` — failure только из-за Brakeman `EOLRails`
+(«Support for Rails 8.0.4 ended on 2026-10-07», устаревший отпечаток `98b26f60…`, `exit code 3`) — ждёт PR #58
+(draft, mergeable clean, не смержен). `docker-ci` — success, `test-diagnostic` — шёл.
+
+**Задача 1 — тест на серверную часть пушей** (новый `spec/services/dom_servis/notifications/web_push_sender_spec.rb`).
+У `WebPushSender` не было ни одного спека, а исправление `urgency: 'high'` (коммит `e36137a`) ничем не закреплено.
+4 примера: сообщение уходит с `urgency: 'high'`, TTL 28 дней и JSON-телом; 410 (`ExpiredSubscription`) → подписка
+`active = false`, `:expired`; 503 → подписка остаётся активной, `:failed`; без VAPID-ключа `WebPush.payload_send`
+не вызывается. Код приложения не менялся.
+Локально проверен только синтаксис (`ruby -c` — OK): Ruby 3.3 вместо 3.4.9, гемы не установлены, RuboCop/RSpec
+не запустить. RSpec выполнит workflow `test-diagnostic` (полный `bundle exec rspec`); RuboCop — шаг Lint, но он
+сейчас обрывается на Brakeman раньше RuboCop, до мержа #58.
+
 ## Подсказки следующему запуску
+
+- Проверить в логе `test-diagnostic` (stage RSpec), что `web_push_sender_spec.rb` зелёный; если красный — чинить спек.
 
 - Задача 4 (остаток): по желанию — QUnit/Vitest для мастера нет, проверка только Playwright-скриптом.
 - Остаток требует Ивана: деплой ветки на тестовый стенд + проверка пушей на реальном Android (сценарий выше),
