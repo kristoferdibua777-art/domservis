@@ -402,7 +402,7 @@
               <button
                 class="btn <%= job.primaryAction.buttonClass %> <%= job.primaryAction.handlerClass %> js-no-detail"
                 data-id="<%= job.id %>"
-                <%= "data-status=\"#{job.primaryAction.status}\"" if job.primaryAction.status %>>
+                <% if job.primaryAction.status: %>data-status="<%= job.primaryAction.status %>"<% end %>>
                 <%= job.primaryAction.label %>
               </button>
               <div class="dom-servis-dispatch-card__tap-hint"><%= @mobileLabels.openDetailsHint %></div>
@@ -587,7 +587,7 @@
                     <option value="<%= kind.id %>"><%= kind.label %></option>
                   <% end %>
                 </select>
-                <input class="js-upload-attachment-input" data-id="<%= @detailJob.id %>" type="file" hidden>
+                <input class="js-upload-attachment-input" data-id="<%= @detailJob.id %>" type="file" style="display:none">
                 <button class="btn btn--text js-trigger-attachment-upload" data-id="<%= @detailJob.id %>"<%= ' disabled' if @detailAttachmentUploading %>>
                   <%= 'Загрузка…' if @detailAttachmentUploading %>
                   <%= 'Добавить вложение' if !@detailAttachmentUploading %>

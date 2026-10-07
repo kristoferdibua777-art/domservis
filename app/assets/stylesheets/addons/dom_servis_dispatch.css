@@ -2876,7 +2876,7 @@ summary.dom-servis-dispatch-drawer__history-row {
   }
 
   .dom-servis-dispatch-board__shell.is-mobile .dom-servis-dispatch-card__actions--mobile .btn {
-    min-height: 42px;
+    min-height: 44px;
     min-width: 138px;
     width: auto;
   }
