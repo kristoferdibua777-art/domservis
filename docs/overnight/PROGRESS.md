@@ -340,9 +340,28 @@ CI #57 на `08f4d54` по логу job `112954540933`: `CI` — failure тол�
 не запустить. RSpec выполнит workflow `test-diagnostic` (полный `bundle exec rspec`); RuboCop — шаг Lint, но он
 сейчас обрывается на Brakeman раньше RuboCop, до мержа #58.
 
+### 2026-10-07 ~20:40–21:10 (автозапуск)
+
+CI #57 на `b7bb714`: `CI` (job `112981041583`) — failure только из-за Brakeman `EOLRails` («Support for Rails 8.0.4
+ended on 2026-10-07», устаревший отпечаток `98b26f60…`, `exit code 3`) — ждёт PR #58 (draft, mergeable clean, не смержен).
+`docker-ci` — success. `test-diagnostic` (job `112981042028`) — **failure, стадия RSpec: 13776 examples, 2 failures**,
+обе в новом `web_push_sender_spec.rb` (`:51` ошибка 503, `:59` без VAPID-ключей):
+`NameError: uninitialized constant WebPush::SubscriptionNotFoundError` в `web_push_sender.rb:47`.
+
+**Задача 1 — найден и исправлен настоящий баг отправки пушей** (коммит «Rescue only Web Push errors that exist…»).
+Диагноз: в геме `web-push 3.1.0` (Gemfile.lock) нет класса `SubscriptionNotFoundError` — проверено по исходнику гема
+(`lib/web_push/errors.rb`: `Error, ConfigurationError, ResponseError, InvalidSubscription, ExpiredSubscription,
+Unauthorized, PayloadTooLarge, TooManyRequests, PushServiceError`; 404 гем отдаёт как `InvalidSubscription`).
+Ruby вычисляет список `rescue` при сопоставлении исключения, поэтому любая ошибка, кроме 410/404 (5xx, 429,
+401 — несовпадение VAPID, отсутствие ключей, сетевой сбой), превращалась в `NameError` и вылетала из
+`WebPushDeliveryJob` вместо записи в лог и `:failed`. Спек из прошлого запуска поймал это сразу.
+Исправление — убрать несуществующий класс из `rescue` (1 строка вместо 3). Поведение для 410/404 не меняется.
+Локально: `ruby -c` — OK; RSpec локально не запустить (нет Zammad/гемов) — подтвердит `test-diagnostic` на этом push.
+
 ## Подсказки следующему запуску
 
-- Проверить в логе `test-diagnostic` (stage RSpec), что `web_push_sender_spec.rb` зелёный; если красный — чинить спек.
+- Проверить `test-diagnostic` на коммите с исправлением `rescue` (~75 мин): RSpec должен быть 0 failures. Если снова
+  красный — смотреть `Failures:` (лог большой — извлекать через субагента).
 
 - Задача 4 (остаток): по желанию — QUnit/Vitest для мастера нет, проверка только Playwright-скриптом.
 - Остаток требует Ивана: деплой ветки на тестовый стенд + проверка пушей на реальном Android (сценарий выше),
