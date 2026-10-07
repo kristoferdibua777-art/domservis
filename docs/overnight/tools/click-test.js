@@ -1,9 +1,11 @@
 // Clicks every visible button/link of the dispatch board harness (board.html from build.js)
 // at mobile widths and records what each click did: state change, API call, navigation.
 // Playwright's real click fails if another element covers the button, so a pass also
-// proves the button is reachable. Usage: node click-test.js <board.html> > clicks.json
+// proves the button is reachable.
+// Usage: node click-test.js <board.html> [widths] [screen names, comma-separated] > clicks.json
+// The calendar is desktop-only (calendarAvailable: !mobileView): node click-test.js board.html 1280 календарь
 const { chromium } = require('playwright')
-const [,, page_, widthsArg = '360,390,412'] = process.argv
+const [,, page_, widthsArg = '360,390,412', onlyArg] = process.argv
 
 // Screens: role + harness screen + optional extra state applied before re-render.
 const SCREENS = [
@@ -17,6 +19,7 @@ const SCREENS = [
   { name: 'карточка (моя)', role: 'master', screen: 'detail', set: { detailJobId: 102 } },
   { name: 'карточка', role: 'dispatcher', screen: 'detail' },
   { name: 'правка', role: 'dispatcher', screen: 'detail', set: { editOpen: true, editingJobId: 101 } },
+  { name: 'календарь', role: 'dispatcher', screen: 'board', set: { viewMode: 'calendar' }, only: true },
 ]
 
 const CLICKABLE = ':is(button, a[href], summary, [role=button], .js-job-card)'
@@ -76,7 +79,7 @@ const label = (el) => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
   const rows = []
   for (const width of widthsArg.split(',').map(Number))
-  for (const sc of SCREENS) {
+  for (const sc of SCREENS.filter((s) => onlyArg ? onlyArg.split(',').includes(s.name) : !s.only)) {
     const ctx = await browser.newContext({ viewport: { width, height: 800 }, isMobile: true, hasTouch: true, locale: 'ru-RU' })
     const p = await ctx.newPage()
     const errs = []
