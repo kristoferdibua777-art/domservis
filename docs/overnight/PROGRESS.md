@@ -358,9 +358,21 @@ Ruby вычисляет список `rescue` при сопоставлении 
 Исправление — убрать несуществующий класс из `rescue` (1 строка вместо 3). Поведение для 410/404 не меняется.
 Локально: `ruby -c` — OK; RSpec локально не запустить (нет Zammad/гемов) — подтвердит `test-diagnostic` на этом push.
 
+### 2026-10-07 ~21:40–22:30 (автозапуск)
+
+CI #57 на `d4f7758`: `CI` (job `113014258409`) — failure только из-за Brakeman `EOLRails` («Support for Rails 8.0.4
+ended on 2026-10-07», устаревший отпечаток `98b26f60…`, `exit code 3`) — ждёт PR #58 (draft, mergeable clean, не смержен).
+`docker-ci` — success. `test-diagnostic` (run `37686118300`, job `113014257181`) — к 22:26 UTC ещё шёл (запущен 20:59),
+результат RSpec по исправлению `rescue` в этом запуске получить не успел.
+
+Локальная проверка исправления: установлен гем `web-push 3.1.0` (как в Gemfile.lock) в scratch-папку,
+`ruby -e 'require "web_push"; …'`: `ExpiredSubscription`, `InvalidSubscription`, `ResponseError` существуют
+(первые два — наследники `ResponseError`), `defined?(WebPush::SubscriptionNotFoundError)` → `nil`.
+То есть в нынешнем `rescue` больше нет несуществующих констант. Код не менялся, новых коммитов кроме этого файла нет.
+
 ## Подсказки следующему запуску
 
-- Проверить `test-diagnostic` на коммите с исправлением `rescue` (~75 мин): RSpec должен быть 0 failures. Если снова
+- Проверить `test-diagnostic` run `37686118300` (коммит `d4f7758`, с исправлением `rescue`; идёт >85 мин): RSpec должен быть 0 failures. Если снова
   красный — смотреть `Failures:` (лог большой — извлекать через субагента).
 
 - Задача 4 (остаток): по желанию — QUnit/Vitest для мастера нет, проверка только Playwright-скриптом.
