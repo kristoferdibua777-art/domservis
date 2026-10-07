@@ -15,3 +15,4 @@ window.App = {
   DomServisDispatchJob: { find() { return null }, select() { return [] } },
   view: (name) => (params) => window.JST[name](params),
 }
+window.__ = (s) => s
