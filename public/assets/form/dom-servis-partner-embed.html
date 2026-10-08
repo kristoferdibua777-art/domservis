@@ -181,8 +181,24 @@
       transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
     }
 
-    .field input::placeholder {
+    .field input::placeholder,
+    .field textarea::placeholder {
       color: var(--field-placeholder);
+    }
+
+    .field textarea {
+      width: 100%;
+      min-height: 132px;
+      border-radius: 16px;
+      border: 1px solid var(--field-border);
+      background: var(--field-bg);
+      color: var(--field-text);
+      padding: 18px 22px;
+      font: inherit;
+      font-size: 20px;
+      line-height: 1.4;
+      outline: none;
+      resize: vertical;
     }
 
     .field input:hover {
@@ -805,13 +821,18 @@
             </div>
           </div>
 
+          <div class="field">
+            <label for="dom_servis_description">${escapeHtml(state.config?.request_source?.settings?.issue_label || "Код ошибки или описание неисправности")}</label>
+            <textarea id="dom_servis_description" name="dom_servis_description" autocomplete="off" placeholder="${escapeHtml(state.config?.request_source?.settings?.issue_placeholder || "Например: ошибка E03, котёл не запускается, нет горячей воды")}"></textarea>
+          </div>
+
           <div class="checkbox">
             <input id="privacy_accepted" name="privacy_accepted" type="checkbox" value="1">
             <label class="checkbox__copy" for="privacy_accepted">${consentMarkup()}</label>
           </div>
           <div class="field-error" data-error-for="privacy"></div>
 
-          <button type="submit" class="submit" disabled>Отправить</button>
+          <button type="submit" class="submit" disabled>${escapeHtml(state.config?.request_source?.settings?.submit_button_text || "Вызвать мастера")}</button>
           <div class="fineprint">После отправки мастер перезвонит и уточнит детали заявки.</div>
         `;
 
@@ -864,7 +885,8 @@
           const dispatchDate = currentDispatchDate();
           const name = form.querySelector('[name="name"]').value.trim();
           const phone = submitPhoneValue(form.querySelector('[name="dom_servis_client_phone"]').value);
-          const description = submitDescription(name, phone);
+          const issue = form.querySelector('[name="dom_servis_description"]').value.trim();
+          const description = issue || submitDescription(name, phone);
 
           const payload = new FormData();
           payload.set('fingerprint', state.fingerprint);
@@ -873,12 +895,12 @@
           payload.set('request_source_origin', state.requestSourceOrigin);
           payload.set('name', name);
           payload.set('email', generatedEmail());
-          payload.set('title', 'Заявка на обратный звонок');
+          payload.set('title', state.config?.request_source?.settings?.form_title || 'Ремонт газового котла');
           payload.set('body', description);
           payload.set('dom_servis_client_name', name);
           payload.set('dom_servis_client_phone', phone);
-          payload.set('dom_servis_service_type', 'Уточнить у клиента');
-          payload.set('dom_servis_address', 'Уточнить у клиента');
+          payload.set('dom_servis_service_type', state.config?.request_source?.settings?.service_type || 'Ремонт газового котла');
+          payload.set('dom_servis_address', state.config?.request_source?.settings?.address_placeholder || 'Адрес уточнить по телефону');
           payload.set('dom_servis_visit_date', dispatchDate);
           payload.set('dom_servis_visit_day', weekdayKey(dispatchDate));
           payload.set('dom_servis_visit_time', 'Уточнить у клиента');
