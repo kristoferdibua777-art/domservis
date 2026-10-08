@@ -64,6 +64,22 @@ class DomServis::RequestSource < ApplicationModel
     "#{base_origin}/assets/form/dom-servis-partner-embed.html?#{query.to_query}"
   end
 
+  # Standalone step-by-step page a customer opens directly (link in a
+  # messenger, QR code, social profile). It submits through the same form
+  # channel as the embed, so the request lands as a DispatchJob of this
+  # source's partner organization. The page reports our own origin, so a
+  # source restricted to partner domains would reject it: no link then.
+  def client_form_url
+    return if allowed_domains.present?
+
+    query = {
+      request_source_token: embed_token,
+      v:                    embed_cache_bust,
+    }
+
+    "#{base_origin}/assets/form/dom-servis-client-request.html?#{query.to_query}"
+  end
+
   def embed_snippet
     <<~HTML.strip
       <iframe
@@ -172,6 +188,7 @@ class DomServis::RequestSource < ApplicationModel
       display_name:            display_name,
       organization_name:       Organization.find_by(id: organization_id)&.name,
       embed_url:               embed_url,
+      client_form_url:         client_form_url,
       embed_snippet:           embed_snippet,
       embed_js_snippet:        embed_js_snippet,
       privacy_policy_url:      privacy_policy_url,
