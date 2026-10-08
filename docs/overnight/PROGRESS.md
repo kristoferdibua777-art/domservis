@@ -501,6 +501,14 @@ CI #57 на `39c22cc` — **полностью зелёный**: `CI` run `37751
 (`dom-servis-client-request.html`, `request_source.jst.eco`, `zammad.pot`) надписей «Пул» нет — задача 2 остаётся
 100%. Остаток задачи 1 по-прежнему требует Ивана (деплой на тестовый стенд + VAPID-ключи).
 
+### 2026-10-08 ~11:40 (автозапуск)
+
+CI #57 на `2bfee30` — **полностью зелёный**: `CI` run `37758302155` — success,
+`Test diagnostic` run `37758302089` — success, `docker-ci` — success. На `c35a828` (merge `main` с #58 и #59 —
+первый прогон с кодом #59 в ветке): Lint и Markdownlint — success (job `113270689013`), `docker-ci` — success;
+Test и `test-diagnostic` к 11:40 UTC ещё шли. Код не менялся. Остаток задачи 1 по-прежнему требует Ивана
+(деплой на тестовый стенд + VAPID-ключи).
+
 ## Подсказки следующему запуску
 
 - Lint кода ветки зелёный (RuboCop/CoffeeLint/ESLint/Stylelint). Последний шаг — Markdownlint: **после каждой правки
