@@ -43,7 +43,9 @@
     } catch (e) {}
   <% end -%>
 
-  <script src="/assets/application-11ea6e232be6f2d056effccb8fbc351ebedff9b811ee1d93237fcdd1433bc500.js?v=push2" defer="defer" nonce="<%= content_security_policy_nonce %>"></script>
+  <%# Same bundle as the main app layout. A hard-coded digest pins the board
+      to whatever build produced it and breaks once that file is gone. %>
+  <%= javascript_include_tag "application", nonce: true, :defer => 'defer' %>
 
   <%# Register the dispatch service worker inline.
       The SW is built by Vite (vite-plugin-pwa, second VitePWA block in
