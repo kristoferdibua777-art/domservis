@@ -43,14 +43,19 @@ Every request source also exposes `client_form_url`
 - Unlike the embed, it fills `service_type`, `address`, `description` and `comment` with the customer's answers;
   "Срочно, сегодня" sets priority `high`, "Завтра" sets tomorrow's visit date, and visit time stays
   "Уточнить у клиента".
-- For a source used only through this link, leave `allowed_domains` empty (or add our own domain), because the page
-  reports our domain as its origin.
+- For a source used only through this link, leave `allowed_domains` empty: the page reports our domain as its origin,
+  so the source card offers the link only when no partner domains are set.
 
 ## Runtime flow
 
 - Partner site submits a Zammad form.
-- The iframe shows only `name`, `phone`, and consent to the customer.
+- The iframe shows `name`, `phone`, an optional issue field (error code or description, sent as the ticket
+  description), and consent to the customer.
 - The iframe fills dispatch placeholders such as `service_type`, `address`, and `visit_date` automatically before submit.
+- A source can tune the form through its `settings`, which `form_config` returns as `request_source.settings`:
+  `form_title` (ticket title), `service_type`, `address_placeholder` (address sent when none is asked),
+  `issue_label`, `issue_placeholder` and `submit_button_text`. Without settings the form uses generic texts
+  ("Уточнить у клиента" for service type and address). Any replacement of this form must keep honouring these keys.
 - The iframe posts its height to the parent window as the layout changes.
 - Zammad creates a `Ticket`.
 - The Dom-Servis intake bridge resolves `request_source_token` to a registry record and, when present, validates
