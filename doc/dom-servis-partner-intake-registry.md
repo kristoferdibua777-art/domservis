@@ -29,6 +29,23 @@ This note describes the working model for partner intake in Dom-Servis after the
 9. The generated embed listens for resize messages from the iframe and updates the iframe height automatically, so
    partner modals do not need a second inner scrollbar.
 
+## Client link (standalone page)
+
+Every request source also exposes `client_form_url`
+(`/assets/form/dom-servis-client-request.html?request_source_token=…`), shown in the admin card as
+"Ссылка на форму для клиентов". It is a full page on our own domain for customers who open a link directly
+(messenger, QR code, social profile) instead of an iframe on a partner site.
+
+- The customer answers one question per screen: what needs doing, what happened and the equipment brand,
+  address and preferred time, then name, phone and consent.
+- The page uses the same `form_config` / `form_submit` channel and `request_source_token` as the embed, so the
+  request becomes a `Ticket` plus a `DispatchJob` attributed to the source's partner organization.
+- Unlike the embed, it fills `service_type`, `address`, `description` and `comment` with the customer's answers;
+  "Срочно, сегодня" sets priority `high`, "Завтра" sets tomorrow's visit date, and visit time stays
+  "Уточнить у клиента".
+- For a source used only through this link, leave `allowed_domains` empty (or add our own domain), because the page
+  reports our domain as its origin.
+
 ## Runtime flow
 
 - Partner site submits a Zammad form.
