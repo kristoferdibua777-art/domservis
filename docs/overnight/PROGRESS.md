@@ -433,6 +433,15 @@ Markdownlint — success** (впервые весь Lint ветки зелёны
 `test-diagnostic` (job `113093934234`) — шёл. Код не менялся. Описание PR #57 обновлено: чек-лист отражает
 сделанное, открыт один пункт — проверка пушей на реальном Android (нужен Иван).
 
+### 2026-10-08 ~02:40 (автозапуск)
+
+**CI #57 впервые полностью зелёный** на `3b848ae` (по списку шагов job через GitHub API):
+`CI` run `37710153911` — success (Lint, Markdownlint, **Test** 01:00–02:22 UTC — все шаги success);
+`Test diagnostic` run `37710153915` — success; `docker-ci` run `37710153937` — success.
+На `6d14de3` (только этот файл): Lint и Markdownlint — success, `docker-ci` — success, Test и `test-diagnostic` к 02:40
+ещё шли. Код не менялся. Остаток задачи 1 (проверка на реальном Android) требует Ивана: деплой ветки на тестовый
+стенд + VAPID-ключи на сервере.
+
 ## Подсказки следующему запуску
 
 - Lint кода ветки зелёный (RuboCop/CoffeeLint/ESLint/Stylelint). Последний шаг — Markdownlint: **после каждой правки
