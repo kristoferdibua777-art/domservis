@@ -442,6 +442,14 @@ Markdownlint — success** (впервые весь Lint ветки зелёны
 ещё шли. Код не менялся. Остаток задачи 1 (проверка на реальном Android) требует Ивана: деплой ветки на тестовый
 стенд + VAPID-ключи на сервере.
 
+### 2026-10-08 ~03:40 (автозапуск)
+
+CI #57 на `6d14de3` (только этот файл) — **полностью зелёный**: `CI` run `37714178570` — success (Lint, Markdownlint,
+Test), `Test diagnostic` run `37714178676` — success, `docker-ci` — success.
+На `28dc85d`: Lint и Markdownlint — success (job `113122244570`), `docker-ci` — success; Test и `test-diagnostic`
+к 03:40 UTC ещё шли. Код не менялся. Остаток задачи 1 — проверка на реальном Android (нужен Иван: деплой ветки
+на тестовый стенд + VAPID-ключи на сервере).
+
 ## Подсказки следующему запуску
 
 - Lint кода ветки зелёный (RuboCop/CoffeeLint/ESLint/Stylelint). Последний шаг — Markdownlint: **после каждой правки
