@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe DomServis::Notifications::WebPushSender do
+RSpec.describe DomServis::Notifications::WebPushSender, :aggregate_failures do
   subject(:sender) { described_class.new(subscription:, payload: { title: 'Новая заявка на стенде' }) }
 
   let(:subscription) do

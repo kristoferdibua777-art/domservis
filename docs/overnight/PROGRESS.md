@@ -399,7 +399,16 @@ CI #57 на `4ce36a4` (исправление `in?([404, 410])`):
   должен впервые пройти Lint дальше Brakeman (RuboCop, CoffeeLint, ESLint, Stylelint). Файл в ветке не менялся.
 - `docker-ci` — success. Конфликтов с main нет.
 
-Код в этом запуске не менялся.
+
+**Продолжение (00:25–00:45).** Первый прогон Lint после мержа #58 (`3cc088d`, job `113085158555`): Brakeman прошёл
+(`Security Warnings: 0`, `Ignored Warnings: 37`), zeitwerk, .po/.pot, GraphQL — ок. Упал **RuboCop: 5308 files, 4 offenses**,
+все в нашем `web_push_sender_spec.rb` — `RSpec/MultipleExpectations [2/1]` (строки 29, 43, 51, 59).
+Исправление: метаданные `:aggregate_failures` на `describe` — общепринятая в репозитории идиома (например,
+`spec/jobs/taskbar_update_trigger_subscriptions_job_spec.rb`, наш же `push_subscription_spec.rb`); проверки и ожидания
+не ослаблены, все ожидания по-прежнему обязательны. Локально: rubocop 1.85.1 + rubocop-rspec 3.9.0 (как в Gemfile.lock)
+в scratch-папке, `--only RSpec/MultipleExpectations`: ДО — 4 offenses (воспроизведено), ПОСЛЕ — 0;
+`RSpec/MetadataStyle` — 0. Полный конфиг проекта локально не запустить (нужны кастомные копы Zammad) — подтвердит CI.
+CoffeeLint/ESLint/Stylelint идут в lint.sh после RuboCop и по ветке ещё не запускались — смотреть следующий прогон.
 
 ## Подсказки следующему запуску
 
