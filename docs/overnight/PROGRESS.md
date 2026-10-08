@@ -516,6 +516,13 @@ success, `Test diagnostic` run `37765097173` — success, `docker-ci` — succes
 `CI` и `test-diagnostic` к 12:40 UTC ещё шли. `main` (`a4286c3`) уже влит в ветку. Код не менялся. Остаток задачи 1
 по-прежнему требует Ивана (деплой на тестовый стенд + VAPID-ключи).
 
+### 2026-10-08 ~13:40 (автозапуск)
+
+CI #57 на `82b25af` — **полностью зелёный**: `CI` run `37771681114` — success,
+`Test diagnostic` run `37771681194` — success, `docker-ci` — success. На `1d16af1`: `docker-ci` — success,
+`CI` и `test-diagnostic` к 13:40 UTC ещё шли. `main` (`a4286c3`) уже влит в ветку, новых коммитов в `main` нет.
+Код не менялся. Остаток задачи 1 по-прежнему требует Ивана (деплой на тестовый стенд + VAPID-ключи).
+
 ## Подсказки следующему запуску
 
 - Lint кода ветки зелёный (RuboCop/CoffeeLint/ESLint/Stylelint). Последний шаг — Markdownlint: **после каждой правки
