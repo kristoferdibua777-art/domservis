@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 
 # core - base
 ruby '3.4.9'
-gem 'rails', '~> 8.0.0'
+gem 'rails', '~> 8.0.5', '>= 8.0.5.1'
 gem 'rake'
 
 # core - rails additions
