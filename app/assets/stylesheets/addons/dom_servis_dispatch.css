@@ -2883,7 +2883,7 @@ summary.dom-servis-dispatch-drawer__history-row {
 }
 
 /* Mobile layout fixes found by the Playwright audit at 360/390/412 px
-   (docs/overnight/PROGRESS.md, task 3). */
+   (PR #57, task 3). */
 @media (max-width: 767px) {
   /* Zammad gives .btn--text -10px side margins and `.btn + .btn` an extra
      10px left margin. Inside these grids that shifts every pill sideways, so
