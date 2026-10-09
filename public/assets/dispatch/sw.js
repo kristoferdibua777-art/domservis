@@ -45,7 +45,9 @@
     var options = {
       body: payload.body || '',
       icon: DEFAULT_ICON,
-      badge: DEFAULT_ICON,
+      // No `badge`: Android renders the badge as a monochrome mask, so a
+      // full-colour square icon shows up as a blank white square in the
+      // status bar. Without it Chrome falls back to its own small icon.
       data: {
         url: payload.url || DEFAULT_URL,
         jobId: payload.jobId || null,
@@ -79,10 +81,13 @@
             for (var i = 0; i < allClients.length; i++) {
               var client = allClients[i];
               if (client.url && client.url.indexOf('/dispatch/') !== -1) {
-                if ('focus' in client) {
-                  return client.focus();
+                // Focus the open board; navigate it only when the push
+                // points somewhere other than the board itself.
+                var focused = 'focus' in client ? client.focus() : Promise.resolve(client);
+                if (targetUrl !== DEFAULT_URL && 'navigate' in client) {
+                  return focused.then(function (c) { return (c || client).navigate(targetUrl); });
                 }
-                return Promise.resolve();
+                return focused;
               }
             }
             if (self.clients.openWindow) {

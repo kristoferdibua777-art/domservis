@@ -125,7 +125,7 @@ const priorityLabel = (priority?: string) => {
 
 const statusLabel = (status?: DispatchStatus) => {
   const map: Record<string, string> = {
-    pool: 'В пуле',
+    pool: 'На стенде',
     taken: 'Назначена',
     in_progress: 'В работе',
     done: 'Готово',
@@ -188,7 +188,7 @@ const stats = computed(() => {
     { label: 'Всего', value: jobs.value.length },
     { label: 'Мои', value: mine },
     { label: 'В работе', value: inProgress },
-    { label: 'В пуле', value: pool },
+    { label: 'На стенде', value: pool },
   ]
 })
 
@@ -208,14 +208,14 @@ const filterOptions = computed<FilterOption[]>(() => {
     policy.value?.role_key === 'master'
       ? [
           { key: 'mine', label: 'Мои', count: counts.mine },
-          { key: 'pool', label: 'Пул', count: counts.pool },
+          { key: 'pool', label: 'Стенд', count: counts.pool },
           { key: 'in_progress', label: 'В работе', count: counts.in_progress },
           { key: 'done', label: 'Готово', count: counts.done },
         ]
       : [
           { key: 'open', label: 'Открытые', count: counts.open },
           { key: 'mine', label: 'Мои', count: counts.mine },
-          { key: 'pool', label: 'Пул', count: counts.pool },
+          { key: 'pool', label: 'Стенд', count: counts.pool },
           { key: 'in_progress', label: 'В работе', count: counts.in_progress },
           { key: 'done', label: 'Готово', count: counts.done },
           { key: 'cancelled', label: 'Отменено', count: counts.cancelled },
@@ -381,7 +381,7 @@ const releaseJob = (job: DispatchJob) =>
     job,
     `/api/v1/dom_servis/dispatch/jobs/${job.id}/release`,
     undefined,
-    'Заявка возвращена в пул.',
+    'Заявка возвращена на стенд.',
   )
 
 const setJobStatus = (job: DispatchJob, status: DispatchStatus) =>
@@ -712,7 +712,7 @@ onMounted(() => {
                 :disabled="savingJobId === selectedJob.id"
                 @click="releaseJob(selectedJob)"
               >
-                В пул
+                На стенд
               </button>
               <button
                 v-if="canStart(selectedJob)"

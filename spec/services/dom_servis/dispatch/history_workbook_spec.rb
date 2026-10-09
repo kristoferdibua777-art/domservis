@@ -42,7 +42,7 @@ RSpec.describe DomServis::Dispatch::HistoryWorkbook, :aggregate_failures do
     expect(rows.pluck(5).uniq).to eq([admin.fullname])
     expect(rows.pluck(6)).to eq([
                                   'Источник: Вручную',
-                                  "Исполнитель: — → #{master.fullname}; Статус: В пуле → Взята",
+                                  "Исполнитель: — → #{master.fullname}; Статус: На стенде → Взята",
                                   'Адрес: Lenina 10 → Mira 5',
                                   'Комментарий диспетчера: — → Позвонить',
                                 ])
@@ -67,7 +67,7 @@ RSpec.describe DomServis::Dispatch::HistoryWorkbook, :aggregate_failures do
 
     expect(last_row[2]).to eq(job_code)
     expect(last_row[4]).to eq('Заявка удалена')
-    expect(last_row[6]).to eq("Номер заявки: #{job_code}; Статус: В пуле; Адрес: Lenina 10")
+    expect(last_row[6]).to eq("Номер заявки: #{job_code}; Статус: На стенде; Адрес: Lenina 10")
   end
 
   it 'builds an xlsx file' do

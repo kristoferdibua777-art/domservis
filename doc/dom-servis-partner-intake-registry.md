@@ -49,8 +49,8 @@ Every request source also exposes `client_form_url`
 ## Runtime flow
 
 - Partner site submits a Zammad form.
-- The iframe shows `name`, `phone`, an optional issue field (error code or description, sent as the ticket
-  description), and consent to the customer.
+- The iframe shows a step-by-step form: contacts (`name`, `phone`, optional address), the problem with an optional
+  issue field (error code or description, sent in the ticket description), the equipment brand, then consent.
 - The iframe fills dispatch placeholders such as `service_type`, `address`, and `visit_date` automatically before submit.
 - A source can tune the form through its `settings`, which `form_config` returns as `request_source.settings`:
   `form_title` (ticket title), `service_type`, `address_placeholder` (address sent when none is asked),

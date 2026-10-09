@@ -604,7 +604,7 @@ class App.DomServisDispatchBoard extends App.Controller
         return
         ui.notify(
           type: 'success'
-          msg: 'Заявка создана и опубликована в пул.'
+          msg: 'Заявка создана и опубликована на стенд.'
           timeout: 3000
         )
         ui.createOpen = false
@@ -626,7 +626,7 @@ class App.DomServisDispatchBoard extends App.Controller
     finalizeSuccess = =>
       @notify(
         type: 'success'
-        msg: 'Заявка создана и опубликована в пул.'
+        msg: 'Заявка создана и опубликована на стенд.'
         timeout: 3000
       )
       @createOpen = false
@@ -887,10 +887,10 @@ class App.DomServisDispatchBoard extends App.Controller
       type: 'POST'
       url: "#{@apiPath}/dom_servis/dispatch/jobs/#{id}/release"
       success: =>
-        @notify(type: 'success', msg: 'Заявка возвращена в пул.', timeout: 3000)
+        @notify(type: 'success', msg: 'Заявка возвращена на стенд.', timeout: 3000)
         @loadJobs(manualRefresh: true)
       error: (xhr) =>
-        @notify(type: 'error', msg: @extractError(xhr, 'Не удалось вернуть заявку в пул.'), timeout: 6000)
+        @notify(type: 'error', msg: @extractError(xhr, 'Не удалось вернуть заявку на стенд.'), timeout: 6000)
         @loadJobs(manualRefresh: true)
     )
 
@@ -1344,7 +1344,7 @@ class App.DomServisDispatchBoard extends App.Controller
 
     [
       { id: 'open', label: 'Открытые', count: _.filter(weekJobs, (job) -> job.status in ['pool', 'taken', 'in_progress']).length }
-      { id: 'pool', label: 'Пул', count: _.filter(weekJobs, (job) -> job.status is 'pool').length }
+      { id: 'pool', label: 'Стенд', count: _.filter(weekJobs, (job) -> job.status is 'pool').length }
       { id: 'active', label: 'В работе', count: _.filter(weekJobs, (job) -> job.status in ['taken', 'in_progress']).length }
       { id: 'mine', label: 'Мои', count: _.filter(weekJobs, (job) -> job.assignee_id is App.User.current()?.id).length }
       { id: 'done', label: 'Готово', count: _.filter(weekJobs, (job) -> job.status in ['done', 'closed']).length }
@@ -1435,7 +1435,7 @@ class App.DomServisDispatchBoard extends App.Controller
       controlsOpen: @mobileControlsOpen(workspaceFilters, currentStatus.id, weekControls)
       telemetry: [
         { label: 'Мои в работе', value: stats.mineActive }
-        { label: 'В пуле', value: stats.pool }
+        { label: 'На стенде', value: stats.pool }
         { label: 'На сегодня', value: stats.today }
       ]
     }
@@ -1472,7 +1472,7 @@ class App.DomServisDispatchBoard extends App.Controller
       badges.push(
         id: 'today'
         tone: 'today'
-        label: "Сегодня в пуле: #{stats.availableToday}"
+        label: "Сегодня на стенде: #{stats.availableToday}"
       )
 
     badges
@@ -1487,7 +1487,7 @@ class App.DomServisDispatchBoard extends App.Controller
   mobileQueueTitle: (statusId) ->
     switch statusId
       when 'mine' then 'Мои заявки'
-      when 'pool' then 'Заявки из пула'
+      when 'pool' then 'Заявки со стенда'
       when 'active' then 'Текущая работа'
       when 'done' then 'Завершённые заявки'
       when 'all' then 'Все заявки недели'
@@ -1509,7 +1509,7 @@ class App.DomServisDispatchBoard extends App.Controller
 
   buildMobileBoardSummary: ->
     stats = @buildStats()
-    "#{stats.mineActive} в работе • #{stats.pool} в пуле"
+    "#{stats.mineActive} в работе • #{stats.pool} на стенде"
 
   buildMobileWeekDays: ->
     _.map @weekdayItems(), (item) =>
@@ -1534,18 +1534,18 @@ class App.DomServisDispatchBoard extends App.Controller
     if @masterAccess() && @statusFilter is 'mine'
       return {
         title: 'У вас нет активных заявок.'
-        body: 'Переключитесь на пул или измените день, чтобы взять следующую заявку.'
+        body: 'Переключитесь на стенд или измените день, чтобы взять следующую заявку.'
       }
 
     if @statusFilter is 'pool'
       return {
-        title: 'В пуле сейчас нет доступных заявок.'
+        title: 'На стенде сейчас нет доступных заявок.'
         body: 'Смените неделю или день, чтобы проверить другой срез.'
       }
 
     {
       title: 'По текущему срезу заявок нет.'
-      body: 'Смените неделю или фильтр, либо создайте первую заявку в пул.'
+      body: 'Смените неделю или фильтр, либо создайте первую заявку на стенд.'
     }
 
   mobileLabels: ->
@@ -1626,7 +1626,7 @@ class App.DomServisDispatchBoard extends App.Controller
       return { label: 'Закрыть', buttonClass: 'btn--success', handlerClass: 'js-set-status', status: 'closed' }
 
     if card.canRelease
-      return { label: 'В пул', buttonClass: 'btn--text', handlerClass: 'js-release-job' }
+      return { label: 'На стенд', buttonClass: 'btn--text', handlerClass: 'js-release-job' }
 
     if card.canEdit
       return { label: 'Редактировать', buttonClass: 'btn--text', handlerClass: 'js-open-edit' }
@@ -2153,11 +2153,11 @@ class App.DomServisDispatchBoard extends App.Controller
 
     switch eventType
       when 'created' then 'Заявка создана'
-      when 'published' then 'Опубликована в пул'
+      when 'published' then 'Опубликована на стенд'
       when 'taken' then 'Взята мастером'
       when 'assigned'
         if meta.to? then "Назначен мастер: #{@historyValue('assignee_id', meta.to)}" else 'Назначен мастер'
-      when 'released' then 'Возвращена в пул'
+      when 'released' then 'Возвращена на стенд'
       when 'status_changed' then transition('Статус', 'status')
       when 'moved_weekday' then transition('День визита', 'visit_day')
       when 'priority_changed' then transition('Приоритет', 'priority')
@@ -2884,7 +2884,7 @@ class App.DomServisDispatchBoard extends App.Controller
       when 'closed' then 'Закрыта'
       when 'cancelled' then 'Отменена'
       when 'transferred_to_partner' then 'Передана партнёру'
-      else 'В пуле'
+      else 'На стенде'
 
   priorityLabel: (priority) ->
     switch priority

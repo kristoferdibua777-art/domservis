@@ -116,7 +116,7 @@
     <div class="dom-servis-dispatch-board__hero-copy">
       <div class="dom-servis-dispatch-board__eyebrow">Дом-Сервис</div>
       <h1>Диспетчеризация заявок</h1>
-      <p>Главное рабочее поле для публикации заявок в общий пул, захвата мастерами и ежедневного контроля по дням недели.</p>
+      <p>Главное рабочее поле для публикации заявок на общий стенд, захвата мастерами и ежедневного контроля по дням недели.</p>
       <% if @mobileView: %>
         <div class="dom-servis-dispatch-board__mobile-summary">
           <div class="dom-servis-dispatch-board__mobile-summary-card">
@@ -186,7 +186,7 @@
       <strong class="dom-servis-dispatch-stat__value"><%= @stats.total %></strong>
     </div>
     <div class="dom-servis-dispatch-stat">
-      <span class="dom-servis-dispatch-stat__label">В пуле</span>
+      <span class="dom-servis-dispatch-stat__label">На стенде</span>
       <strong class="dom-servis-dispatch-stat__value"><%= @stats.pool %></strong>
     </div>
     <div class="dom-servis-dispatch-stat">
@@ -402,7 +402,7 @@
               <button
                 class="btn <%= job.primaryAction.buttonClass %> <%= job.primaryAction.handlerClass %> js-no-detail"
                 data-id="<%= job.id %>"
-                <%= "data-status=\"#{job.primaryAction.status}\"" if job.primaryAction.status %>>
+                <% if job.primaryAction.status: %>data-status="<%= job.primaryAction.status %>"<% end %>>
                 <%= job.primaryAction.label %>
               </button>
               <div class="dom-servis-dispatch-card__tap-hint"><%= @mobileLabels.openDetailsHint %></div>
@@ -587,7 +587,7 @@
                     <option value="<%= kind.id %>"><%= kind.label %></option>
                   <% end %>
                 </select>
-                <input class="js-upload-attachment-input" data-id="<%= @detailJob.id %>" type="file" hidden>
+                <input class="js-upload-attachment-input" data-id="<%= @detailJob.id %>" type="file" style="display:none">
                 <button class="btn btn--text js-trigger-attachment-upload" data-id="<%= @detailJob.id %>"<%= ' disabled' if @detailAttachmentUploading %>>
                   <%= 'Загрузка…' if @detailAttachmentUploading %>
                   <%= 'Добавить вложение' if !@detailAttachmentUploading %>
@@ -686,7 +686,7 @@
                 <button class="btn btn--success js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="closed">Закрыть</button>
               <% end %>
               <% if @detailJob.canRelease: %>
-                <button class="btn js-release-job js-no-detail" data-id="<%= @detailJob.id %>">В пул</button>
+                <button class="btn js-release-job js-no-detail" data-id="<%= @detailJob.id %>">На стенд</button>
               <% end %>
               <% if @detailJob.canCancel: %>
                 <button class="btn btn--danger js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="cancelled">Отмена</button>
@@ -705,7 +705,7 @@
         <div class="dom-servis-dispatch-modal__header">
           <div>
             <h2>Новая заявка</h2>
-            <p>После сохранения заявка сразу попадёт в общий пул мастеров.</p>
+            <p>После сохранения заявка сразу попадёт на общий стенд мастеров.</p>
           </div>
           <button class="btn btn--text js-close-create">Закрыть</button>
         </div>
@@ -736,7 +736,7 @@
           <div class="dom-servis-dispatch-modal__columns">
           <div class="form-group">
             <label>День недели *</label>
-            <select class="form-control js-create-visit-day js-create-draft-field">
+            <select class="form-control js-create-visit-day js-create-draft-field" aria-label="День недели">
               <% for day in [{ id: 'mon', label: 'Пн' }, { id: 'tue', label: 'Вт' }, { id: 'wed', label: 'Ср' }, { id: 'thu', label: 'Чт' }, { id: 'fri', label: 'Пт' }, { id: 'sat', label: 'Сб' }, { id: 'sun', label: 'Вс' }]: %>
                 <option value="<%= day.id %>"<%= ' selected' if @createDraft.visit_day is day.id %>><%= day.label %></option>
               <% end %>
@@ -745,7 +745,7 @@
 
           <div class="form-group">
             <label>Дата визита</label>
-            <input class="form-control js-create-visit-date js-create-draft-field" type="date" value="<%= @createDraft.visit_date %>">
+            <input class="form-control js-create-visit-date js-create-draft-field" type="date" aria-label="Дата визита" value="<%= @createDraft.visit_date %>">
           </div>
         </div>
 
@@ -758,7 +758,7 @@
 
           <div class="form-group">
             <label>Приоритет</label>
-            <select class="form-control js-create-priority js-create-draft-field">
+            <select class="form-control js-create-priority js-create-draft-field" aria-label="Приоритет">
               <option value="low"<%= ' selected' if @createDraft.priority is 'low' %>>Низкий</option>
               <option value="medium"<%= ' selected' if @createDraft.priority is 'medium' %>>Средний</option>
               <option value="high"<%= ' selected' if @createDraft.priority is 'high' %>>Высокий</option>
@@ -769,7 +769,7 @@
 
         <div class="form-group">
           <label>Заказчик</label>
-          <select class="form-control js-create-organization-id js-create-draft-field">
+          <select class="form-control js-create-organization-id js-create-draft-field" aria-label="Заказчик">
             <% for organization in @organizationOptions: %>
               <option value="<%= organization.id %>"<%= ' selected' if "#{@createDraft.organization_id}" is "#{organization.id}" %>><%= organization.label %></option>
             <% end %>
@@ -801,12 +801,11 @@
           <label>Комментарий диспетчера</label>
           <textarea class="form-control js-create-comment js-create-draft-field" rows="3" placeholder="Внутренний комментарий по заявке"><%= @createDraft.comment %></textarea>
         </div>
-        </div>
 
           <div class="form-group">
             <label>Вложения при оформлении</label>
             <div class="dom-servis-dispatch-modal__attachment-toolbar">
-              <select class="form-control js-create-attachment-kind">
+              <select class="form-control js-create-attachment-kind" aria-label="Вид вложения">
                 <% for kind in @createAttachmentKinds: %>
                   <option value="<%= kind.id %>"<%= ' selected' if "#{@createAttachmentKind}" is "#{kind.id}" %>><%= kind.label %></option>
                 <% end %>
@@ -834,11 +833,12 @@
               <div class="dom-servis-dispatch-modal__attachment-empty">Вложения пока не добавлены.</div>
             <% end %>
           </div>
+        </div>
         <div class="dom-servis-dispatch-modal__footer">
           <div class="dom-servis-dispatch-modal__hint">Если дату не менять, заявка будет поставлена в выбранный день открытой недели.</div>
           <div class="dom-servis-dispatch-modal__footer-actions">
             <button class="btn js-close-create">Отмена</button>
-            <button class="btn btn--success js-create-job">Опубликовать в пул</button>
+            <button class="btn btn--success js-create-job">Опубликовать на стенд</button>
           </div>
         </div>
       </div>
@@ -847,7 +847,7 @@
 
   <% if @mobileView && @mobileWorkspaceMenuOpen && @currentUserCard: %>
     <div class="dom-servis-dispatch-mobile-menu">
-      <button type="button" class="dom-servis-dispatch-mobile-menu__backdrop js-close-mobile-account-menu"></button>
+      <button type="button" class="dom-servis-dispatch-mobile-menu__backdrop js-close-mobile-account-menu" aria-label="Закрыть меню"></button>
       <aside class="dom-servis-dispatch-mobile-menu__sheet" role="dialog" aria-modal="true" aria-label="<%= @mobileLabels.accountMenuTitle %>">
         <div class="dom-servis-dispatch-mobile-menu__header">
           <div>

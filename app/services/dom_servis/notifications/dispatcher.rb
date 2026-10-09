@@ -113,7 +113,7 @@ class DomServis::Notifications::Dispatcher
   def push_title
     case event_type
     when :new_pool_job, :job_released
-      'Новая заявка в пуле'
+      'Новая заявка на стенде'
     when :assigned_to_you
       'Вам назначена заявка'
     when :job_unclaimed
