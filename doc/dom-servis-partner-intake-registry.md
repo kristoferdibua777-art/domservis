@@ -49,13 +49,19 @@ Every request source also exposes `client_form_url`
 ## Runtime flow
 
 - Partner site submits a Zammad form.
-- The iframe shows a step-by-step form: contacts (`name`, `phone`, optional address), the problem with an optional
-  issue field (error code or description, sent in the ticket description), the equipment brand, then consent.
+- The iframe shows a one-page form: equipment brand, phone, name, an optional error code or problem description,
+  then consent. Name and phone are required. The page fits a 320 x 600 iframe without scrolling (ZIPКОТЛЫ39 embeds
+  it on Tilda in a fixed 600px frame), error messages included; on wide screens brand, phone and name share one row.
 - The iframe fills dispatch placeholders such as `service_type`, `address`, and `visit_date` automatically before submit.
+  The brand is appended to the service type ("Ремонт газового котла — Baxi"), so the board card shows it; brand and
+  problem also go into the description.
 - A source can tune the form through its `settings`, which `form_config` returns as `request_source.settings`:
   `form_title` (ticket title), `service_type`, `address_placeholder` (address sent when none is asked),
+  `brand_label`, `brand_placeholder`, `brand_suggestions` (comma-separated brands offered while typing),
   `issue_label`, `issue_placeholder` and `submit_button_text`. Without settings the form uses generic texts
-  ("Уточнить у клиента" for service type and address). Any replacement of this form must keep honouring these keys.
+  ("Марка техники", "Уточнить у клиента" for service type and address). Any replacement of this form must keep
+  honouring these keys.
+- After a successful submit the page offers "Отправить ещё одну заявку", which reloads the form configuration.
 - The iframe posts its height to the parent window as the layout changes.
 - Zammad creates a `Ticket`.
 - The Dom-Servis intake bridge resolves `request_source_token` to a registry record and, when present, validates
