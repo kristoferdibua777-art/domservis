@@ -729,8 +729,21 @@
         ].join(' ');
       }
 
+      // privacy_policy_url can come from the page's own query string, so only
+      // http(s) links are rendered; a javascript: URL would run on our domain.
+      function httpUrl(value) {
+        const text = String(value || '').trim();
+        if (!text) return '';
+        try {
+          const url = new URL(text, window.location.href);
+          return /^https?:$/.test(url.protocol) ? url.href : '';
+        } catch (error) {
+          return '';
+        }
+      }
+
       function consentMarkup() {
-        const policyUrl = state.config?.request_source?.privacy_policy_url || state.privacyPolicyUrl;
+        const policyUrl = httpUrl(state.config?.request_source?.privacy_policy_url || state.privacyPolicyUrl);
         if (policyUrl) {
           return `Нажимая на кнопку, вы соглашаетесь с <a href="${escapeHtml(policyUrl)}" target="_blank" rel="noopener noreferrer">политикой конфиденциальности</a>`;
         }
