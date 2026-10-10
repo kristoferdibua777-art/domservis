@@ -6,23 +6,26 @@
   <meta name="theme-color" content="#71747b">
   <title>Дом-Сервис | Заявка партнёра</title>
   <style>
+    /*
+      One screen, no scrolling: partners often embed this page in a fixed
+      600px iframe (ZIPКОТЛЫ39 on Tilda) that is 320px wide on phones, so the
+      whole form, error lines included, has to fit into 320 x 600.
+    */
     :root {
       --page-text: #f4f4f6;
       --muted: rgba(255, 255, 255, 0.78);
-      --muted-strong: rgba(255, 255, 255, 0.88);
+      --muted-strong: rgba(255, 255, 255, 0.9);
       --card-border: rgba(255, 255, 255, 0.18);
       --card-shadow: rgba(20, 22, 28, 0.32);
       --field-bg: rgba(252, 252, 253, 0.98);
       --field-border: rgba(27, 30, 37, 0.08);
       --field-text: #181a20;
       --field-placeholder: #a7a9b2;
-      --danger: #d84a4a;
-      --danger-soft: rgba(216, 74, 74, 0.14);
       --accent: #e2382b;
       --accent-strong: #f14536;
-      --radius: 30px;
-      --radius-sm: 18px;
-      --shadow: 0 28px 80px var(--card-shadow);
+      --radius: 24px;
+      --radius-field: 14px;
+      --field-height: 48px;
       --font-head: "Segoe UI Variable Display", "Segoe UI", "Inter", sans-serif;
       --font-body: "Segoe UI Variable Text", "Segoe UI", "Inter", sans-serif;
     }
@@ -38,11 +41,11 @@
       background: transparent;
       color: var(--page-text);
       font-family: var(--font-body);
-      line-height: 1.45;
+      line-height: 1.4;
     }
 
     body {
-      padding: clamp(12px, 1.3vw, 24px);
+      padding: clamp(8px, 1.2vw, 20px);
       overflow-x: hidden;
     }
 
@@ -55,13 +58,13 @@
       position: relative;
       width: 100%;
       overflow: hidden;
-      padding: clamp(28px, 4vw, 46px);
+      padding: clamp(16px, 3vw, 32px);
       border-radius: var(--radius);
       background:
         linear-gradient(142deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02) 24%),
         linear-gradient(180deg, #858891 0%, #767981 44%, #666972 100%);
       border: 1px solid var(--card-border);
-      box-shadow: var(--shadow);
+      box-shadow: 0 20px 60px var(--card-shadow);
       isolation: isolate;
     }
 
@@ -83,37 +86,28 @@
       z-index: 1;
     }
 
-    .eyebrow {
-      margin: 0 0 12px;
-      color: rgba(255, 255, 255, 0.76);
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
     h1 {
       margin: 0;
       font-family: var(--font-head);
-      font-size: 58px;
-      line-height: 0.95;
+      font-size: clamp(24px, 3.4vw, 36px);
+      line-height: 1.1;
       font-weight: 800;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
     }
 
     .lead {
-      margin: 14px 0 0;
+      margin: 6px 0 0;
       color: var(--muted);
-      font-size: 16px;
+      font-size: 14px;
     }
 
     .banner {
       display: none;
-      margin-top: 22px;
-      padding: 14px 16px;
-      border-radius: var(--radius-sm);
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-field);
       font-size: 14px;
-      line-height: 1.4;
+      line-height: 1.35;
     }
 
     .banner--error {
@@ -126,15 +120,15 @@
     .loading {
       display: grid;
       place-items: center;
-      min-height: 240px;
+      min-height: 200px;
       text-align: center;
       color: rgba(255, 255, 255, 0.84);
     }
 
     .loading__spinner {
-      width: 40px;
-      height: 40px;
-      margin: 0 auto 14px;
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 12px;
       border-radius: 50%;
       border: 3px solid rgba(255, 255, 255, 0.18);
       border-top-color: rgba(255, 255, 255, 0.94);
@@ -142,51 +136,49 @@
     }
 
     .form {
-      margin-top: 28px;
+      margin-top: 14px;
       display: grid;
-      gap: 18px;
+      gap: 8px;
     }
 
-    .contact-grid {
+    .fields {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 18px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px 14px;
     }
 
     .field {
       display: grid;
-      gap: 8px;
+      gap: 4px;
+      align-content: start;
     }
 
     .field label {
       color: var(--muted-strong);
       font-size: 13px;
       font-weight: 700;
+      line-height: 1.3;
     }
 
-    .field input[type="text"],
-    .field input[type="tel"] {
+    /* 16px+ text keeps iOS Safari from zooming into a focused field. */
+    .field input {
       width: 100%;
-      min-height: 72px;
-      border-radius: 16px;
+      min-height: var(--field-height);
+      border-radius: var(--radius-field);
       border: 1px solid var(--field-border);
       background: var(--field-bg);
       color: var(--field-text);
-      padding: 0 22px;
+      padding: 0 16px;
       font: inherit;
-      font-size: 28px;
+      font-size: 17px;
       line-height: 1;
       outline: none;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
-      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
     }
 
     .field input::placeholder {
       color: var(--field-placeholder);
-    }
-
-    .field input:hover {
-      transform: translateY(-1px);
     }
 
     .field input:focus {
@@ -207,17 +199,13 @@
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
       align-items: stretch;
-      min-height: 72px;
-      border-radius: 16px;
+      min-height: var(--field-height);
+      border-radius: var(--radius-field);
       border: 1px solid var(--field-border);
       background: var(--field-bg);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
-      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
       overflow: hidden;
-    }
-
-    .phone-field:hover {
-      transform: translateY(-1px);
     }
 
     .phone-field:focus-within {
@@ -237,10 +225,10 @@
     .phone-field__prefix {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      padding: 0 16px 0 18px;
+      gap: 8px;
+      padding: 0 12px 0 14px;
       color: #3a3d47;
-      font-size: 17px;
+      font-size: 15px;
       font-weight: 700;
       white-space: nowrap;
       border-right: 1px solid rgba(27, 30, 37, 0.08);
@@ -250,51 +238,86 @@
 
     .phone-field__flag {
       display: inline-flex;
-      width: 30px;
-      height: 20px;
-      border-radius: 6px;
+      width: 24px;
+      height: 16px;
+      border-radius: 4px;
       border: 1px solid rgba(33, 37, 43, 0.1);
       background:
         linear-gradient(180deg, #ffffff 0 33.33%, #3552d8 33.33% 66.66%, #d33434 66.66% 100%);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
     }
 
-    .phone-field input {
-      min-height: 70px;
+    .phone-field input,
+    .phone-field input:focus,
+    .phone-field input[aria-invalid="true"] {
+      min-height: calc(var(--field-height) - 2px);
       border: 0;
       border-radius: 0;
       background: transparent;
       box-shadow: none;
-      padding: 0 22px 0 18px;
+      padding: 0 14px 0 12px;
     }
 
-    .phone-field input:hover,
-    .phone-field input:focus,
-    .phone-field input[aria-invalid="true"] {
-      transform: none;
-      border: 0;
-      box-shadow: none;
+    /*
+      Errors never add height, so a failed submit cannot push the form past the
+      iframe: field errors sit in the label row, the consent error has its line.
+    */
+    .field-error {
+      min-height: 16px;
+      color: #ffe0dd;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 16px;
+    }
+
+    .field__head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .field__head label {
+      flex: 0 0 auto;
+    }
+
+    .field__head .field-error {
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      text-align: right;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* A server or network error takes the header's place instead of adding a block. */
+    .shell.has-banner h1,
+    .shell.has-banner .lead {
+      display: none;
+    }
+
+    .shell.has-banner .banner {
+      margin-top: 0;
     }
 
     .checkbox {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
-      margin-top: 6px;
+      gap: 10px;
       color: var(--muted-strong);
-      font-size: 15px;
+      font-size: 13px;
     }
 
     .checkbox input {
-      width: 24px;
-      height: 24px;
-      margin: 1px 0 0;
+      width: 20px;
+      height: 20px;
+      margin: 0;
       accent-color: var(--accent);
       flex: 0 0 auto;
     }
 
     .checkbox__copy {
-      line-height: 1.35;
+      line-height: 1.3;
     }
 
     .checkbox__copy a {
@@ -304,25 +327,19 @@
       text-underline-offset: 3px;
     }
 
-    .field-error {
-      min-height: 18px;
-      color: #fff4f4;
-      font-size: 13px;
-    }
-
     .submit {
       appearance: none;
       width: 100%;
-      min-height: 72px;
+      min-height: 52px;
       border: 0;
       border-radius: 999px;
       background: linear-gradient(180deg, var(--accent-strong), var(--accent));
       color: #ffffff;
       font: inherit;
-      font-size: 22px;
+      font-size: 18px;
       font-weight: 800;
       cursor: pointer;
-      box-shadow: 0 20px 34px rgba(226, 56, 43, 0.26);
+      box-shadow: 0 14px 28px rgba(226, 56, 43, 0.26);
       transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
     }
 
@@ -332,285 +349,46 @@
     }
 
     .submit:disabled {
-      cursor: not-allowed;
+      cursor: progress;
       opacity: 0.68;
       box-shadow: none;
       transform: none;
     }
 
-    .fineprint {
-      margin-top: 2px;
-      color: rgba(255, 255, 255, 0.72);
-      font-size: 13px;
-      text-align: center;
-    }
-
     .success {
       display: grid;
-      gap: 12px;
-      padding: 12px 0 4px;
-    }
-
-    .success__eyebrow {
-      margin: 0;
-      color: rgba(255, 255, 255, 0.72);
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      font-size: 12px;
-      font-weight: 700;
+      gap: 10px;
+      padding-top: 14px;
     }
 
     .success h2 {
       margin: 0;
       font-family: var(--font-head);
-      font-size: 38px;
+      font-size: 26px;
       font-weight: 800;
-      line-height: 1;
+      line-height: 1.1;
     }
 
     .success p {
       margin: 0;
-      color: rgba(255, 255, 255, 0.84);
-      font-size: 16px;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 15px;
     }
 
-    .wizard__progress {
-      display: grid;
-      gap: 10px;
-    }
-
-    .wizard__progress-label {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      color: var(--muted-strong);
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .wizard__progress-track {
-      display: grid;
-      grid-auto-flow: column;
-      grid-auto-columns: minmax(0, 1fr);
-      gap: 6px;
-    }
-
-    .wizard__progress-segment {
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.22);
-      transition: background-color 0.25s ease;
-    }
-
-    .wizard__progress-segment.is-done {
-      background: #ffffff;
-    }
-
-    .wizard__step {
-      display: grid;
-      gap: 18px;
-      min-width: 0;
-      margin: 0;
-      padding: 0;
-      border: 0;
-    }
-
-    .wizard__step[hidden] {
-      display: none;
-    }
-
-    .wizard__step.is-entering-forward {
-      animation: step-in-forward 0.28s ease-out;
-    }
-
-    .wizard__step.is-entering-back {
-      animation: step-in-back 0.28s ease-out;
-    }
-
-    .wizard__legend {
-      float: left;
-      width: 100%;
-      margin: 0 0 2px;
-      padding: 0;
-      font-family: var(--font-head);
-      font-size: 24px;
-      font-weight: 800;
-      line-height: 1.15;
-      outline: none;
-    }
-
-    .wizard__legend + * {
-      clear: both;
-    }
-
-    .wizard__hint {
-      margin: 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .field__optional {
-      color: var(--muted);
-      font-weight: 400;
-    }
-
-    .field textarea {
-      width: 100%;
-      min-height: 96px;
-      border-radius: 16px;
-      border: 1px solid var(--field-border);
-      background: var(--field-bg);
-      color: var(--field-text);
-      padding: 14px 18px;
-      font: inherit;
-      font-size: 17px;
-      line-height: 1.4;
-      resize: vertical;
-      outline: none;
-    }
-
-    .field textarea:focus {
-      border-color: rgba(226, 56, 43, 0.4);
-      box-shadow: 0 0 0 4px rgba(226, 56, 43, 0.1);
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .chip {
-      position: relative;
-      display: inline-flex;
-    }
-
-    .chip input {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .chip span {
-      display: inline-flex;
-      align-items: center;
-      min-height: 48px;
-      padding: 0 18px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.34);
-      background: rgba(255, 255, 255, 0.1);
-      color: #ffffff;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
-    }
-
-    .chip input:checked + span {
-      background: #ffffff;
-      border-color: #ffffff;
-      color: var(--field-text);
-    }
-
-    .chip input:focus-visible + span {
-      outline: 3px solid #ffffff;
-      outline-offset: 2px;
-    }
-
-    .summary {
-      display: grid;
-      gap: 0;
-      margin: 0;
-      border-radius: var(--radius-sm);
-      background: rgba(0, 0, 0, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-    }
-
-    .summary__row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-areas: "label edit" "value edit";
-      align-items: center;
-      column-gap: 12px;
-      padding: 10px 8px 10px 16px;
-    }
-
-    .summary__row + .summary__row {
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .summary__label {
-      grid-area: label;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .summary__value {
-      grid-area: value;
-      margin: 2px 0 0;
-      font-size: 16px;
-      overflow-wrap: anywhere;
-    }
-
-    .summary__edit,
-    .wizard__back {
+    .again {
       appearance: none;
+      justify-self: start;
       min-height: 44px;
-      border: 0;
+      margin-top: 4px;
+      padding: 0 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
       background: transparent;
       color: #ffffff;
       font: inherit;
+      font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-    }
-
-    .summary__edit {
-      grid-area: edit;
-      min-width: 44px;
-      padding: 0 10px;
-      font-size: 14px;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
-
-    .wizard__nav {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .wizard__nav .submit {
-      flex: 1 1 auto;
-    }
-
-    .wizard__back {
-      flex: 0 0 auto;
-      min-height: 72px;
-      padding: 0 24px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      font-size: 18px;
-    }
-
-    .wizard__back[hidden] {
-      display: none;
-    }
-
-    @keyframes step-in-forward {
-      from {
-        opacity: 0;
-        transform: translateX(24px);
-      }
-    }
-
-    @keyframes step-in-back {
-      from {
-        opacity: 0;
-        transform: translateX(-24px);
-      }
     }
 
     .hidden {
@@ -623,135 +401,38 @@
       }
     }
 
-    @media (max-width: 900px) {
-      .page {
-        width: 100%;
+    /* Wide screens: the three fields share one row. */
+    @media (min-width: 760px) {
+      :root {
+        --field-height: 52px;
       }
 
-      .shell {
-        padding: 24px 20px;
+      .fields {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
 
-      h1 {
-        font-size: 52px;
-      }
-
-      .success h2 {
-        font-size: 32px;
-      }
-    }
-
-    @media (max-width: 760px) {
-      .contact-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 640px) {
-      body {
-        padding: 12px;
-      }
-
-      .shell {
-        padding: 16px 14px;
-        border-radius: 24px;
-      }
-
-      h1 {
-        font-size: 34px;
+      .field--wide {
+        grid-column: 1 / -1;
       }
 
       .lead {
-        margin-top: 10px;
         font-size: 15px;
       }
 
       .form {
         margin-top: 18px;
-        gap: 14px;
-      }
-
-      .field {
-        gap: 6px;
-      }
-
-      .field input[type="text"],
-      .field input[type="tel"] {
-        min-height: 60px;
-        font-size: 18px;
-      }
-
-      .phone-field {
-        grid-template-columns: 86px minmax(0, 1fr);
-        min-height: 60px;
-      }
-
-      .phone-field__prefix {
-        gap: 8px;
-        padding: 0 12px 0 14px;
-        font-size: 14px;
-      }
-
-      .phone-field__flag {
-        width: 24px;
-        height: 16px;
-      }
-
-      .phone-field input {
-        min-height: 60px;
-        padding: 0 18px 0 14px;
-      }
-
-      .submit {
-        min-height: 58px;
-        font-size: 18px;
-      }
-
-      .wizard__back {
-        min-height: 58px;
-        padding: 0 20px;
-        font-size: 16px;
-      }
-
-      .wizard__legend {
-        font-size: 20px;
-      }
-
-      .wizard__step {
-        gap: 14px;
-      }
-
-      .fineprint,
-      .field-error,
-      .checkbox {
-        font-size: 12px;
-      }
-
-      .checkbox {
         gap: 10px;
-      }
-
-      .checkbox input {
-        width: 22px;
-        height: 22px;
-      }
-
-      .checkbox__copy {
-        line-height: 1.25;
-      }
-
-      .success h2 {
-        font-size: 28px;
-      }
-
-      .fineprint {
-        display: none;
       }
     }
 
-    @media (min-width: 1400px) {
-      .shell {
-        padding: 48px;
+    /* Short windows (phone in landscape, small iframes): trim the header. */
+    @media (max-height: 520px) {
+      .lead {
+        display: none;
+      }
+
+      .form {
+        margin-top: 10px;
       }
     }
   </style>
@@ -759,9 +440,8 @@
 <body>
   <main class="page">
     <section class="shell" aria-live="polite">
-      <p class="eyebrow">Заявка</p>
       <h1>Оставьте заявку</h1>
-      <p class="lead">Мастер свяжется с вами и уточнит детали.</p>
+      <p class="lead">Мастер перезвонит и уточнит детали.</p>
 
       <div id="banner" class="banner" role="alert" aria-live="assertive"></div>
 
@@ -794,6 +474,7 @@
 
       const refs = {
         page: document.querySelector('.page'),
+        shell: document.querySelector('.shell'),
         banner: document.getElementById('banner'),
         loading: document.getElementById('loading'),
         formHost: document.getElementById('formHost'),
@@ -802,10 +483,12 @@
 
       const RESIZE_MESSAGE_TYPE = 'dom-servis:resize';
       const RESIZE_MIN_HEIGHT = 480;
-      const RESIZE_FALLBACK_HEIGHT = 640;
       let resizeFrameId = null;
       let lastPostedHeight = 0;
       const resizeObserver = 'ResizeObserver' in window ? new ResizeObserver(() => scheduleResize()) : null;
+
+      const ASK_CLIENT = 'Уточнить у клиента';
+      const DEFAULT_BRAND_SUGGESTIONS = ['Bosch', 'Samsung', 'LG', 'Indesit', 'Атлант', 'Electrolux', 'Haier', 'Beko'];
 
       function ensureFingerprint() {
         const storageKey = 'dom-servis-partner-fingerprint';
@@ -894,26 +577,22 @@
         return `(${part1}) ${part2}-${part3}-${part4}`;
       }
 
-      function displayPhoneValue(rawValue) {
-        const formatted = formatPhoneValue(rawValue);
-        return formatted || '';
-      }
-
       function submitPhoneValue(rawValue) {
-        const digits = normalizePhone(rawValue);
-        if (!digits) return '';
-        return `+7 ${displayPhoneValue(digits)}`.trim();
+        const formatted = formatPhoneValue(rawValue);
+        return formatted ? `+7 ${formatted}` : '';
       }
 
       function setBanner(message) {
         refs.banner.className = 'banner banner--error';
         refs.banner.textContent = message;
+        refs.shell.classList.add('has-banner');
         scheduleResize();
       }
 
       function hideBanner() {
         refs.banner.className = 'banner';
         refs.banner.textContent = '';
+        refs.shell.classList.remove('has-banner');
         scheduleResize();
       }
 
@@ -963,10 +642,8 @@
         if (error) error.textContent = message || '';
         if (input) {
           input.setAttribute('aria-invalid', message ? 'true' : 'false');
-          if (field === 'dom_servis_client_phone') {
-            const wrapper = input.closest('.phone-field');
-            if (wrapper) wrapper.classList.toggle('is-invalid', Boolean(message));
-          }
+          const wrapper = input.closest('.phone-field');
+          if (wrapper) wrapper.classList.toggle('is-invalid', Boolean(message));
         }
         scheduleResize();
       }
@@ -984,54 +661,20 @@
         scheduleResize();
       }
 
-      const STEPS = [
-        { key: 'contacts', title: 'Контакты', fields: ['name', 'dom_servis_client_phone', 'address'] },
-        { key: 'problem', title: 'Что случилось', fields: ['problem'] },
-        { key: 'brand', title: 'Марка техники', fields: ['brand'] },
-        { key: 'confirm', title: 'Проверка', fields: ['privacy'] },
-      ];
-
-      const PROBLEM_OPTIONS = [
-        'Не включается',
-        'Не греет',
-        'Не охлаждает',
-        'Течёт вода',
-        'Сильно шумит',
-        'Ошибка на дисплее',
-      ];
-
-      const BRAND_OPTIONS = [
-        'Bosch',
-        'Samsung',
-        'LG',
-        'Indesit',
-        'Атлант',
-        'Electrolux',
-        'Haier',
-        'Beko',
-      ];
-
-      const BRAND_UNKNOWN = 'Не знаю';
-
       function humanizeServerError(field, message) {
         const value = String(message || '').toLowerCase();
         if (field === 'name' || value.includes('name')) return 'Введите имя';
         if (field === 'dom_servis_client_phone') return 'Введите телефон';
-        if (field === 'privacy') return 'Подтвердите согласие с политикой';
+        if (field === 'privacy') return 'Подтвердите согласие';
         if (value.includes('forbidden') || value.includes('paused')) return 'Форма временно недоступна';
         return 'Не удалось отправить заявку';
       }
 
-      function stepErrors(stepIndex, values) {
+      function validate(values) {
         const errors = {};
-        const fields = STEPS[stepIndex].fields;
-
-        if (fields.includes('name') && !values.name) errors.name = 'Введите имя';
-        if (fields.includes('dom_servis_client_phone') && normalizePhone(values.phone).length < 10) {
-          errors.dom_servis_client_phone = 'Введите телефон полностью';
-        }
-        if (fields.includes('privacy') && !values.privacyAccepted) errors.privacy = 'Подтвердите согласие с политикой';
-
+        if (normalizePhone(values.phone).length < 10) errors.dom_servis_client_phone = 'Введите телефон полностью';
+        if (!values.name) errors.name = 'Введите имя';
+        if (!values.privacyAccepted) errors.privacy = 'Подтвердите согласие';
         return errors;
       }
 
@@ -1040,28 +683,39 @@
           setFieldError(field, message);
         });
 
-        const firstField = Object.keys(errors)[0];
+        const order = ['brand', 'dom_servis_client_phone', 'name', 'privacy'];
+        const firstField = order.find((field) => errors[field]);
         if (firstField) {
           const target = document.querySelector(`[name="${firstField}"]`);
-          if (target && target.focus) target.focus({ preventScroll: false });
+          if (target && target.focus) target.focus();
         }
-
-        scheduleResize();
       }
 
-      const NOT_SPECIFIED = 'Не указано';
-      const ASK_CLIENT = 'Уточнить у клиента';
-
       // Per-source texts from form_config (DomServis::RequestSource#settings).
-      // ZIPКОТЛЫ39 sets a gas boiler service type and an error-code prompt;
-      // sources without settings keep the defaults.
+      // ZIPКОТЛЫ39 asks for the boiler brand and sets a gas boiler service
+      // type; sources without settings keep the defaults.
       function sourceSetting(key, fallback) {
         const value = state.config?.request_source?.settings?.[key];
         return typeof value === 'string' && value.trim() ? value.trim() : fallback;
       }
 
-      function problemSummary(values) {
-        return [values.problem, values.problemDetails].filter(Boolean).join('. ');
+      // brand_suggestions is a comma-separated string (or a list) of brands
+      // offered while typing; they take no room on the screen.
+      function brandSuggestions() {
+        const value = state.config?.request_source?.settings?.brand_suggestions;
+        const list = Array.isArray(value) ? value : String(value || '').split(/[,;\n]/);
+        const brands = list.map((item) => String(item).trim()).filter(Boolean).slice(0, 40);
+        return brands.length ? brands : DEFAULT_BRAND_SUGGESTIONS;
+      }
+
+      // The dispatch board shows the service type as the card title, so the
+      // brand goes there too: "Ремонт газового котла — Baxi".
+      function serviceTypeFor(brand) {
+        const base = sourceSetting('service_type', '');
+        if (base && brand) return `${base} — ${brand}`;
+        if (base) return base;
+        if (brand) return `Ремонт: ${brand}`;
+        return ASK_CLIENT;
       }
 
       function submitDescription(values, phone) {
@@ -1069,10 +723,9 @@
           'Клиент оставил заявку через сайт партнёра.',
           `Имя клиента: ${values.name}.`,
           `Телефон клиента: ${phone}.`,
-          `Адрес: ${values.address || 'не указан'}.`,
-          `Поломка: ${problemSummary(values) || 'не указана'}.`,
-          `Марка техники: ${values.brand || 'не указана'}.`,
-          'Нужно уточнить недостающие детали, дату и время визита.'
+          `Марка: ${values.brand || 'не указана'}.`,
+          `Проблема: ${values.issue || 'не указана'}.`,
+          'Нужно уточнить адрес, дату и время визита.'
         ].join(' ');
       }
 
@@ -1085,224 +738,96 @@
         return 'Нажимая на кнопку, вы соглашаетесь с обработкой персональных данных';
       }
 
-      function chipsMarkup(name, options) {
-        return options.map((option) => `
-          <label class="chip">
-            <input type="radio" name="${name}" value="${escapeHtml(option)}">
-            <span>${escapeHtml(option)}</span>
-          </label>
-        `).join('');
-      }
-
       function buildForm() {
+        const submitText = sourceSetting('submit_button_text', 'Отправить заявку');
         const form = document.createElement('form');
-        form.className = 'form wizard';
+        form.className = 'form';
         form.noValidate = true;
         form.innerHTML = `
-          <div class="wizard__progress">
-            <div class="wizard__progress-label"><span class="js-step-counter"></span><span class="js-step-title"></span></div>
-            <div class="wizard__progress-track" role="progressbar" aria-label="Шаг заявки" aria-valuemin="1" aria-valuemax="${STEPS.length}">
-              ${STEPS.map(() => '<span class="wizard__progress-segment"></span>').join('')}
+          <div class="fields">
+            <div class="field">
+              <label for="brand">${escapeHtml(sourceSetting('brand_label', 'Марка техники'))}</label>
+              <input id="brand" name="brand" type="text" list="brandSuggestions" autocomplete="off" autocapitalize="words" enterkeyhint="next" placeholder="${escapeHtml(sourceSetting('brand_placeholder', 'Например: Bosch'))}" maxlength="80">
+              <datalist id="brandSuggestions">
+                ${brandSuggestions().map((brand) => `<option value="${escapeHtml(brand)}"></option>`).join('')}
+              </datalist>
             </div>
-          </div>
 
-          <fieldset class="wizard__step" data-step="0">
-            <legend class="wizard__legend">Как с вами связаться</legend>
-            <div class="contact-grid">
-              <div class="field">
-                <label for="name">Имя</label>
-                <input id="name" name="name" type="text" autocomplete="name" placeholder="Имя" maxlength="120">
-                <div class="field-error" data-error-for="name"></div>
-              </div>
-
-              <div class="field">
+            <div class="field">
+              <div class="field__head">
                 <label for="dom_servis_client_phone">Телефон</label>
-                <div class="phone-field">
-                  <div class="phone-field__prefix" aria-hidden="true">
-                    <span class="phone-field__flag"></span>
-                    <span>+7</span>
-                  </div>
-                  <input id="dom_servis_client_phone" name="dom_servis_client_phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(900) 000-00-00">
+                <span class="field-error" id="phone_error" data-error-for="dom_servis_client_phone"></span>
+              </div>
+              <div class="phone-field">
+                <div class="phone-field__prefix" aria-hidden="true">
+                  <span class="phone-field__flag"></span>
+                  <span>+7</span>
                 </div>
-                <div class="field-error" data-error-for="dom_servis_client_phone"></div>
+                <input id="dom_servis_client_phone" name="dom_servis_client_phone" type="tel" autocomplete="tel" inputmode="tel" enterkeyhint="next" placeholder="(900) 000-00-00" aria-describedby="phone_error">
               </div>
             </div>
 
             <div class="field">
-              <label for="address">Адрес <span class="field__optional">— если удобно</span></label>
-              <input id="address" name="address" type="text" autocomplete="street-address" placeholder="Улица, дом, квартира" maxlength="300">
+              <div class="field__head">
+                <label for="name">Имя</label>
+                <span class="field-error" id="name_error" data-error-for="name"></span>
+              </div>
+              <input id="name" name="name" type="text" autocomplete="name" autocapitalize="words" enterkeyhint="next" placeholder="Имя" maxlength="120" aria-describedby="name_error">
             </div>
-          </fieldset>
 
-          <fieldset class="wizard__step" data-step="1" hidden>
-            <legend class="wizard__legend">Что случилось с техникой?</legend>
-            <div class="chips" role="radiogroup" aria-label="Причина поломки">
-              ${chipsMarkup('problem', PROBLEM_OPTIONS)}
+            <div class="field field--wide">
+              <label for="issue">${escapeHtml(sourceSetting('issue_label', 'Код ошибки или описание проблемы'))}</label>
+              <input id="issue" name="issue" type="text" autocomplete="off" enterkeyhint="send" placeholder="${escapeHtml(sourceSetting('issue_placeholder', 'Например: E03, не включается, течёт'))}" maxlength="500">
             </div>
-            <div class="field">
-              <label for="problem_details">${escapeHtml(sourceSetting('issue_label', 'Опишите подробнее'))} <span class="field__optional">— если хотите</span></label>
-              <textarea id="problem_details" name="problem_details" rows="3" maxlength="1000" placeholder="${escapeHtml(sourceSetting('issue_placeholder', 'Например: стиральная машина не сливает воду, на экране ошибка E18'))}"></textarea>
-            </div>
-            <p class="wizard__hint">Можно пропустить — мастер уточнит по телефону.</p>
-          </fieldset>
-
-          <fieldset class="wizard__step" data-step="2" hidden>
-            <legend class="wizard__legend">Какой марки техника?</legend>
-            <div class="chips" role="radiogroup" aria-label="Марка техники">
-              ${chipsMarkup('brand', BRAND_OPTIONS.concat(BRAND_UNKNOWN))}
-            </div>
-            <div class="field">
-              <label for="brand_other">Другая марка</label>
-              <input id="brand_other" name="brand_other" type="text" placeholder="Например: Gorenje" maxlength="80">
-            </div>
-            <p class="wizard__hint">Можно пропустить — мастер уточнит по телефону.</p>
-          </fieldset>
-
-          <fieldset class="wizard__step" data-step="3" hidden>
-            <legend class="wizard__legend">Проверьте заявку</legend>
-            <div class="summary js-summary"></div>
-
-            <div class="checkbox">
-              <input id="privacy_accepted" name="privacy_accepted" type="checkbox" value="1">
-              <label class="checkbox__copy" for="privacy_accepted">${consentMarkup()}</label>
-            </div>
-            <div class="field-error" data-error-for="privacy"></div>
-          </fieldset>
-
-          <div class="wizard__nav">
-            <button type="button" class="wizard__back js-back">Назад</button>
-            <button type="submit" class="submit js-next">Далее</button>
           </div>
-          <div class="fineprint">После отправки мастер перезвонит и согласует время визита.</div>
+
+          <div class="checkbox">
+            <input id="privacy_accepted" name="privacy" type="checkbox" value="1" aria-describedby="privacy_error">
+            <label class="checkbox__copy" for="privacy_accepted">${consentMarkup()}</label>
+          </div>
+          <div class="field-error" id="privacy_error" data-error-for="privacy"></div>
+
+          <button type="submit" class="submit">${escapeHtml(submitText)}</button>
         `;
 
-        const submitButton = form.querySelector('.js-next');
-        const backButton = form.querySelector('.js-back');
+        const submitButton = form.querySelector('.submit');
         const checkbox = form.querySelector('#privacy_accepted');
         const phoneInput = form.querySelector('[name="dom_servis_client_phone"]');
-        const brandOther = form.querySelector('[name="brand_other"]');
-        const stepElements = Array.from(form.querySelectorAll('.wizard__step'));
-        const segments = Array.from(form.querySelectorAll('.wizard__progress-segment'));
-        const progress = form.querySelector('[role="progressbar"]');
-        const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        let currentStep = 0;
+        const inputs = Array.from(form.querySelectorAll('.fields input'));
 
         const readValues = () => {
           const data = new FormData(form);
           const text = (key) => String(data.get(key) || '').trim();
-          const brandChoice = text('brand');
           return {
-            name: text('name'),
+            brand: text('brand'),
             phone: text('dom_servis_client_phone'),
-            address: text('address'),
-            problem: text('problem'),
-            problemDetails: text('problem_details'),
-            brand: text('brand_other') || brandChoice,
+            name: text('name'),
+            issue: text('issue'),
             privacyAccepted: checkbox.checked,
           };
         };
 
-        const isLastStep = () => currentStep === STEPS.length - 1;
-        const submitButtonText = () => (isLastStep() ? sourceSetting('submit_button_text', 'Отправить заявку') : 'Далее');
-
-        const updateSubmitState = () => {
-          submitButton.disabled = state.submitting || (isLastStep() && !checkbox.checked);
-        };
-
-        const renderSummary = () => {
-          const values = readValues();
-          const rows = [
-            ['Имя', values.name, 0],
-            ['Телефон', submitPhoneValue(values.phone), 0],
-            ['Адрес', values.address, 0],
-            ['Поломка', problemSummary(values), 1],
-            ['Марка', values.brand, 2],
-          ];
-          form.querySelector('.js-summary').innerHTML = rows.map(([label, value, step]) => `
-            <div class="summary__row">
-              <span class="summary__label">${label}</span>
-              <span class="summary__value">${escapeHtml(value || NOT_SPECIFIED)}</span>
-              <button type="button" class="summary__edit" data-goto="${step}" aria-label="Изменить: ${label}">Изменить</button>
-            </div>
-          `).join('');
-        };
-
-        const showStep = (index, direction) => {
-          currentStep = index;
-          stepElements.forEach((element, elementIndex) => {
-            const active = elementIndex === index;
-            element.hidden = !active;
-            element.classList.remove('is-entering-forward', 'is-entering-back');
-            if (active && direction && !reduceMotion) {
-              void element.offsetWidth;
-              element.classList.add(direction > 0 ? 'is-entering-forward' : 'is-entering-back');
-            }
-          });
-          segments.forEach((segment, segmentIndex) => {
-            segment.classList.toggle('is-done', segmentIndex <= index);
-          });
-          progress.setAttribute('aria-valuenow', String(index + 1));
-          progress.setAttribute('aria-valuetext', `Шаг ${index + 1} из ${STEPS.length}: ${STEPS[index].title}`);
-          form.querySelector('.js-step-counter').textContent = `Шаг ${index + 1} из ${STEPS.length}`;
-          form.querySelector('.js-step-title').textContent = STEPS[index].title;
-          backButton.hidden = index === 0;
-          submitButton.textContent = submitButtonText();
-          if (isLastStep()) renderSummary();
-          updateSubmitState();
-          hideBanner();
-
-          if (direction) {
-            // Move focus to the new step so screen readers announce it and the old button loses focus.
-            const legend = stepElements[index].querySelector('legend');
-            legend.setAttribute('tabindex', '-1');
-            legend.focus({ preventScroll: true });
-          }
-          scheduleResize();
-        };
-
-        const goToStep = (index) => {
-          if (index === currentStep) return;
-          clearFieldErrors();
-          showStep(index, index > currentStep ? 1 : -1);
-        };
-
-        const stepForField = (field) => {
-          const index = STEPS.findIndex((step) => step.fields.includes(field));
-          return index === -1 ? currentStep : index;
-        };
-
-        backButton.addEventListener('click', () => {
-          if (currentStep > 0) goToStep(currentStep - 1);
-        });
-
-        form.addEventListener('click', (event) => {
-          const edit = event.target.closest('[data-goto]');
-          if (edit) goToStep(Number(edit.dataset.goto));
-        });
-
-        checkbox.addEventListener('change', () => {
-          setFieldError('privacy', '');
-          updateSubmitState();
-        });
-
-        form.querySelectorAll('[name="brand"]').forEach((input) => {
-          input.addEventListener('change', () => {
-            brandOther.value = '';
+        // Enter (or "next" on a phone keyboard) moves to the next field; only
+        // the last field sends the form.
+        inputs.forEach((input, index) => {
+          input.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' || event.isComposing || index === inputs.length - 1) return;
+            event.preventDefault();
+            inputs[index + 1].focus();
           });
         });
 
-        brandOther.addEventListener('input', () => {
-          if (brandOther.value.trim()) {
-            form.querySelectorAll('[name="brand"]').forEach((input) => { input.checked = false; });
-          }
+        inputs.forEach((input) => {
+          if (input === phoneInput) return;
+          input.addEventListener('input', () => setFieldError(input.name, ''));
         });
 
-        form.querySelector('[name="name"]').addEventListener('input', () => setFieldError('name', ''));
+        checkbox.addEventListener('change', () => setFieldError('privacy', ''));
 
         phoneInput.addEventListener('input', () => {
           const cursor = phoneInput.selectionStart || 0;
           const beforeLength = phoneInput.value.length;
-          const nextValue = displayPhoneValue(phoneInput.value);
+          const nextValue = formatPhoneValue(phoneInput.value);
           phoneInput.value = nextValue;
           const afterLength = nextValue.length;
           const nextCursor = Math.max(0, cursor + (afterLength - beforeLength));
@@ -1324,51 +849,39 @@
           clearFieldErrors();
 
           const values = readValues();
-          const errors = stepErrors(currentStep, values);
-
+          const errors = validate(values);
           if (Object.keys(errors).length) {
             renderErrors(errors);
-            updateSubmitState();
-            return;
-          }
-
-          if (!isLastStep()) {
-            showStep(currentStep + 1, 1);
             return;
           }
 
           const dispatchDate = currentDispatchDate();
-          const name = values.name;
           const phone = submitPhoneValue(values.phone);
           const description = submitDescription(values, phone);
-          const problem = values.problem || values.problemDetails;
-          // A partner-defined service type (one-service partners) wins over the
-          // generic category; the chosen category stays in the description.
-          const serviceType = sourceSetting('service_type', problem ? `Ремонт: ${problem}` : ASK_CLIENT).slice(0, 200);
 
           const payload = new FormData();
           payload.set('fingerprint', state.fingerprint);
           payload.set('token', state.config.token || '');
           payload.set('request_source_token', state.requestSourceToken);
           payload.set('request_source_origin', state.requestSourceOrigin);
-          payload.set('name', name);
+          payload.set('name', values.name);
           payload.set('email', generatedEmail());
           payload.set('title', sourceSetting('form_title', 'Заявка на ремонт'));
           payload.set('body', description);
-          payload.set('dom_servis_client_name', name);
+          payload.set('dom_servis_client_name', values.name);
           payload.set('dom_servis_client_phone', phone);
-          payload.set('dom_servis_service_type', serviceType);
-          // The dispatch intake requires an address, so an empty one becomes a call-back reminder.
-          payload.set('dom_servis_address', values.address || sourceSetting('address_placeholder', ASK_CLIENT));
+          payload.set('dom_servis_service_type', serviceTypeFor(values.brand).slice(0, 200));
+          // The dispatch intake requires an address; the form does not ask for one.
+          payload.set('dom_servis_address', sourceSetting('address_placeholder', ASK_CLIENT));
           payload.set('dom_servis_visit_date', dispatchDate);
           payload.set('dom_servis_visit_day', weekdayKey(dispatchDate));
           payload.set('dom_servis_visit_time', ASK_CLIENT);
           payload.set('dom_servis_dispatch_priority', 'medium');
           payload.set('dom_servis_description', description);
-          payload.set('dom_servis_comment', 'Недостающие детали, дату и время визита нужно уточнить у клиента.');
+          payload.set('dom_servis_comment', 'Адрес, дату и время визита нужно уточнить у клиента.');
 
           state.submitting = true;
-          updateSubmitState();
+          submitButton.disabled = true;
           submitButton.textContent = 'Отправляем...';
 
           try {
@@ -1384,7 +897,7 @@
               Object.entries(data.errors || { base: 'Не удалось отправить заявку' }).forEach(([field, message]) => {
                 if (field === 'base') {
                   setBanner(humanizeServerError(field, message));
-                } else if (document.querySelector(`[data-error-for="${field}"]`)) {
+                } else if (form.querySelector(`[data-error-for="${field}"]`)) {
                   mapped[field] = humanizeServerError(field, message);
                 } else {
                   // Errors on fields the visitor never sees (generated email, title, body) must not fail silently.
@@ -1392,10 +905,7 @@
                 }
               });
 
-              const fieldNames = Object.keys(mapped);
-              if (fieldNames.length) {
-                const targetStep = Math.min(...fieldNames.map(stepForField));
-                if (targetStep !== currentStep) showStep(targetStep, -1);
+              if (Object.keys(mapped).length) {
                 renderErrors(mapped);
               } else if (!refs.banner.textContent) {
                 setBanner('Не удалось отправить заявку');
@@ -1408,16 +918,17 @@
             setBanner('Не удалось отправить заявку. Проверьте соединение и попробуйте ещё раз.');
           } finally {
             state.submitting = false;
-            submitButton.textContent = submitButtonText();
-            updateSubmitState();
+            submitButton.disabled = false;
+            submitButton.textContent = submitText;
           }
         });
 
-        showStep(0, 0);
         return form;
       }
 
       function showForm(form) {
+        refs.successHost.classList.add('hidden');
+        refs.successHost.innerHTML = '';
         refs.formHost.innerHTML = '';
         refs.formHost.appendChild(form);
         refs.formHost.classList.remove('hidden');
@@ -1428,11 +939,16 @@
         refs.formHost.classList.add('hidden');
         refs.successHost.innerHTML = `
           <div class="success">
-            <p class="success__eyebrow">Готово</p>
             <h2>Заявка отправлена</h2>
             <p>Мастер свяжется с вами в ближайшее время${ticketNumber ? `. Номер обращения: #${escapeHtml(ticketNumber)}` : ''}.</p>
+            <button type="button" class="again js-again">Отправить ещё одну заявку</button>
           </div>
         `;
+        refs.successHost.querySelector('.js-again').addEventListener('click', () => {
+          refs.successHost.classList.add('hidden');
+          setLoading(true);
+          bootstrap();
+        });
         refs.successHost.classList.remove('hidden');
         scheduleResize();
       }
@@ -1470,11 +986,9 @@
             state.privacyPolicyUrl = data.request_source.privacy_policy_url;
           }
 
-          const form = buildForm();
-          showForm(form);
+          showForm(buildForm());
           setLoading(false);
           hideBanner();
-          scheduleResize();
         } catch (error) {
           setBanner(error.message || 'Не удалось загрузить форму.');
           setLoading(false);
