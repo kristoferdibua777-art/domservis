@@ -420,6 +420,65 @@ RSpec.describe 'Form', type: :request do
         expect(ticket.customer.email).to be_present
         expect(ticket.preferences.dig('dom_servis_intake', 'partner_org_id')).to eq(partner_org.id)
       end
+
+      it 'keeps the photos of the form on the ticket and copies them to the dispatch job', :aggregate_failures do
+        params = {
+          fingerprint:             fingerprint,
+          token:                   token,
+          name:                    'Bob Smith',
+          title:                   'Need help with boiler',
+          body:                    'The boiler is leaking and needs inspection.',
+          dom_servis_service_type: 'Boiler repair',
+          dom_servis_address:      'Lenina 10',
+          dom_servis_client_name:  'Bob Smith',
+          dom_servis_client_phone: '+79001234567',
+          dom_servis_visit_date:   '2026-03-23',
+          dom_servis_visit_time:   '10:00',
+          file:                    [fixture_file_upload('image/small.png', 'image/png')],
+        }
+
+        post '/api/v1/form_submit', params: params
+
+        expect(response).to have_http_status(:ok)
+        expect(json_response['errors']).to be_falsey
+
+        ticket = Ticket.find(json_response['ticket']['id'])
+        job = DomServis::DispatchJob.find_by(ticket_id: ticket.id)
+        photo = job.attachments.first
+
+        expect(ticket.articles.first.attachments.map(&:filename)).to eq(['small.png'])
+        expect(job.attachments.map(&:filename)).to eq(['small.png'])
+        expect(photo.preferences).to include('dom_servis_kind' => 'intake_attachment', 'Mime-Type' => 'image/png')
+        expect(photo.size).to eq(ticket.articles.first.attachments.first.size)
+      end
+
+      it 'rejects a form file that is not an image', :aggregate_failures do
+        params = {
+          fingerprint: fingerprint,
+          token:       token,
+          name:        'Bob Smith',
+          title:       'Need help with boiler',
+          body:        'The boiler is leaking and needs inspection.',
+          file:        [fixture_file_upload('csv_import/organization/simple.csv', 'text/csv')],
+        }
+
+        expect { post '/api/v1/form_submit', params: params }.not_to change(Ticket, :count)
+        expect(json_response['errors']).to include('file' => 'invalid')
+      end
+
+      it 'rejects more than five photos', :aggregate_failures do
+        params = {
+          fingerprint: fingerprint,
+          token:       token,
+          name:        'Bob Smith',
+          title:       'Need help with boiler',
+          body:        'The boiler is leaking and needs inspection.',
+          file:        Array.new(6) { fixture_file_upload('image/small.png', 'image/png') },
+        }
+
+        expect { post '/api/v1/form_submit', params: params }.not_to change(Ticket, :count)
+        expect(json_response['errors']).to include('file' => 'too_many')
+      end
     end
 
     context 'when two partners use the same transport', db_strategy: :reset do
