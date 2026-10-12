@@ -36,13 +36,18 @@ Every request source also exposes `client_form_url`
 "Ссылка на форму для клиентов". It is a full page on our own domain for customers who open a link directly
 (messenger, QR code, social profile) instead of an iframe on a partner site.
 
-- The customer answers one question per screen: what needs doing, what happened and the equipment brand,
-  address and preferred time, then name, phone and consent.
+- Two steps. Step 1: the customer picks a service. Step 2: what happened (quick options and free text), the brand
+  and model for a boiler, a water heater or a household appliance, photos of the breakdown, then name, phone,
+  an optional address and consent. Only name, phone and consent are required.
+- Photos: up to five images. The page shrinks them to 1600px JPEG before upload, so they go fast over a mobile
+  network. `FormController` accepts images only, at most five and 10 MB each for Dom-Servis sources, keeps them on
+  the ticket article and copies them to the `DispatchJob` as "Входные материалы" (`intake_attachment`), so the
+  dispatcher and the master see them in the job card.
 - The page uses the same `form_config` / `form_submit` channel and `request_source_token` as the embed, so the
   request becomes a `Ticket` plus a `DispatchJob` attributed to the source's partner organization.
 - Unlike the embed, it fills `service_type`, `address`, `description` and `comment` with the customer's answers;
-  "Срочно, сегодня" sets priority `high`, "Завтра" sets tomorrow's visit date, and visit time stays
-  "Уточнить у клиента".
+  the model is appended to the service type, "Срочно — нужен мастер сегодня" sets priority `high`, an empty
+  address and the visit time become "Уточнить у клиента".
 - For a source used only through this link, leave `allowed_domains` empty: the page reports our domain as its origin,
   so the source card offers the link only when no partner domains are set.
 

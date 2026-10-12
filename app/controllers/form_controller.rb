@@ -1,6 +1,10 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class FormController < ApplicationController
+  # Dom-Servis request forms are public and take photos of the breakdown.
+  DOM_SERVIS_FILE_LIMIT     = 5
+  DOM_SERVIS_FILE_MAX_BYTES = 10.megabytes
+
   prepend_before_action -> { authorize! }, only: %i[configuration submit]
 
   skip_before_action :verify_csrf_token
@@ -170,7 +174,22 @@ class FormController < ApplicationController
       end
     end
 
+    if partner_form && (file_error = dom_servis_file_error)
+      errors['file'] = file_error
+    end
+
     errors
+  end
+
+  # Only a few images of a sane size: the endpoint needs no login.
+  def dom_servis_file_error
+    files = Array.wrap(params[:file])
+    return if files.blank?
+    return 'invalid' if files.any? { |file| !file.respond_to?(:content_type) || !file.content_type.to_s.start_with?('image/') }
+    return 'too_many' if files.size > DOM_SERVIS_FILE_LIMIT
+    return 'too_large' if files.any? { |file| file.size > DOM_SERVIS_FILE_MAX_BYTES }
+
+    nil
   end
 
   def fetch_customer
@@ -220,7 +239,7 @@ class FormController < ApplicationController
       internal:  false,
     )
 
-    params[:file]&.each do |file|
+    Array.wrap(params[:file]).each do |file|
       Store.create!(
         object:      'Ticket::Article',
         o_id:        article.id,
@@ -252,10 +271,36 @@ class FormController < ApplicationController
       request_source_origin: params[:request_source_origin].presence,
     ).payload
 
-    DomServis::Intake::DispatchJobCreator.new(
+    dispatch_job = DomServis::Intake::DispatchJobCreator.new(
       payload: payload,
       ticket:  ticket,
     ).execute
+
+    copy_form_files_to_dispatch_job!(ticket, dispatch_job)
+  end
+
+  # The dispatch board lists a job's own attachments, so the photos sent with
+  # the form are copied from the ticket article to the job as intake material.
+  def copy_form_files_to_dispatch_job!(ticket, dispatch_job)
+    article = ticket.articles.first
+    return if article.blank?
+
+    article.attachments.each do |store|
+      content_type = store.preferences['Mime-Type'].presence || 'application/octet-stream'
+
+      Store.create!(
+        object:      DomServis::DispatchJob.to_s,
+        o_id:        dispatch_job.id,
+        data:        store.content,
+        filename:    store.filename,
+        preferences: {
+          'Content-Type'      => content_type,
+          'Mime-Type'         => content_type,
+          'dom_servis_kind'   => 'intake_attachment',
+          'original_filename' => store.filename,
+        },
+      )
+    end
   end
 
   def dom_servis_request_source
