@@ -313,7 +313,12 @@
       }
 
       function persist(subscription) {
-        return request('POST', '/api/v1/dom_servis/dispatch/push_subscriptions', subscription.toJSON());
+        return request('POST', '/api/v1/dom_servis/dispatch/push_subscriptions', subscription.toJSON())
+          .then(function (xhr) {
+            // The board swaps its «enable» button for «Тест» on this event.
+            window.dispatchEvent(new Event('dom-servis-push-subscribed'));
+            return xhr;
+          });
       }
 
       function subscribe(registration) {

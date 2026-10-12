@@ -189,7 +189,10 @@ DispatchEscalationJob проверяет, остаётся ли новая за�
 | /dispatch/manifest.webmanifest | Manifest |
 
 Vue mobile-компонент существует, но его
-[маршрут](../../app/frontend/apps/mobile/pages/dom-servis/routes.ts) перенаправляет на общую доску.
+[маршрут](../../app/frontend/apps/mobile/pages/dom-servis/routes.ts) перенаправляет на /dispatch/.
+Телефон, открывший /#dom_servis/dispatch, тоже
+[переходит](../../app/assets/javascripts/app/controllers/_plugin/mobile_detection.coffee) на /dispatch/:
+service worker и включение Web Push есть только там.
 [Мобильная песочница](../../dom-servis-mobile-sandbox/README.md) работает с mock-данными.
 
 ## Правила изменения архитектуры

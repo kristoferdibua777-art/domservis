@@ -89,10 +89,12 @@ class App.DomServisDispatchBoard extends App.Controller
     @initViewportMode()
     @statusFilter = 'mine' if @mobileView && @masterAccess()
     @bindRouteWatcher()
+    @bindPushStateWatcher()
     @bindDispatchBoardRealtimeRefresh()
     @resetCreateDraft()
 
     @render()
+    @syncPushState()
     @loadEffectivePolicy()
     @loadTags()
     @loadOrganizations()
@@ -113,6 +115,7 @@ class App.DomServisDispatchBoard extends App.Controller
   release: =>
     @stopViewportWatcher()
     @stopRouteWatcher()
+    @stopPushStateWatcher()
     @syncMobileShellState(false)
 
   render: ->
@@ -2945,6 +2948,35 @@ class App.DomServisDispatchBoard extends App.Controller
   vapidPublicKey: ->
     return document.querySelector('meta[name="dom-servis-vapid-public-key"]')?.content
 
+  # The onboarding sheet of the dispatch shell subscribes on its own and
+  # announces it with this event.
+  bindPushStateWatcher: ->
+    @pushStateWatcher = => @syncPushState()
+    $(window).on('dom-servis-push-subscribed.domServisDispatchPush', @pushStateWatcher)
+
+  stopPushStateWatcher: ->
+    return if !@pushStateWatcher
+    $(window).off('dom-servis-push-subscribed.domServisDispatchPush', @pushStateWatcher)
+    @pushStateWatcher = null
+
+  # The browser's subscription of the dispatch service worker, if any.
+  # `ready` only resolves inside the dispatch shell.
+  currentPushSubscription: ->
+    navigator.serviceWorker.ready.then (registration) -> registration.pushManager.getSubscription()
+
+  # A device that is already subscribed gets «Тест» instead of an offer to
+  # enable notifications again after every reload.
+  syncPushState: ->
+    return if @pushEnabled || !@pushSupported() || !@vapidPublicKey()
+
+    @currentPushSubscription()
+      .then (subscription) =>
+        return if !subscription
+
+        @pushEnabled = true
+        @render()
+      .catch -> null
+
   # Request notification permission, subscribe the dispatch service worker
   # to the push service, and persist the subscription on the backend.
   enablePushNotifications: (e) =>
@@ -3064,6 +3096,8 @@ class DomServisDispatchBoardRouter extends App.ControllerPermanent
 
   constructor: (params) ->
     super
+
+    return if App.MobileDetection.redirectToDispatchShell()
 
     @authenticateCheckRedirect()
 
