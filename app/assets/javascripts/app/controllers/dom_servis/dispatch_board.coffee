@@ -20,6 +20,9 @@ class App.DomServisDispatchBoard extends App.Controller
     'click .js-close-mobile-account-menu': 'closeMobileAccountMenu'
     'click .js-mobile-workspace-nav': 'navigateFromMobileWorkspaceMenu'
     'click .js-create-job': 'createJob'
+    'input .js-create-source-text': 'updateCreateSourceText'
+    'click .js-paste-create-source': 'pasteCreateSource'
+    'click .js-parse-create-source': 'parseCreateSource'
     'input .js-create-draft-field': 'updateCreateDraft'
     'change .js-create-draft-field': 'updateCreateDraft'
     'click .js-create-tag-toggle': 'toggleCreateTag'
@@ -77,6 +80,10 @@ class App.DomServisDispatchBoard extends App.Controller
     @attachmentUploading = {}
     @eventCollections = {}
     @createDraft = {}
+    @createSourceText = ''
+    @createParsing = false
+    @createMissingFields = []
+    @createParsedValues = {}
     @createAttachmentFiles = []
     @createAttachmentUploading = false
     @createAttachmentKind = 'intake_attachment'
@@ -147,6 +154,10 @@ class App.DomServisDispatchBoard extends App.Controller
       showEnablePush: @vapidPublicKey() && !@pushEnabled
       showTestPush: @pushSupported() && @vapidPublicKey() && @pushEnabled
       createDraft: @createDraft
+      createSourceText: @createSourceText
+      createParsing: @createParsing
+      createMissingFields: @createMissingFields
+      clipboardPasteSupported: @clipboardPasteSupported()
       createAttachmentKinds: @createAttachmentKindOptions()
       createAttachmentKind: @createAttachmentKind
       createAttachmentFiles: @buildCreateAttachmentDraft()
@@ -698,10 +709,18 @@ class App.DomServisDispatchBoard extends App.Controller
     @createAttachmentKind = $(e.currentTarget).val() || 'intake_attachment'
 
   resetCreateDraft: ->
+    @createSourceText = ''
+    @createParsing = false
+    @createParseRequestId = (@createParseRequestId || 0) + 1
+    @createMissingFields = []
+    @createParsedValues = {}
+    @createDraft = @createDraftDefaults()
+
+  createDraftDefaults: ->
     defaultVisitDay = @defaultVisitDay()
     privateOrganizationId = @privateOrganizationId()
 
-    @createDraft =
+    {
       service_type: ''
       address: ''
       client_name: ''
@@ -714,6 +733,7 @@ class App.DomServisDispatchBoard extends App.Controller
       work_tags: ''
       description: ''
       comment: ''
+    }
 
   syncCreateDraftFromForm: ->
     return if !@createOpen
@@ -735,8 +755,123 @@ class App.DomServisDispatchBoard extends App.Controller
       description: read('.js-create-description').trim()
       comment: read('.js-create-comment').trim()
 
-  updateCreateDraft: ->
+  updateCreateDraft: (e) ->
     @syncCreateDraftFromForm()
+
+    # A field typed in after parsing is no longer missing.
+    input = $(e?.currentTarget)
+    field = input.data('draft-field')
+    return if !field || !@createDraft[field]
+
+    @createMissingFields = _.without(@createMissingFields, field)
+    group = input.closest('.form-group')
+    group.removeClass('is-missing')
+    group.find('.js-create-missing-hint').remove()
+
+  updateCreateSourceText: (e) ->
+    @createSourceText = $(e.currentTarget).val()?.toString() || ''
+
+  clipboardPasteSupported: ->
+    window.isSecureContext is true && typeof navigator.clipboard?.readText is 'function'
+
+  pasteCreateSource: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    return if @createParsing || !@clipboardPasteSupported()
+
+    navigator.clipboard.readText()
+      .then((text) =>
+        text = text?.toString().trim() || ''
+        if !text
+          @notify(type: 'error', msg: 'Буфер обмена пуст. Скопируй сообщение с заявкой.', timeout: 4000)
+          return
+
+        @createSourceText = text
+        @parseCreateSource()
+      )
+      .catch(=>
+        @notify(type: 'error', msg: 'Нет доступа к буферу обмена. Вставь текст в поле вручную и нажми «Разобрать».', timeout: 6000)
+      )
+
+  # The server splits the pasted message into form fields; publishing stays
+  # a separate, explicit step after the dispatcher has checked them.
+  parseCreateSource: (e) =>
+    @preventDefaultAndStopPropagation(e) if e
+    return if @createParsing || !@createOpen
+
+    input = (@createSourceText || '').trim()
+    if !input
+      @notify(type: 'error', msg: 'Вставь или напиши текст заявки.', timeout: 4000)
+      return
+
+    @syncCreateDraftFromForm()
+    @createParsing = true
+    @render()
+
+    # A form closed and opened again while the request runs is a new draft.
+    requestId = @createParseRequestId
+
+    @ajax(
+      id: 'dom_servis_dispatch_parse_input'
+      type: 'POST'
+      url: "#{@apiPath}/dom_servis/dispatch/jobs/parse_input"
+      data: JSON.stringify(input: input)
+      processData: true
+      success: (data) =>
+        return if requestId isnt @createParseRequestId
+        @createParsing = false
+        @applyParsedDraft(data?.draft || {}, data?.missing || [])
+      error: (xhr) =>
+        return if requestId isnt @createParseRequestId
+        @createParsing = false
+        @render()
+        @notify(
+          type: 'error'
+          msg: @extractError(xhr, 'Текст не удалось разобрать.')
+          timeout: 6000
+        )
+    )
+
+  # Fields the text gave replace what the form had. A value an earlier parse
+  # filled in and the new text does not give is reset, so parsing another
+  # message never keeps the previous client's phone or name. Values typed by
+  # hand stay, and a description typed by hand is never replaced.
+  applyParsedDraft: (draft, missing) ->
+    return if !@createOpen
+
+    @syncCreateDraftFromForm()
+    defaults = @createDraftDefaults()
+
+    for field in ['service_type', 'address', 'client_name', 'client_phone', 'visit_date', 'visit_day', 'visit_time', 'priority', 'description']
+      value = draft[field]?.toString() || ''
+      current = @createDraft[field] || ''
+      typedByHand = current isnt '' && current isnt defaults[field] && current isnt @createParsedValues[field]
+      continue if field is 'description' && typedByHand
+
+      if value
+        @createDraft[field] = value
+        @createParsedValues[field] = value
+      else if !typedByHand
+        @createDraft[field] = defaults[field]
+        delete @createParsedValues[field]
+
+    @createMissingFields = _.filter(missing, (field) => !@createDraft[field])
+    @render()
+
+    # Bring the filled fields into view; the pasted text stays just above.
+    source = @$('.dom-servis-dispatch-create-source')
+    @$('.dom-servis-dispatch-modal__body').scrollTop(source.outerHeight(true)) if source.length > 0
+
+    labels =
+      client_phone: 'телефон'
+      address: 'адрес'
+      client_name: 'имя'
+      service_type: 'тип работ'
+    missingLabels = _.compact(_.map(@createMissingFields, (field) -> labels[field]))
+    message = if missingLabels.length > 0
+      "Поля заполнены из текста. Не нашлось: #{missingLabels.join(', ')}."
+    else
+      'Поля заполнены из текста. Проверь их перед публикацией.'
+    @notify(type: 'success', msg: message, timeout: 5000)
 
   toggleCreateTag: (e) =>
     @preventDefaultAndStopPropagation(e)

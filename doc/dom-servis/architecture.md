@@ -169,6 +169,7 @@ DispatchEscalationJob проверяет, остаётся ли новая за�
 | Доступ к записям | [dispatch_job_policy.rb](../../app/policies/dom_servis/dispatch_job_policy.rb) |
 | Связь с тикетами | [backing_ticket](../../app/services/dom_servis/dispatch/backing_ticket/) |
 | Приём обращений | [intake](../../app/services/dom_servis/intake/) |
+| Разбор вставленного текста в форму | [text_parser.rb](../../app/services/dom_servis/intake/text_parser.rb) |
 | Реестр партнёров | [request_source.rb](../../app/models/dom_servis/request_source.rb) |
 | Партнёрская форма | [embed HTML](../../public/assets/form/dom-servis-partner-embed.html) |
 | Вложения | [attachments_controller.rb](../../app/controllers/dom_servis/dispatch/attachments_controller.rb) |

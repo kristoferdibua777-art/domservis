@@ -208,6 +208,13 @@
   padding: 16px;
 }
 
+.dom-servis-dispatch-board__mobile-create {
+  font-size: 16px;
+  margin: 14px 0;
+  min-height: 48px;
+  width: 100%;
+}
+
 .dom-servis-dispatch-board__mobile-stage-copy h1 {
   color: #f8fbff;
   font-size: 28px;
@@ -1776,6 +1783,35 @@ summary.dom-servis-dispatch-drawer__history-row {
   margin-top: 8px;
 }
 
+.dom-servis-dispatch-create-source {
+  background: rgba(58, 64, 79, 0.42);
+  border: 1px dashed rgba(120, 132, 158, 0.7);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.dom-servis-dispatch-modal .form-group.dom-servis-dispatch-create-source {
+  margin-bottom: 20px;
+}
+
+.dom-servis-dispatch-create-source__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dom-servis-dispatch-modal .form-group.is-missing .form-control {
+  border-color: #d9a441;
+}
+
+.dom-servis-dispatch-create-missing {
+  color: #f0c88a;
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 6px;
+}
+
 .dom-servis-dispatch-modal__attachment-toolbar {
   align-items: center;
   display: grid;
@@ -1910,6 +1946,10 @@ summary.dom-servis-dispatch-drawer__history-row {
 
   .dom-servis-dispatch-modal__footer-actions {
     width: 100%;
+  }
+
+  .dom-servis-dispatch-create-source__actions .btn {
+    flex: 1 1 auto;
   }
 
   .dom-servis-dispatch-drawer__attachment-item {

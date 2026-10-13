@@ -243,22 +243,17 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     model_item_render(job)
   end
 
+  # Splits a pasted request message into create form fields. Only a draft:
+  # the dispatcher checks it and publishes through #create.
   def parse_input
-    input = params.require(:input).to_s.strip
+    input = params[:input].to_s.strip
     raise Exceptions::UnprocessableEntity, __('No input submitted.') if input.blank?
+    raise Exceptions::UnprocessableEntity, "Текст заявки длиннее #{DomServis::Intake::TextParser::MAX_INPUT_LENGTH} символов." if input.length > DomServis::Intake::TextParser::MAX_INPUT_LENGTH
 
     ensure_action_allowed!('create_job')
 
-    render json: {
-      draft: {
-        service_type: infer_service_type(input),
-        address:      __('Address to be confirmed'),
-        description:  input,
-        priority:     infer_priority(input),
-        status:       'pool',
-        source:       'ai',
-      }
-    }, status: :ok
+    parser = DomServis::Intake::TextParser.new(input, today: dispatch_today)
+    render json: { draft: parser.draft, missing: parser.missing }, status: :ok
   end
 
   # Syncs the backing ticket again after a failure was recorded on the job.
@@ -440,20 +435,9 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     DomServis::DispatchTagCatalog.normalize_names(tag_names).sort
   end
 
-  def infer_priority(input)
-    lowered = input.downcase
-    return 'critical' if lowered.match?(%r{авар|сроч|горит|замерз|затоп|ошибк}i)
-
-    'medium'
-  end
-
-  def infer_service_type(input)
-    lowered = input.downcase
-    return 'Plumbing' if lowered.match?(%r{кран|смесител|вода|сантех}i)
-    return 'Boiler' if lowered.match?(%r{кот[её]л|отоплен|газ}i)
-    return 'Electrical' if lowered.match?(%r{розет|свет|элект|люстр}i)
-
-    __('General Service')
+  # "Сегодня" and "завтра" in a pasted message mean the dispatch's local day.
+  def dispatch_today
+    (Time.find_zone(Setting.get('timezone_default').presence) || Time.zone).today
   end
 
   def master_access?

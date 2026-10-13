@@ -38,7 +38,7 @@
 | POST | /jobs | Создание |
 | PUT/PATCH | /jobs/:id | Generic update, без смены исполнителя |
 | DELETE | /jobs/:id | Удаление |
-| POST | /jobs/parse_input | Черновик из текста по ключевым словам |
+| POST | /jobs/parse_input | Разбор вставленного текста в черновик формы создания; заявку не создаёт |
 | POST | /jobs/:id/take | Взять |
 | POST | /jobs/:id/assign | Назначить активного мастера |
 | POST | /jobs/:id/release | Вернуть в pool |
@@ -101,6 +101,18 @@
 Недопустимый переход возвращает 422, отсутствие нужного действия или статуса в политике — 403.
 POST /jobs создаёт заявку только в pool: assignee_id, published_at, taken_at, completed_at, closed_at,
 cancelled_at и status, отличный от pool, дают 422. Мастер назначается через assign или take.
+
+Разбор текста через POST /jobs/parse_input (диспетчер, администратор; мастеру 403):
+
+```json
+{ "input": "Осипенко д. 7 кв 3, котёл Baxi не греет, 8 900 123-45-67" }
+```
+
+Ответ: draft с найденными полями формы (client_phone, address, client_name, service_type,
+description, priority, visit_date, visit_day, visit_time; ненайденных ключей нет) и missing —
+какие из client_phone, address, client_name, service_type текст не дал.
+Пустой текст и текст длиннее 5000 символов дают 422. Публикация — отдельный POST /jobs
+из формы после проверки диспетчером, с source manual, поэтому клиент ищется по телефону как при ручном вводе.
 
 Эти примеры не заменяют текущие strong params.
 Ответы generic CRUD формирует Zammad; нельзя считать, что для всех действий существует один response envelope.

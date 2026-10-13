@@ -139,6 +139,45 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
     end
   end
 
+  describe 'POST /api/v1/dom_servis/dispatch/jobs/parse_input' do
+    let(:input) { 'Осипенко д. 7 кв 3, котёл Baxi не греет, 8 900 123-45-67' }
+
+    context 'when logged in as a dispatcher', authenticated_as: :dispatcher_user do
+      it 'returns a draft of the create form without creating a job', :aggregate_failures do
+        expect { post '/api/v1/dom_servis/dispatch/jobs/parse_input', params: { input: }, as: :json }.not_to change(DomServis::DispatchJob, :count)
+
+        expect(response).to have_http_status(:ok)
+        expect(json_response['draft']).to include(
+          'address'      => 'Осипенко, д. 7, кв. 3',
+          'client_phone' => '+79001234567',
+          'service_type' => 'Газовый котёл: Не греет · Baxi',
+          'description'  => input,
+        )
+        expect(json_response['missing']).to eq(['client_name'])
+      end
+
+      it 'rejects an empty text' do
+        post '/api/v1/dom_servis/dispatch/jobs/parse_input', params: { input: '  ' }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it 'rejects a text above the length limit' do
+        post '/api/v1/dom_servis/dispatch/jobs/parse_input', params: { input: 'а' * (DomServis::Intake::TextParser::MAX_INPUT_LENGTH + 1) }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    context 'when logged in as a master', authenticated_as: -> { master_user } do
+      it 'is not allowed' do
+        post '/api/v1/dom_servis/dispatch/jobs/parse_input', params: { input: }, as: :json
+
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+  end
+
   describe 'GET /api/v1/dom_servis/dispatch/jobs', authenticated_as: :dispatcher_user do
     it 'returns the backing ticket number as the job number', :aggregate_failures do
       ticket = create(:ticket)

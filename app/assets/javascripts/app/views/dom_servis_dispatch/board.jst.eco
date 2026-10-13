@@ -32,6 +32,9 @@
           <h1><%= @mobileShell.title %></h1>
           <p><%= @mobileBoardSummary %></p>
         </div>
+        <% if @canCreateJob: %>
+          <button type="button" class="btn btn--success dom-servis-dispatch-board__mobile-create js-open-create">+ Новая заявка</button>
+        <% end %>
         <div class="dom-servis-dispatch-board__mobile-workspace-filters">
           <% for item in @mobileShell.workspaceFilters: %>
             <button class="btn btn--text js-status-filter<%= ' is-active' if item.active %>" data-filter="<%= item.id %>">
@@ -711,25 +714,46 @@
         </div>
 
         <div class="dom-servis-dispatch-modal__body">
-        <div class="form-group">
-          <label>Тип работ *</label>
-          <input class="form-control js-create-service-type js-create-draft-field" type="text" placeholder="Например: Замена смесителя" value="<%= @createDraft.service_type %>">
+        <div class="form-group dom-servis-dispatch-create-source">
+          <label for="dom-servis-dispatch-create-source">Текст заявки</label>
+          <textarea id="dom-servis-dispatch-create-source" class="form-control js-create-source-text" rows="3" placeholder="Вставь сообщение: адрес, телефон, имя, котёл и неисправность"<%= ' disabled' if @createParsing %>><%= @createSourceText %></textarea>
+          <div class="dom-servis-dispatch-create-source__actions">
+            <% if @clipboardPasteSupported: %>
+              <button type="button" class="btn js-paste-create-source"<%= ' disabled' if @createParsing %>>Вставить и разобрать</button>
+            <% end %>
+            <button type="button" class="btn btn--primary js-parse-create-source"<%= ' disabled' if @createParsing %>><%= if @createParsing then 'Разбираю…' else 'Разобрать' %></button>
+          </div>
+          <div class="dom-servis-dispatch-drawer__field-hint">Поля ниже заполнятся из текста. Проверь их перед публикацией.</div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group<%= ' is-missing' if 'service_type' in @createMissingFields %>">
+          <label>Тип работ *</label>
+          <input class="form-control js-create-service-type js-create-draft-field" data-draft-field="service_type" type="text" list="dom-servis-dispatch-service-types" placeholder="Например: Замена смесителя" value="<%= @createDraft.service_type %>">
+          <datalist id="dom-servis-dispatch-service-types">
+            <% for serviceType in ['Газовый котёл', 'Бойлер, колонка', 'Сантехника', 'Электрика', 'Бытовая техника', 'Другое по дому']: %>
+              <option value="<%= serviceType %>"></option>
+            <% end %>
+          </datalist>
+          <% if 'service_type' in @createMissingFields: %><div class="dom-servis-dispatch-create-missing js-create-missing-hint">Не нашлось в тексте</div><% end %>
+        </div>
+
+        <div class="form-group<%= ' is-missing' if 'address' in @createMissingFields %>">
           <label>Адрес *</label>
-          <input class="form-control js-create-address js-create-draft-field" type="text" placeholder="Улица, дом, квартира" value="<%= @createDraft.address %>">
+          <input class="form-control js-create-address js-create-draft-field" data-draft-field="address" type="text" placeholder="Улица, дом, квартира" value="<%= @createDraft.address %>">
+          <% if 'address' in @createMissingFields: %><div class="dom-servis-dispatch-create-missing js-create-missing-hint">Не нашлось в тексте</div><% end %>
         </div>
 
           <div class="dom-servis-dispatch-modal__columns">
-          <div class="form-group">
+          <div class="form-group<%= ' is-missing' if 'client_name' in @createMissingFields %>">
             <label>Имя клиента</label>
-            <input class="form-control js-create-client-name js-create-draft-field" type="text" placeholder="Мария" value="<%= @createDraft.client_name %>">
+            <input class="form-control js-create-client-name js-create-draft-field" data-draft-field="client_name" type="text" placeholder="Мария" value="<%= @createDraft.client_name %>">
+            <% if 'client_name' in @createMissingFields: %><div class="dom-servis-dispatch-create-missing js-create-missing-hint">Не нашлось в тексте</div><% end %>
           </div>
 
-          <div class="form-group">
+          <div class="form-group<%= ' is-missing' if 'client_phone' in @createMissingFields %>">
             <label>Телефон *</label>
-            <input class="form-control js-create-client-phone js-create-draft-field" type="text" placeholder="+7 900 000 00 00" value="<%= @createDraft.client_phone %>">
+            <input class="form-control js-create-client-phone js-create-draft-field" data-draft-field="client_phone" type="tel" placeholder="+7 900 000 00 00" value="<%= @createDraft.client_phone %>">
+            <% if 'client_phone' in @createMissingFields: %><div class="dom-servis-dispatch-create-missing js-create-missing-hint">Не нашлось в тексте</div><% end %>
           </div>
         </div>
 
