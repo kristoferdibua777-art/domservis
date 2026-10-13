@@ -1582,7 +1582,7 @@ class App.DomServisDispatchBoard extends App.Controller
         jobCode: @jobNumber(job)
         serviceType: job.service_type || 'Без названия'
         address: job.address || 'Адрес не указан'
-        clientName: job.client_name || 'Клиент не указан'
+        clientName: job.client_name || (if job.client_contacts_hidden then 'Контакты после взятия' else 'Клиент не указан')
         clientPhone: job.client_phone || ''
         visitDate: job.visit_date || ''
         visitTime: job.visit_time || ''
@@ -1668,7 +1668,7 @@ class App.DomServisDispatchBoard extends App.Controller
       title: job.service_type || 'Без названия'
       serviceType: job.service_type || 'Без названия'
       address: job.address || 'Адрес не указан'
-      clientName: job.client_name || 'Клиент не указан'
+      clientName: job.client_name || (if job.client_contacts_hidden then 'Контакты после взятия' else 'Клиент не указан')
       clientPhone: job.client_phone || ''
       organizationName: @resolveOrganizationName(job)
       status: job.status || 'pool'
@@ -1722,8 +1722,8 @@ class App.DomServisDispatchBoard extends App.Controller
         id: 'client'
         label: 'Клиент'
         items: _.compact([
-          @detailItem('Имя', job.client_name || 'Не указано')
-          @detailItem('Телефон', job.client_phone || 'Не указан')
+          @detailItem('Имя', job.client_name || (if job.client_contacts_hidden then 'Откроется после взятия' else 'Не указано'))
+          @detailItem('Телефон', job.client_phone || (if job.client_contacts_hidden then 'Откроется после взятия' else 'Не указан'))
           @detailItem('Заказчик', @resolveOrganizationName(job))
         ])
       }

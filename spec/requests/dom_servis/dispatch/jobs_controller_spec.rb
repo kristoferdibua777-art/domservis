@@ -628,4 +628,71 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
       expect(json_response.pluck('id')).not_to include(next_day_job.id)
     end
   end
+
+  describe 'client contacts (personal data minimisation)' do
+    before { job.update!(client_name: 'Иван Петров') }
+
+    context 'when logged in as a master', authenticated_as: -> { master_user } do
+      it 'hides the contacts of a pool job in the list', :aggregate_failures do
+        get '/api/v1/dom_servis/dispatch/jobs?expand=true', as: :json
+
+        item = json_response.find { |entry| entry['id'] == job.id }
+        expect(item).to include('client_phone' => nil, 'client_name' => nil, 'client_contacts_hidden' => true)
+        expect(item['address']).to eq('Lenina 10')
+      end
+
+      it 'hides the contacts of a pool job in show, also in the full format', :aggregate_failures do
+        get "/api/v1/dom_servis/dispatch/jobs/#{job.id}", as: :json
+
+        expect(json_response).to include('client_phone' => nil, 'client_contacts_hidden' => true)
+
+        get "/api/v1/dom_servis/dispatch/jobs/#{job.id}?full=true", as: :json
+
+        expect(response.body).not_to include('+79001234567')
+      end
+
+      it 'shows the contacts once the master has taken the job', :aggregate_failures do
+        post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/take", as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(json_response).to include('client_phone' => '+79001234567', 'client_name' => 'Иван Петров')
+        expect(json_response).not_to have_key('client_contacts_hidden')
+      end
+
+      it 'does not reveal the contacts when another master took the job first', :aggregate_failures do
+        job.update!(status: 'taken', assignee: other_master_user)
+        allow_any_instance_of(DomServis::DispatchJobPolicy).to receive(:take?).and_return(true)
+        allow_any_instance_of(DomServis::DispatchJobPolicy::Scope).to receive(:resolve).and_return(DomServis::DispatchJob.all)
+
+        post "/api/v1/dom_servis/dispatch/jobs/#{job.id}/take", as: :json
+
+        expect(response).to have_http_status(:conflict)
+        expect(response.body).not_to include('+79001234567')
+      end
+
+      it 'drops contact changes from the history of a pool job', :aggregate_failures do
+        DomServis::DispatchEvent.create!(
+          dispatch_job: job,
+          actor_user:   dispatcher_user,
+          event_type:   'updated',
+          meta:         { changes: { client_phone: { from: '+79001234567', to: '+79007654321' }, address: { from: 'A', to: 'B' } } },
+        )
+
+        get "/api/v1/dom_servis/dispatch/jobs/#{job.id}/events", as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include('+7900')
+        expect(response.body).to include('address')
+      end
+    end
+
+    context 'when logged in as a dispatcher', authenticated_as: :dispatcher_user do
+      it 'shows the contacts of a pool job', :aggregate_failures do
+        get "/api/v1/dom_servis/dispatch/jobs/#{job.id}", as: :json
+
+        expect(json_response).to include('client_phone' => '+79001234567', 'client_name' => 'Иван Петров')
+        expect(json_response).not_to have_key('client_contacts_hidden')
+      end
+    end
+  end
 end
