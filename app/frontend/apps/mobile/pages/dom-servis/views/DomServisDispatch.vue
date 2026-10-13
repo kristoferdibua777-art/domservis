@@ -12,7 +12,7 @@ import { useSessionStore } from '#shared/stores/session.ts'
 import CommonLoader from '#mobile/components/CommonLoader/CommonLoader.vue'
 import { useHeader } from '#mobile/composables/useHeader.ts'
 import {
-  domServisDispatchDesktopPath,
+  domServisDispatchBoardPath,
   domServisDispatchLabel,
   domServisDispatchTitle,
 } from '#mobile/lib/domServisDispatch.ts'
@@ -468,7 +468,7 @@ onMounted(() => {
           </p>
         </div>
         <CommonLink
-          :link="domServisDispatchDesktopPath"
+          :link="domServisDispatchBoardPath"
           external
           class="text-sm font-medium text-blue"
         >

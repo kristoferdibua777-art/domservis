@@ -1,6 +1,9 @@
 dispatchDesktopRoutePattern = /^#dom_servis\/dispatch(?:$|[/?])/
+dispatchShellPathPattern = /^\/dispatch(?:$|\/)/
 
 class App.MobileDetection
+  @dispatchShellUrl: '/dispatch/#dom_servis/dispatch'
+
   @isMobile: ->
     isMobile()
 
@@ -33,6 +36,21 @@ class App.MobileDetection
 
   @shouldPreferDispatchLanding: ->
     @hasDispatchAccess() && (@isMobile() || @isCompactViewport() || @isForcingDesktopView())
+
+  @insideDispatchShell: (pathname = window.location.pathname) ->
+    dispatchShellPathPattern.test(pathname || '')
+
+  # Web Push can only be turned on in the installable shell at /dispatch/:
+  # the main app has neither its service worker nor the onboarding sheet.
+  # A phone that opens the board anywhere else would never get a push.
+  @shouldUseDispatchShell: (pathname = window.location.pathname) ->
+    @isMobile() && !@insideDispatchShell(pathname)
+
+  @redirectToDispatchShell: ->
+    return false if !@shouldUseDispatchShell()
+
+    window.location.replace(@dispatchShellUrl)
+    true
 
   @mobileTargetHash: (hash = window.location.hash) ->
     return '' if @desktopShellRequiredForHash(hash)

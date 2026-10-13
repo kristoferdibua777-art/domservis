@@ -8,7 +8,9 @@ const dispatchPermissions = [
   'dom_servis.master',
 ] as const
 
-export const domServisDispatchDesktopPath = '/#dom_servis/dispatch'
+// The board's installable shell: the only page with the service worker and
+// the Web Push onboarding, so phones must open the board there.
+export const domServisDispatchBoardPath = '/dispatch/#dom_servis/dispatch'
 export const domServisDispatchMobilePath = '/dom-servis/dispatch'
 export const domServisDispatchLabel = 'Дом-Сервис'
 export const domServisDispatchTitle = 'Диспетчерская доска'
