@@ -158,13 +158,10 @@ class DomServis::DispatchJob < ApplicationModel
   def notify_recipients_on_create
     return if status != 'pool'
 
-    recipients = DomServis::Notifications::Dispatcher
-      .recipients_for_permissions('dom_servis.master')
-
     DomServis::Notifications::Dispatcher.new(
       job:        self,
       event_type: :new_pool_job,
-      recipients: recipients,
+      recipients: DomServis::Notifications::Dispatcher.recipients_for_new_pool_job(self),
       actor:      created_by,
     ).deliver
 

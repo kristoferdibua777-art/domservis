@@ -68,6 +68,18 @@ RSpec.describe DomServis::DispatchJob, current_user_id: 1, type: :model do
                                                       ))
   end
 
+  it 'tells the recipients of a new job about it after create commit' do
+    recipients = [User.find(1)]
+    allow(DomServis::Notifications::Dispatcher).to receive_messages(
+      recipients_for_new_pool_job: recipients,
+      new:                         instance_double(DomServis::Notifications::Dispatcher, deliver: nil),
+    )
+
+    job = described_class.create!(dispatch_job_attrs)
+
+    expect(DomServis::Notifications::Dispatcher).to have_received(:new).with(hash_including(job: job, event_type: :new_pool_job, recipients: recipients))
+  end
+
   describe 'status workflow' do
     before do
       allow(DomServis::Notifications::Dispatcher).to receive(:new).and_return(instance_double(DomServis::Notifications::Dispatcher, deliver: nil))

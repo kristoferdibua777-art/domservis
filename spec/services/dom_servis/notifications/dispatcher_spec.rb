@@ -30,4 +30,36 @@ RSpec.describe DomServis::Notifications::Dispatcher, current_user_id: 1 do
       expect(dispatcher.send(:push_body, nil)).to eq("Открыть: · Boiler repair · Lenina 10 · #{job.job_code}")
     end
   end
+
+  describe '.recipients_for_new_pool_job' do
+    before { DomServis::DispatchRoleCatalog.sync!(actor_id: 1) }
+
+    let!(:master_user)     { dispatch_user('Dom-Servis Master') }
+    let!(:dispatcher_user) { dispatch_user('Dom-Servis Dispatcher') }
+    let!(:admin_user)      { dispatch_user('Dom-Servis Admin') }
+    let!(:other_agent)     { create(:agent) }
+
+    def dispatch_user(role_name)
+      create(:agent).tap { |user| user.roles << Role.find_by!(name: role_name) }
+    end
+
+    it 'tells masters, dispatchers and admins about a job from a request source', :aggregate_failures do
+      # Intake attributes the job to a stand-in agent, here the admin.
+      intake_job = DomServis::DispatchJob.new(request_source_id: 1, created_by_id: admin_user.id)
+
+      recipients = described_class.recipients_for_new_pool_job(intake_job)
+
+      expect(recipients).to include(master_user, dispatcher_user, admin_user)
+      expect(recipients).not_to include(other_agent)
+    end
+
+    it 'leaves out the person who entered the job on the board', :aggregate_failures do
+      board_job = DomServis::DispatchJob.new(created_by_id: dispatcher_user.id)
+
+      recipients = described_class.recipients_for_new_pool_job(board_job)
+
+      expect(recipients).to include(master_user, admin_user)
+      expect(recipients).not_to include(dispatcher_user)
+    end
+  end
 end
