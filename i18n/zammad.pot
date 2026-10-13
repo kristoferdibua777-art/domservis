@@ -13652,10 +13652,6 @@ msgstr ""
 msgid "Push subscription p256dh key is required."
 msgstr ""
 
-#: app/assets/javascripts/app/controllers/dom_servis/dispatch_board.coffee:2516
-msgid "Push-уведомления не настроены администратором (нет VAPID ключа)."
-msgstr ""
-
 #: app/assets/javascripts/app/views/maintenance.jst.eco:27
 #: db/seeds/settings.rb:52
 msgid "Put a message on the login page. To change it, click on the text area below and change it in-line."

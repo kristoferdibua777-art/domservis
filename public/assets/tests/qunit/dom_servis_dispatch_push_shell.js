@@ -89,6 +89,59 @@ QUnit.test('the browser is not asked where push cannot work', async assert => {
   assert.false(withoutKey.pushEnabled)
 });
 
+QUnit.test('the enable button hands over to the onboarding sheet', assert => {
+  const board = pushBoard()
+  let opened = 0
+  const listener = () => { opened += 1 }
+  window.addEventListener('dom-servis-push-open', listener)
+
+  try {
+    let prevented = 0
+    board.enablePushNotifications({ preventDefault: () => { prevented += 1 } })
+
+    assert.equal(opened, 1, 'the sheet is asked to open')
+    assert.equal(prevented, 1)
+    assert.false(board.pushEnabled, 'only the sheet turns notifications on')
+    assert.equal(board.renders, 0)
+  } finally {
+    window.removeEventListener('dom-servis-push-open', listener)
+  }
+});
+
+QUnit.test('a sent test says how many devices it went to', assert => {
+  const requests = []
+  const notes = []
+  const errors = []
+  const board = pushBoard({
+    apiPath: '/api/v1',
+    ajax: (options) => requests.push(options),
+    notify: (options) => notes.push(options),
+    notifyPushError: (message) => errors.push(message),
+    extractError: (xhr, fallback) => fallback,
+  })
+
+  board.testPushNotification({ preventDefault: () => {} })
+  assert.equal(requests[0].url, '/api/v1/dom_servis/dispatch/push_subscriptions/test')
+  assert.true(board.pushTesting)
+
+  board.testPushNotification({ preventDefault: () => {} })
+  assert.equal(requests.length, 1, 'no second request while one is running')
+
+  requests[0].success({ status: 'ok', sent_to: 2 })
+  assert.false(board.pushTesting)
+  assert.equal(notes.length, 1)
+  assert.equal(notes[0].type, 'success')
+  assert.true(notes[0].msg.startsWith('Тест отправлен, устройств: 2.'), notes[0].msg)
+
+  assert.true(board.pushTestSentMessage(undefined).startsWith('Тест отправлен. '), 'no count without a server answer')
+
+  board.testPushNotification({ preventDefault: () => {} })
+  requests[1].error({})
+  assert.false(board.pushTesting)
+  assert.deepEqual(errors, ['Тестовый пуш не отправлен.'])
+  assert.equal(notes.length, 1, 'no success note for a failed test')
+});
+
 QUnit.test('the onboarding sheet event refreshes the state', async assert => {
   const board = pushBoard()
   let synced = 0

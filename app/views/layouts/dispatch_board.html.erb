@@ -337,7 +337,37 @@
       function showDenied() {
         enableButton.disabled = true;
         enableButton.textContent = 'Уведомления запрещены';
-        setStatus('Чтобы включить: нажмите на значок замка слева от адреса сайта → «Разрешения» → «Уведомления» → «Разрешить», затем обновите страницу.', true);
+        setStatus('Уведомления для сайта запрещены. В браузере нажмите на значок слева от адреса сайта → «Разрешения» → «Уведомления» → «Разрешить» и обновите страницу. Если такого пункта нет или сайт открыт значком с главного экрана: настройки телефона → «Приложения» → браузер → «Уведомления» → включить.', true);
+        show();
+      }
+
+      function showUnsupported() {
+        enableButton.disabled = true;
+        enableButton.textContent = 'Уведомления недоступны';
+        setStatus('Этот браузер не умеет получать уведомления. На Android откройте сайт в Chrome. На iPhone откройте его в Safari, выберите «Поделиться» → «На экран “Домой”» и запускайте с главного экрана.', true);
+        show();
+      }
+
+      // Says why turning notifications on failed: a button that silently
+      // springs back leaves the user with nothing to act on or to report.
+      function showFailure(error) {
+        if (error && error.name === 'NotAllowedError') {
+          showDenied();
+          return;
+        }
+
+        var text;
+        if (error && error.status === 401) {
+          text = 'Сначала войдите в систему, затем повторите.';
+        } else if (error && error.status) {
+          text = 'Сервер не сохранил подписку (ошибка ' + error.status + '). Попробуйте ещё раз позже.';
+        } else {
+          var reason = error && error.name ? ' (' + (error.name + (error.message ? ': ' + error.message : '')).slice(0, 140) + ')' : '';
+          text = 'Не получилось включить уведомления. Проверьте интернет, отключите VPN и попробуйте ещё раз.' + reason;
+        }
+
+        resetButton();
+        setStatus(text);
         show();
       }
 
@@ -352,7 +382,7 @@
               // silently, without flashing the sheet.
               return subscribe(registration).catch(function (error) {
                 if (window.console) console.warn('Push re-sync:', error);
-                if (!snoozed()) show();
+                if (!snoozed()) showFailure(error);
               });
             }
 
@@ -383,6 +413,7 @@
             }
             if (permission !== 'granted') {
               resetButton();
+              setStatus('Браузер не получил ответа на запрос. Нажмите кнопку ещё раз и выберите «Разрешить». Если запрос не появляется, включите уведомления для браузера в настройках телефона.', true);
               return null;
             }
 
@@ -395,11 +426,26 @@
           })
           .catch(function (error) {
             if (window.console) console.warn('Push enable:', error);
-            resetButton();
-            setStatus(error && error.status === 401
-              ? 'Сначала войдите в систему, затем повторите.'
-              : 'Не получилось включить уведомления. Проверьте интернет и попробуйте ещё раз.');
+            showFailure(error);
           });
+      });
+
+      // The board's own «Пуш» / «Уведомления» button opens the sheet on
+      // demand: after «Позже», when the browser has blocked the site, and in
+      // browsers that cannot do Web Push at all.
+      window.addEventListener('dom-servis-push-open', function () {
+        if (!supported()) {
+          showUnsupported();
+          return;
+        }
+        if (Notification.permission === 'denied') {
+          showDenied();
+          return;
+        }
+
+        resetButton();
+        setStatus('');
+        show();
       });
 
       laterButton.addEventListener('click', function () {
