@@ -70,6 +70,17 @@ class DomServis::Notifications::Dispatcher
     User.joins(:roles).where(roles: { id: role_ids }, users: { active: true }).distinct
   end
 
+  # Who is told that a job has just appeared on the stand: the masters who
+  # may take it and the dispatchers and admins who run the stand. Whoever
+  # entered the job on the board already knows about it. A job from a
+  # request source only has a stand-in creator, so nobody is left out there.
+  def self.recipients_for_new_pool_job(job)
+    recipients = recipients_for_permissions('dom_servis.master', 'dom_servis.dispatcher', 'dom_servis.admin')
+    return recipients if job.request_source_id.present?
+
+    recipients.where.not(id: job.created_by_id)
+  end
+
   private
 
   def deliver_in_app(user)
