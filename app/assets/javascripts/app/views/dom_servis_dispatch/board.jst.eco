@@ -716,7 +716,7 @@
         <div class="dom-servis-dispatch-modal__body">
         <div class="form-group dom-servis-dispatch-create-source">
           <label for="dom-servis-dispatch-create-source">Текст заявки</label>
-          <textarea id="dom-servis-dispatch-create-source" class="form-control js-create-source-text" rows="3" placeholder="Вставь сообщение: адрес, телефон, имя, котёл и неисправность"<%= ' disabled' if @createParsing %>><%= @createSourceText %></textarea>
+          <textarea id="dom-servis-dispatch-create-source" class="form-control js-create-source-text" rows="3" placeholder="Вставь сообщение: адрес, телефон, имя, техника и модель, неисправность"<%= ' disabled' if @createParsing %>><%= @createSourceText %></textarea>
           <div class="dom-servis-dispatch-create-source__actions">
             <% if @clipboardPasteSupported: %>
               <button type="button" class="btn js-paste-create-source"<%= ' disabled' if @createParsing %>>Вставить и разобрать</button>
@@ -726,15 +726,27 @@
           <div class="dom-servis-dispatch-drawer__field-hint">Поля ниже заполнятся из текста. Проверь их перед публикацией.</div>
         </div>
 
-        <div class="form-group<%= ' is-missing' if 'service_type' in @createMissingFields %>">
-          <label>Тип работ *</label>
-          <input class="form-control js-create-service-type js-create-draft-field" data-draft-field="service_type" type="text" list="dom-servis-dispatch-service-types" placeholder="Например: Замена смесителя" value="<%= @createDraft.service_type %>">
-          <datalist id="dom-servis-dispatch-service-types">
-            <% for serviceType in ['Газовый котёл', 'Бойлер, колонка', 'Сантехника', 'Электрика', 'Бытовая техника', 'Другое по дому']: %>
-              <option value="<%= serviceType %>"></option>
+        <div class="form-group<%= ' is-missing' if 'work_type' in @createMissingFields %>">
+          <label for="dom-servis-dispatch-create-work-type">Вид работ *</label>
+          <input id="dom-servis-dispatch-create-work-type" class="form-control js-create-work-type js-create-draft-field" data-draft-field="work_type" type="text" autocomplete="off" placeholder="Выбери ниже или впиши свой" value="<%= @createDraft.work_type %>">
+          <div class="dom-servis-dispatch-tag-selector__chips dom-servis-dispatch-create-work-types">
+            <% for workType in @workTypeOptions: %>
+              <button type="button" class="dom-servis-dispatch-tag-selector__chip js-create-work-type-chip<%= ' is-active' if workType is @createDraft.work_type %>" data-work-type="<%= workType %>"><%= workType %></button>
             <% end %>
-          </datalist>
-          <% if 'service_type' in @createMissingFields: %><div class="dom-servis-dispatch-create-missing js-create-missing-hint">Не нашлось в тексте</div><% end %>
+          </div>
+          <% if 'work_type' in @createMissingFields: %><div class="dom-servis-dispatch-create-missing js-create-missing-hint">Не нашлось в тексте</div><% end %>
+        </div>
+
+        <div class="form-group<%= ' is-missing' if 'equipment' in @createMissingFields %>">
+          <label for="dom-servis-dispatch-create-equipment">Техника и модель</label>
+          <input id="dom-servis-dispatch-create-equipment" class="form-control js-create-equipment js-create-draft-field" data-draft-field="equipment" type="text" autocomplete="off" placeholder="Например: котёл Baxi Eco Four 24, стиральная машина Bosch WAN24" value="<%= @createDraft.equipment %>">
+          <% if 'equipment' in @createMissingFields: %><div class="dom-servis-dispatch-create-missing js-create-missing-hint">Не нашлось в тексте</div><% end %>
+        </div>
+
+        <div class="form-group<%= ' is-missing' if 'fault' in @createMissingFields %>">
+          <label for="dom-servis-dispatch-create-fault">Неисправность или что сделать</label>
+          <input id="dom-servis-dispatch-create-fault" class="form-control js-create-fault js-create-draft-field" data-draft-field="fault" type="text" autocomplete="off" placeholder="Например: не греет, ошибка E10, установка" value="<%= @createDraft.fault %>">
+          <% if 'fault' in @createMissingFields: %><div class="dom-servis-dispatch-create-missing js-create-missing-hint">Не нашлось в тексте</div><% end %>
         </div>
 
         <div class="form-group<%= ' is-missing' if 'address' in @createMissingFields %>">

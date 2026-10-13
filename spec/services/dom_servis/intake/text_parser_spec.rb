@@ -18,16 +18,44 @@ RSpec.describe DomServis::Intake::TextParser do
     end
 
     it 'reports the key fields the text does not give' do
-      expect(parser.missing).to eq(%i[client_phone client_name service_type])
+      expect(parser.missing).to eq(%i[client_phone client_name work_type equipment fault])
     end
   end
 
   context 'with an address, a fault and a boiler model' do
     let(:text) { 'Осипенко д. 7. кв.3 " мозги" котёл Beretta CIA' }
 
-    it 'reads the address, the equipment, the fault and the model', :aggregate_failures do
-      expect(parser.draft).to include(address: 'Осипенко, д. 7, кв. 3', service_type: 'Газовый котёл: Плата управления · Beretta CIA')
+    it 'splits the work into positions', :aggregate_failures do
+      expect(parser.draft).to include(
+        address:      'Осипенко, д. 7, кв. 3',
+        work_type:    'Котлы и отопление',
+        equipment:    'Котёл Beretta CIA',
+        fault:        'Плата управления',
+        service_type: 'Котлы и отопление: Котёл Beretta CIA — Плата управления',
+      )
       expect(parser.missing).to eq(%i[client_phone client_name])
+    end
+  end
+
+  describe 'work positions' do
+    [
+      ['Ленина 5, стиральная машина Weissgauff WM 4947 не сливает воду, ошибка E21', 'Бытовая техника', 'Стиральная машина Weissgauff WM 4947', 'Ошибка E21, не сливает воду'],
+      ['Мира 10 кв 4, холодильник Атлант не морозит', 'Бытовая техника', 'Холодильник Atlant', 'Не холодит'],
+      ['Мира 2, Bosch Serie 4 не сливает', 'Бытовая техника', 'Bosch Serie 4', 'Не сливает воду'],
+      ['Гагарина 3, кондиционер Daikin течёт и шумит', 'Кондиционеры', 'Кондиционер Daikin', 'Течёт, шумит'],
+      ['Победы 12, бойлер Термекс 80 л не греет', 'Водонагреватели и колонки', 'Водонагреватель Thermex', 'Не греет'],
+      ['Садовая 4, нет света в квартире, выбивает автомат', 'Электрика', nil, 'Нет света, выбивает автомат'],
+      ['Ленина 8, засор в ванной', 'Сантехника', nil, 'Засор'],
+      ['Кирова 7, нужно повесить карниз', 'Мелкий ремонт', nil, nil],
+      ['Ленина 3, посудомойка ошибка H01, Иван WhatsApp', 'Бытовая техника', 'Посудомоечная машина', 'Ошибка H01'],
+    ].each do |message, work_type, equipment, fault|
+      context "with \"#{message}\"" do
+        let(:text) { message }
+
+        it 'reads the work type, the equipment with its model and the fault' do
+          expect(parser.draft.slice(:work_type, :equipment, :fault)).to eq({ work_type:, equipment:, fault: }.compact)
+        end
+      end
     end
   end
 
@@ -44,7 +72,7 @@ RSpec.describe DomServis::Intake::TextParser do
       expect(parser.draft).to include(
         address:      'ул. Малая Лесная, д. 15, кв. 9, этаж 3',
         client_phone: '+79001234567',
-        service_type: 'Сантехника: Счётчик, Установка',
+        service_type: 'Сантехника: Счётчик воды — Установка',
       )
     end
   end
@@ -82,7 +110,7 @@ RSpec.describe DomServis::Intake::TextParser do
     it 'fills the whole draft', :aggregate_failures do
       expect(parser.draft).to include(
         address:      'Осипенко, д. 7, кв. 3',
-        service_type: 'Газовый котёл: Ошибка E10, Не греет · Baxi Eco Four 24',
+        service_type: 'Котлы и отопление: Котёл Baxi Eco Four 24 — Ошибка E10, не греет',
         client_name:  'Мария Петрова',
         client_phone: '+79001234567',
         visit_date:   '2026-10-14',
@@ -99,7 +127,7 @@ RSpec.describe DomServis::Intake::TextParser do
     it 'stops the street name at the request words', :aggregate_failures do
       expect(parser.draft).to include(
         address:      'Сержанта Мишина, д. 12Б',
-        service_type: 'Сантехника',
+        service_type: 'Сантехника: Кран',
         client_name:  'Иван',
         client_phone: '+79007654321',
         visit_date:   '2026-10-16',
@@ -113,7 +141,7 @@ RSpec.describe DomServis::Intake::TextParser do
     let(:text) { 'Лесная улица 12к2, срочно, пахнет газом' }
 
     it 'reads the address and marks the job critical' do
-      expect(parser.draft).to include(address: 'ул. Лесная, д. 12, корп. 2', priority: 'critical')
+      expect(parser.draft).to include(address: 'ул. Лесная, д. 12, корп. 2', priority: 'critical', service_type: 'Котлы и отопление — Пахнет газом')
     end
   end
 
@@ -125,7 +153,7 @@ RSpec.describe DomServis::Intake::TextParser do
         address:      'ул. 8 Марта, д. 15, кв. 3',
         client_name:  'Наталья',
         client_phone: '+79001112233',
-        service_type: 'Бойлер, колонка: Течёт · Thermex',
+        service_type: 'Водонагреватели и колонки: Водонагреватель Thermex — Течёт',
       )
       expect(parser.draft).not_to include(:visit_date)
     end
@@ -136,7 +164,7 @@ RSpec.describe DomServis::Intake::TextParser do
 
     it 'leaves them in the description', :aggregate_failures do
       expect(parser.draft).not_to include(:address, :client_phone, :visit_date, :visit_time)
-      expect(parser.draft[:service_type]).to eq('Газовый котёл: Падает давление · Protherm')
+      expect(parser.draft[:service_type]).to eq('Котлы и отопление: Котёл Protherm — Падает давление')
     end
   end
 

@@ -150,7 +150,10 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
         expect(json_response['draft']).to include(
           'address'      => 'Осипенко, д. 7, кв. 3',
           'client_phone' => '+79001234567',
-          'service_type' => 'Газовый котёл: Не греет · Baxi',
+          'work_type'    => 'Котлы и отопление',
+          'equipment'    => 'Котёл Baxi',
+          'fault'        => 'Не греет',
+          'service_type' => 'Котлы и отопление: Котёл Baxi — Не греет',
           'description'  => input,
         )
         expect(json_response['missing']).to eq(['client_name'])

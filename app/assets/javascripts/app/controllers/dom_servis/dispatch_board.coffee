@@ -23,6 +23,7 @@ class App.DomServisDispatchBoard extends App.Controller
     'input .js-create-source-text': 'updateCreateSourceText'
     'click .js-paste-create-source': 'pasteCreateSource'
     'click .js-parse-create-source': 'parseCreateSource'
+    'click .js-create-work-type-chip': 'pickCreateWorkType'
     'input .js-create-draft-field': 'updateCreateDraft'
     'change .js-create-draft-field': 'updateCreateDraft'
     'click .js-create-tag-toggle': 'toggleCreateTag'
@@ -158,6 +159,7 @@ class App.DomServisDispatchBoard extends App.Controller
       createParsing: @createParsing
       createMissingFields: @createMissingFields
       clipboardPasteSupported: @clipboardPasteSupported()
+      workTypeOptions: @workTypeOptions
       createAttachmentKinds: @createAttachmentKindOptions()
       createAttachmentKind: @createAttachmentKind
       createAttachmentFiles: @buildCreateAttachmentDraft()
@@ -721,7 +723,9 @@ class App.DomServisDispatchBoard extends App.Controller
     privateOrganizationId = @privateOrganizationId()
 
     {
-      service_type: ''
+      work_type: ''
+      equipment: ''
+      fault: ''
       address: ''
       client_name: ''
       client_phone: ''
@@ -742,7 +746,9 @@ class App.DomServisDispatchBoard extends App.Controller
       @$(selector).val()?.toString() || ''
 
     @createDraft =
-      service_type: read('.js-create-service-type').trim()
+      work_type: read('.js-create-work-type').trim()
+      equipment: read('.js-create-equipment').trim()
+      fault: read('.js-create-fault').trim()
       address: read('.js-create-address').trim()
       client_name: read('.js-create-client-name').trim()
       client_phone: read('.js-create-client-phone').trim()
@@ -758,15 +764,48 @@ class App.DomServisDispatchBoard extends App.Controller
   updateCreateDraft: (e) ->
     @syncCreateDraftFromForm()
 
-    # A field typed in after parsing is no longer missing.
     input = $(e?.currentTarget)
     field = input.data('draft-field')
+    @syncWorkTypeChips() if field is 'work_type'
+
+    # A field typed in after parsing is no longer missing.
     return if !field || !@createDraft[field]
 
     @createMissingFields = _.without(@createMissingFields, field)
     group = input.closest('.form-group')
     group.removeClass('is-missing')
     group.find('.js-create-missing-hint').remove()
+
+  # The "Вид работ" positions; the server's text parser uses the same list.
+  workTypeOptions: [
+    'Котлы и отопление'
+    'Водонагреватели и колонки'
+    'Сантехника'
+    'Электрика'
+    'Бытовая техника'
+    'Кондиционеры'
+    'Мелкий ремонт'
+  ]
+
+  pickCreateWorkType: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    workType = $(e.currentTarget).data('work-type')?.toString() || ''
+    return if !workType
+
+    @$('.js-create-work-type').val(workType).trigger('input')
+
+  syncWorkTypeChips: ->
+    workType = @createDraft.work_type
+    @$('.js-create-work-type-chip').each(->
+      chip = $(@)
+      chip.toggleClass('is-active', chip.data('work-type')?.toString() is workType)
+    )
+
+  # The job title the board shows, built from the three work positions the
+  # same way the server's text parser does: "Вид: Техника — Неисправность".
+  composeServiceType: (draft) ->
+    title = _.compact([draft.work_type, draft.equipment]).join(': ')
+    _.compact([title, draft.fault]).join(' — ')
 
   updateCreateSourceText: (e) ->
     @createSourceText = $(e.currentTarget).val()?.toString() || ''
@@ -790,6 +829,7 @@ class App.DomServisDispatchBoard extends App.Controller
       )
       .catch(=>
         @notify(type: 'error', msg: 'Нет доступа к буферу обмена. Вставь текст в поле вручную и нажми «Разобрать».', timeout: 6000)
+        @$('.js-create-source-text').trigger('focus')
       )
 
   # The server splits the pasted message into form fields; publishing stays
@@ -841,7 +881,7 @@ class App.DomServisDispatchBoard extends App.Controller
     @syncCreateDraftFromForm()
     defaults = @createDraftDefaults()
 
-    for field in ['service_type', 'address', 'client_name', 'client_phone', 'visit_date', 'visit_day', 'visit_time', 'priority', 'description']
+    for field in ['work_type', 'equipment', 'fault', 'address', 'client_name', 'client_phone', 'visit_date', 'visit_day', 'visit_time', 'priority', 'description']
       value = draft[field]?.toString() || ''
       current = @createDraft[field] || ''
       typedByHand = current isnt '' && current isnt defaults[field] && current isnt @createParsedValues[field]
@@ -865,7 +905,9 @@ class App.DomServisDispatchBoard extends App.Controller
       client_phone: 'телефон'
       address: 'адрес'
       client_name: 'имя'
-      service_type: 'тип работ'
+      work_type: 'вид работ'
+      equipment: 'техника и модель'
+      fault: 'неисправность'
     missingLabels = _.compact(_.map(@createMissingFields, (field) -> labels[field]))
     message = if missingLabels.length > 0
       "Поля заполнены из текста. Не нашлось: #{missingLabels.join(', ')}."
@@ -1128,14 +1170,14 @@ class App.DomServisDispatchBoard extends App.Controller
   createPayload: ->
     @syncCreateDraftFromForm()
 
-    serviceType = @createDraft.service_type
+    serviceType = @composeServiceType(@createDraft)
     address = @createDraft.address
     clientPhone = @createDraft.client_phone
     visitDay = @createDraft.visit_day
     visitDate = @createDraft.visit_date
 
-    if !serviceType
-      @notify(type: 'error', msg: 'Укажи тип работ.', timeout: 4000)
+    if !@createDraft.work_type
+      @notify(type: 'error', msg: 'Выбери вид работ.', timeout: 4000)
       return null
 
     if !address

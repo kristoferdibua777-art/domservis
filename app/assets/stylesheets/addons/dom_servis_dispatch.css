@@ -1801,6 +1801,10 @@ summary.dom-servis-dispatch-drawer__history-row {
   margin-top: 10px;
 }
 
+.dom-servis-dispatch-create-work-types {
+  margin-top: 10px;
+}
+
 .dom-servis-dispatch-modal .form-group.is-missing .form-control {
   border-color: #d9a441;
 }

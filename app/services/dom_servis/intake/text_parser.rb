@@ -2,7 +2,8 @@
 
 # Turns a pasted request message into a draft of the board's create form:
 # an SMS, a messenger text or a phone secretary transcript that carries the
-# address, phone, boiler model, client name and fault in any order.
+# address, phone, client name, equipment with its model and the fault in any
+# order. The work is split into positions: work type, equipment and fault.
 #
 # Rules, not a language model: a field the rules do not recognise stays empty
 # and is listed in #missing. The dispatcher checks the draft before publishing;
@@ -12,7 +13,13 @@ class DomServis::Intake::TextParser
 
   # The fields the dispatcher fills first. The ones the text does not give are
   # reported, so the form can point at them.
-  KEY_FIELDS = %i[client_phone address client_name service_type].freeze
+  KEY_FIELDS = %i[client_phone address client_name work_type equipment fault].freeze
+
+  # The "Вид работ" positions; the create form offers the same list.
+  WORK_TYPES = [
+    'Котлы и отопление', 'Водонагреватели и колонки', 'Сантехника', 'Электрика',
+    'Бытовая техника', 'Кондиционеры', 'Мелкий ремонт'
+  ].freeze
 
   # Consumed parts of the text are overwritten with this character, which keeps
   # offsets stable and stops later rules from joining words across the gap.
@@ -76,6 +83,7 @@ class DomServis::Intake::TextParser
     адрес адреса адресу дом д кв квартира подъезд этаж корпус
     нужно надо срочно пожалуйста позвоните позвонить приехать
     котел котла котлу бойлер колонка кран ошибка код давление модель марка
+    стиральная машина холодильник кондиционер плита розетка счетчик смеситель унитаз
   ].freeze
   STREET_STOP_ENDINGS = %r{(?:ть|ться|тся|ает|яет|ует|ите)\z}
   STREET_NUMBER       = %r{\A\d{1,2}(?:-?[а-я]{1,2})?\z}
@@ -86,33 +94,73 @@ class DomServis::Intake::TextParser
   LOOKBEHIND_CHARS = 80
   PART_WINDOW_CHARS = 40
 
-  # Checked in order, the first match wins: equipment first, so a leaking
-  # boiler is a boiler job and not plumbing.
-  CATEGORIES = [
-    ['Газовый котёл',   %r{котел|котл[аеуы]|котлом}],
-    ['Бойлер, колонка', %r{бойлер|водонагрев|колонк}],
-    ['Бытовая техника', %r{стиральн|посудомо|холодильн|морозильн|варочн|духов|микроволн|\bплит[аеуы]\b}],
-    ['Электрика',       %r{электри|розетк|выключател|проводк|\bсвет[аеу]?\b|люстр|светильник|щиток|автомат}],
-    ['Сантехника',      %r{сантех|счетчик|(?<![[:alpha:]])кран|смесител|унитаз|раковин|\bванн|душев|засор|канализ|\bтруб[аеыу]?\b|сифон|радиатор|батаре|полотенцесуш|теч[её]т|протек|протечк|капа[ею]т}],
-    ['Газовый котёл',   %r{отоплени|не\s+грее}],
+  # Equipment the text names, checked in this order, with its work type. The
+  # first one found wins, so a leaking boiler is a boiler job, not plumbing.
+  EQUIPMENT = [
+    ['Котёл',                'Котлы и отопление',         %r{котел|котл[аеуыо]|электрокот}],
+    ['Газовая колонка',      'Водонагреватели и колонки', %r{колонк}],
+    ['Водонагреватель',      'Водонагреватели и колонки', %r{бойлер|водонагрев}],
+    ['Стиральная машина',    'Бытовая техника',           %r{стиральн|стиралк}],
+    ['Посудомоечная машина', 'Бытовая техника',           %r{посудомо|посудомойк}],
+    ['Сушильная машина',     'Бытовая техника',           %r{сушильн}],
+    ['Холодильник',          'Бытовая техника',           %r{холодильн}],
+    ['Морозильник',          'Бытовая техника',           %r{морозильн}],
+    ['Варочная панель',      'Бытовая техника',           %r{варочн}],
+    ['Духовой шкаф',         'Бытовая техника',           %r{духов}],
+    ['Плита',                'Бытовая техника',           %r{\bплит[аеуы]\b}],
+    ['Микроволновка',        'Бытовая техника',           %r{микроволн|\bсвч\b}],
+    ['Вытяжка',              'Бытовая техника',           %r{вытяжк}],
+    ['Кондиционер',          'Кондиционеры',              %r{кондиционер|сплит}],
+    ['Тёплый пол',           'Котлы и отопление',         %r{тепл(?:ый|ого|ом)\s+пол}],
+    ['Радиатор',             'Котлы и отопление',         %r{радиатор|батаре}],
+    ['Насос',                'Котлы и отопление',         %r{насос}],
+    ['Счётчик воды',         'Сантехника',                %r{счетчик}],
+    ['Смеситель',            'Сантехника',                %r{смесител}],
+    ['Унитаз',               'Сантехника',                %r{унитаз}],
+    ['Раковина',             'Сантехника',                %r{раковин}],
+    ['Полотенцесушитель',    'Сантехника',                %r{полотенцесуш}],
+    ['Кран',                 'Сантехника',                %r{(?<![[:alpha:]])кран}],
+    ['Розетка',              'Электрика',                 %r{розетк}],
+    ['Выключатель',          'Электрика',                 %r{выключател}],
+    ['Светильник',           'Электрика',                 %r{люстр|светильник}],
+    ['Электрощиток',         'Электрика',                 %r{щиток}],
   ].freeze
 
+  # The work type of a text that names no equipment.
+  WORK_TYPE_WORDS = [
+    ['Котлы и отопление', %r{отоплени|запах\s+газа|пахнет\s+газ|газом\s+пахн}],
+    ['Сантехника',        %r{сантех|засор|канализ|\bтруб[аеыу]?\b|сифон|водопровод|теч[её]т|протек|протечк|капа[ею]т}],
+    ['Электрика',         %r{электри|проводк|\bсвет[аеу]?\b|автомат}],
+    ['Бытовая техника',   %r{бытов\S*\s+техник|не\s+(?:слива|отжима|набира)|барабан}],
+    ['Мелкий ремонт',     %r{повесить|собрать|сборк|карниз|\bполк[аиу]\b|замок|замк[аи]}],
+  ].freeze
+
+  # Faults and kinds of work, in the order they are listed.
   FAULTS = [
-    ['Пахнет газом',      %r{запах\s+газа|пахнет\s+газ|газом\s+пахн}],
-    ['Плата управления',  %r{мозг|\bплат[аеуы]\b|электроник}],
-    ['Не греет',          %r{не\s+гре(?:ет|ют)|не\s+нагрева}],
-    ['Нет горячей воды',  %r{нет\s+горяч}],
-    ['Не включается',     %r{не\s+(?:включа|запуска|зажига|разжига)}],
-    ['Не работает',       %r{не\s+работа}],
-    ['Течёт',             %r{теч[её]т|теку|протека|протечк|капа[ею]т|подтека}],
-    ['Падает давление',   %r{давлени}],
-    ['Шумит',             %r{шум|хлопа|гудит|стучит|свистит}],
-    ['Засор',             %r{засор}],
-    ['Выбивает автомат',  %r{выбива}],
-    ['Счётчик',           %r{сч[её]тчик}],
-    ['Обслуживание',      %r{обслуживан|чистк}],
-    ['Установка',         %r{установ|подключ|монтаж}],
-    ['Замена',            %r{замен|поменя}],
+    ['пахнет газом',      %r{запах\s+газа|пахнет\s+газ|газом\s+пахн}],
+    ['плата управления',  %r{мозг|\bплат[аеуы]\b|электроник}],
+    ['не греет',          %r{не\s+гре(?:ет|ют)|не\s+нагрева}],
+    ['нет горячей воды',  %r{нет\s+горяч}],
+    ['не холодит',        %r{не\s+(?:холод|мороз|охлажда)}],
+    ['не сливает воду',   %r{не\s+слива}],
+    ['не набирает воду',  %r{не\s+набира}],
+    ['не отжимает',       %r{не\s+отжима}],
+    ['не крутит барабан', %r{не\s+крут|барабан\s+не}],
+    ['не включается',     %r{не\s+(?:включа|запуска|зажига|разжига)}],
+    ['не работает',       %r{не\s+работа}],
+    ['нет света',         %r{нет\s+свет|не\s+горит\s+свет}],
+    ['искрит',            %r{искрит}],
+    ['выбивает автомат',  %r{выбива}],
+    ['течёт',             %r{теч[её]т|теку|протека|протечк|капа[ею]т|подтека}],
+    ['падает давление',   %r{давлени}],
+    ['шумит',             %r{шум|хлопа|гудит|стучит|свистит|вибрир}],
+    ['засор',             %r{засор}],
+    ['обслуживание',      %r{обслуживан}],
+    ['чистка',            %r{чистк|почистить|промывк}],
+    ['диагностика',       %r{диагност}],
+    ['демонтаж',          %r{демонтаж}],
+    ['установка',         %r{установ|подключ|(?<!де)монтаж}],
+    ['замена',            %r{замен|поменя}],
   ].freeze
   MAX_FAULTS = 3
 
@@ -120,42 +168,58 @@ class DomServis::Intake::TextParser
   BARE_ERROR_CODE = %r{(?<![[:alnum:]])([efе]\d{2,3})(?![[:alnum:]])}i
   CODE_LOOKALIKES = %w[А A В B Е E К K М M Н H О O Р P С C Т T Х X].each_slice(2).to_h.freeze
 
-  # Canonical brand name, spellings, and the job category the brand implies
-  # when the text names no equipment.
+  # Canonical brand name and its spellings. Brands that make one kind of
+  # equipment also give the equipment and work type when the text names none;
+  # brands of several kinds (Bosch: boilers and washing machines) do not.
+  BOILER = ['Котёл', 'Котлы и отопление'].freeze
+  HEATER = ['Водонагреватель', 'Водонагреватели и колонки'].freeze
   BRANDS = [
-    ['Baxi',        %w[baxi бакси],                'Газовый котёл'],
-    ['Beretta',     %w[beretta берета беретта],    'Газовый котёл'],
-    ['Vaillant',    %w[vaillant вайлант ваилант],  'Газовый котёл'],
-    ['Buderus',     %w[buderus будерус],           'Газовый котёл'],
-    ['Navien',      %w[navien навьен навиен],      'Газовый котёл'],
-    ['Protherm',    %w[protherm протерм],          'Газовый котёл'],
-    ['Viessmann',   %w[viessmann висман виссман],  'Газовый котёл'],
-    ['Immergas',    %w[immergas иммергаз имергаз], 'Газовый котёл'],
-    ['Ferroli',     %w[ferroli ферроли],           'Газовый котёл'],
-    ['Kiturami',    %w[kiturami китурами],         'Газовый котёл'],
-    ['Bosch',       %w[bosch бош],                 'Газовый котёл'],
-    ['Daewoo',      %w[daewoo дэу],                'Газовый котёл'],
-    ['Rinnai',      %w[rinnai риннай],             'Газовый котёл'],
-    ['Junkers',     %w[junkers юнкерс],            'Газовый котёл'],
-    ['Lemax',       %w[lemax лемакс],              'Газовый котёл'],
-    ['Kentatsu',    %w[kentatsu кентатсу],         'Газовый котёл'],
-    ['Ariston',     %w[ariston аристон],           'Газовый котёл'],
-    ['Electrolux',  %w[electrolux электролюкс],    'Бойлер, колонка'],
-    ['Thermex',     %w[thermex термекс],           'Бойлер, колонка'],
-    ['Neva',        %w[neva нева],                 'Бойлер, колонка'],
-    ['Haier',       %w[haier хаер хайер],          'Бытовая техника'],
-    ['Samsung',     %w[samsung самсунг],           'Бытовая техника'],
-    ['LG',          %w[lg],                        'Бытовая техника'],
-    ['Indesit',     %w[indesit индезит],           'Бытовая техника'],
-    ['Atlant',      %w[atlant атлант],             'Бытовая техника'],
-    ['Candy',       %w[candy канди],               'Бытовая техника'],
-    ['Zanussi',     %w[zanussi занусси],           'Бытовая техника'],
-    ['Hotpoint',    %w[hotpoint хотпоинт],         'Бытовая техника'],
-    ['Whirlpool',   %w[whirlpool вирпул],          'Бытовая техника'],
-    ['Beko',        %w[beko беко],                 'Бытовая техника'],
-    ['Gorenje',     %w[gorenje горенье],           'Бытовая техника'],
-  ].freeze
+    ['Baxi',           %w[baxi бакси],                BOILER],
+    ['Beretta',        %w[beretta берета беретта],    BOILER],
+    ['Vaillant',       %w[vaillant вайлант ваилант],  BOILER],
+    ['Buderus',        %w[buderus будерус],           BOILER],
+    ['Navien',         %w[navien навьен навиен],      BOILER],
+    ['Protherm',       %w[protherm протерм],          BOILER],
+    ['Viessmann',      %w[viessmann висман виссман],  BOILER],
+    ['Immergas',       %w[immergas иммергаз имергаз], BOILER],
+    ['Ferroli',        %w[ferroli ферроли],           BOILER],
+    ['Kiturami',       %w[kiturami китурами],         BOILER],
+    ['Rinnai',         %w[rinnai риннай],             BOILER],
+    ['Junkers',        %w[junkers юнкерс],            BOILER],
+    ['Lemax',          %w[lemax лемакс],              BOILER],
+    ['Thermex',        %w[thermex термекс],           HEATER],
+    ['Bosch',          %w[bosch бош]],
+    ['Ariston',        %w[ariston аристон]],
+    ['Electrolux',     %w[electrolux электролюкс]],
+    ['Daewoo',         %w[daewoo дэу]],
+    ['Kentatsu',       %w[kentatsu кентатсу]],
+    ['Neva',           %w[neva]],
+    ['Haier',          %w[haier хаер хайер]],
+    ['Samsung',        %w[samsung самсунг]],
+    ['LG',             %w[lg]],
+    ['Indesit',        %w[indesit индезит]],
+    ['Atlant',         %w[atlant атлант]],
+    ['Candy',          %w[candy канди]],
+    ['Zanussi',        %w[zanussi занусси]],
+    ['Hotpoint',       %w[hotpoint хотпоинт]],
+    ['Whirlpool',      %w[whirlpool вирпул]],
+    ['Beko',           %w[beko беко]],
+    ['Gorenje',        %w[gorenje горенье]],
+    ['Siemens',        %w[siemens сименс]],
+    ['Miele',          %w[miele миле]],
+    ['Midea',          %w[midea мидея]],
+    ['Hansa',          %w[hansa ханса]],
+    ['Weissgauff',     %w[weissgauff вайсгауф]],
+    ['Daikin',         %w[daikin дайкин]],
+    ['Mitsubishi',     %w[mitsubishi мицубиси]],
+    ['Ballu',          %w[ballu баллу]],
+    ['Gree',           %w[gree]],
+  ].map { |brand, spellings, kind| [brand, %r{(?<![[:alpha:]])(?:#{spellings.join('|')})(?![[:alpha:]])}i, kind] }.freeze
   MODEL_TOKENS = %r{\A(?: +[A-Za-z0-9][A-Za-z0-9.+/-]*(?![A-Za-z0-9.+/-])(?!\s*(?:квт|kw\b|л\b|литр))){1,4}}i
+  NOT_A_MODEL = %w[ok ок whatsapp viber telegram tg wa sms www id].freeze
+  # A model of a brand the list does not know: Latin words in the text,
+  # starting with a word of two letters or more ("Weissgauff WM 4947").
+  LATIN_MODEL = %r{(?<![A-Za-z0-9])[A-Za-z][A-Za-z0-9.+/-]+(?: +[A-Za-z0-9][A-Za-z0-9.+/-]*(?![A-Za-z0-9.+/-])(?!\s*(?:квт|kw\b|л\b|литр))){0,3}}
 
   NAME_WORD  = %r{[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?}
   NAME_LABEL = %r{(?i:имя|клиент(?:ка)?|заказчик|контакт(?:ное\s+лицо)?|зовут|спросить)\s*[:\-–]?\s*(#{NAME_WORD}(?: +#{NAME_WORD}){0,2})}
@@ -217,10 +281,10 @@ class DomServis::Intake::TextParser
         client_phone: extract_phone,
         address:      extract_address,
       }
-      result[:client_name]  = extract_name
-      result[:service_type] = service_type
-      result[:description]  = @text.presence
-      result[:priority]     = priority
+      result[:client_name] = extract_name
+      result.merge!(work_positions)
+      result[:description] = @text.presence
+      result[:priority] = priority
 
       if (visit_date = extract_date)
         result[:visit_date] = visit_date.iso8601
@@ -234,6 +298,13 @@ class DomServis::Intake::TextParser
 
   def missing
     KEY_FIELDS.select { |field| draft[field].blank? }
+  end
+
+  # The job title the board shows: "Котлы и отопление: Котёл Baxi — Не греет".
+  # The create form builds it from the same three positions.
+  def self.service_type_for(work_type, equipment, fault)
+    title = [work_type, equipment].compact_blank.join(': ')
+    [title, fault].compact_blank.join(' — ').presence&.truncate(250, omission: '…')
   end
 
   private
@@ -432,33 +503,51 @@ class DomServis::Intake::TextParser
     left.present? && right.present? && @rest[left.end(0)...right.begin(0)].match?(%r{\A +\z})
   end
 
-  def service_type
-    category = CATEGORIES.find { |_label, pattern| @match.match?(pattern) }&.first
-    brand = equipment_model
-    category ||= brand&.last
-    return if category.nil?
+  def work_positions
+    equipment = EQUIPMENT.find { |_label, _work_type, pattern| @match.match?(pattern) }
+    brand, model = equipment_model
+    work_type = equipment&.second ||
+                WORK_TYPE_WORDS.find { |_work_type, pattern| @match.match?(pattern) }&.first ||
+                brand&.third&.second
+    equipment_label = equipment&.first || brand&.third&.first
+    fault = detected_faults.join(', ').upcase_first.presence
 
-    faults = detected_faults
-    text = category
-    text += ": #{faults.join(', ')}" if faults.any?
-    text += " · #{brand.first}" if brand
-    text.truncate(250, omission: '…')
+    positions = {
+      work_type:,
+      equipment: [equipment_label, model].compact_blank.join(' ').presence,
+      fault:,
+    }
+    positions.merge(service_type: self.class.service_type_for(*positions.values))
   end
 
-  # Brand and the Latin model words written after it ("Beretta CIA",
-  # "Baxi Eco Four 24", but not the power in "Beretta 24 квт"); a Cyrillic
-  # spelling gives the brand alone.
+  # The brand entry and the model as written: the canonical brand with the
+  # Latin model words after it ("Beretta CIA", "Baxi Eco Four 24", but not the
+  # power in "Beretta 24 квт"), or Latin words of a brand the list does not
+  # know. A Cyrillic spelling gives the brand alone.
   def equipment_model
-    BRANDS.each do |brand, spellings, category|
-      pattern = %r{(?<![[:alpha:]])(?:#{spellings.map { |spelling| Regexp.escape(spelling) }.join('|')})(?![[:alpha:]])}i
-      match = @text.match(pattern)
+    BRANDS.each do |entry|
+      match = @text.match(entry[1])
       next if match.nil?
 
-      model = []
+      model = [entry[0]]
       if match[0].ascii_only?
-        model = @text[match.end(0), 80].to_s[MODEL_TOKENS].to_s.split.map { |token| token.sub(%r{[.+/-]+\z}, '') }
+        model += @text[match.end(0), 80].to_s[MODEL_TOKENS].to_s.split.map { |token| token.sub(%r{[.+/-]+\z}, '') }
       end
-      return [[brand, *model].join(' '), category]
+      return [entry, model.join(' ')]
+    end
+
+    [nil, unknown_brand_model]
+  end
+
+  # Skips error codes ("ошибка H01") and messenger names.
+  def unknown_brand_model
+    @text.to_enum(:scan, LATIN_MODEL).each do
+      match = Regexp.last_match
+      model = match[0].sub(%r{[.+/-]+\z}, '')
+      next if model.match?(%r{\A[ef]\d{2,3}\z}i) || NOT_A_MODEL.include?(model.split.first.downcase)
+      next if @text[[match.begin(0) - 12, 0].max...match.begin(0)].match?(%r{(?:ошибк\S*|код)\s*[:№#-]?\s*\z}i)
+
+      return model
     end
 
     nil
@@ -467,7 +556,7 @@ class DomServis::Intake::TextParser
   def detected_faults
     faults = []
     code = @text[ERROR_CODE, 1] || @text[BARE_ERROR_CODE, 1]
-    faults << "Ошибка #{normalize_code(code)}" if code
+    faults << "ошибка #{normalize_code(code)}" if code
 
     FAULTS.each do |label, pattern|
       faults << label if @match.match?(pattern)

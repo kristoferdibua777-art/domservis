@@ -108,9 +108,12 @@ cancelled_at и status, отличный от pool, дают 422. Мастер �
 { "input": "Осипенко д. 7 кв 3, котёл Baxi не греет, 8 900 123-45-67" }
 ```
 
-Ответ: draft с найденными полями формы (client_phone, address, client_name, service_type,
-description, priority, visit_date, visit_day, visit_time; ненайденных ключей нет) и missing —
-какие из client_phone, address, client_name, service_type текст не дал.
+Ответ: draft с найденными полями формы (client_phone, address, client_name, work_type, equipment,
+fault, service_type, description, priority, visit_date, visit_day, visit_time; ненайденных ключей нет)
+и missing — какие из client_phone, address, client_name, work_type, equipment, fault текст не дал.
+work_type — позиция «Вид работ» из списка TextParser::WORK_TYPES, equipment — техника с маркой
+и моделью, fault — неисправность или работа. service_type собирается из них так же, как в форме:
+«Вид работ: Техника и модель — Неисправность».
 Пустой текст и текст длиннее 5000 символов дают 422. Публикация — отдельный POST /jobs
 из формы после проверки диспетчером, с source manual, поэтому клиент ищется по телефону как при ручном вводе.
 
