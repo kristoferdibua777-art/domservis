@@ -13,7 +13,7 @@
             <%= @roleLabel %>
           </div>
           <% if @showEnablePush: %>
-            <button type="button" class="dom-servis-dispatch-board__mobile-push-action js-enable-push"><%= if @pushSubscribing then '...' else 'Пуш' %></button>
+            <button type="button" class="dom-servis-dispatch-board__mobile-push-action js-enable-push">Пуш</button>
           <% end %>
           <% if @showTestPush: %>
             <button type="button" class="dom-servis-dispatch-board__mobile-push-action js-test-push"><%= if @pushTesting then '...' else 'Тест' %></button>
@@ -163,7 +163,7 @@
       <div class="dom-servis-dispatch-board__role"><span>Роль</span><strong><%= @roleLabel %></strong></div>
       <div class="dom-servis-dispatch-board__header-actions">
         <% if @showEnablePush: %>
-          <button class="btn js-enable-push"><%= if @pushSubscribing then 'Включение…' else 'Уведомления' %></button>
+          <button class="btn js-enable-push">Уведомления</button>
         <% end %>
         <% if @showTestPush: %>
           <button class="btn btn--text js-test-push"><%= if @pushTesting then 'Отправка…' else 'Тест пуша' %></button>

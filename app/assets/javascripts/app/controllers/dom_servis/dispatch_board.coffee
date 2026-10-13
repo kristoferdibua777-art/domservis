@@ -83,7 +83,6 @@ class App.DomServisDispatchBoard extends App.Controller
     @mobileWorkspaceMenuOpen = false
     @pendingRealtimeRefresh = false
     @realtimeRefreshDelayId = null
-    @pushSubscribing = false
     @pushTesting = false
     @pushEnabled = false
     @initViewportMode()
@@ -142,7 +141,6 @@ class App.DomServisDispatchBoard extends App.Controller
       canCreateJob: @canCreatePublishedJob()
       pushSupported: @pushSupported() && @vapidPublicKey()
       pushEnabled: @pushEnabled
-      pushSubscribing: @pushSubscribing
       pushTesting: @pushTesting
       showEnablePush: @vapidPublicKey() && !@pushEnabled
       showTestPush: @pushSupported() && @vapidPublicKey() && @pushEnabled
@@ -2977,75 +2975,12 @@ class App.DomServisDispatchBoard extends App.Controller
         @render()
       .catch -> null
 
-  # Request notification permission, subscribe the dispatch service worker
-  # to the push service, and persist the subscription on the backend.
-  enablePushNotifications: (e) =>
+  # Turning notifications on belongs to the onboarding sheet of the dispatch
+  # shell: it asks for the permission in its own tap, subscribes and tells
+  # the user what to do when the browser refuses.
+  enablePushNotifications: (e) ->
     e?.preventDefault()
-
-    return if !@pushSupported()
-    return if @pushSubscribing
-
-    if !@vapidPublicKey()
-      @notifyPushError(__('Push-уведомления не настроены администратором (нет VAPID ключа).'))
-      return
-
-    @pushSubscribing = true
-    @render()
-
-    # Use Promise chains instead of async/await: CoffeeScript 1.x (used by
-    # Sprockets eco/coffee compiler) does not understand `await`.
-    Notification.requestPermission()
-      .then (permission) =>
-        if permission != 'granted'
-          @pushSubscribing = false
-          @render()
-          # coffeelint: disable=detect_translatable_string
-          # Not user-facing: this is an internal control-flow sentinel,
-          # matched verbatim below via `error?.message == 'Permission
-          # denied'` to silently suppress the generic error toast. Wrapping
-          # it in __() would translate the message in non-en-US locales and
-          # break that exact-string comparison, incorrectly showing the
-          # generic "failed to enable push" toast whenever a user simply
-          # declines the browser permission prompt.
-          return Promise.reject(new Error('Permission denied'))
-          # coffeelint: enable=detect_translatable_string
-
-        navigator.serviceWorker.ready
-      .then (registration) =>
-        registration.pushManager.getSubscription()
-          .then (subscription) =>
-            return subscription if subscription
-
-            registration.pushManager.subscribe(
-              userVisibleOnly: true
-              applicationServerKey: @urlBase64ToUint8Array(@vapidPublicKey())
-            )
-      .then (subscription) =>
-        @persistPushSubscription(subscription)
-      .then =>
-        @pushEnabled = true
-        @pushSubscribing = false
-        @render()
-      .catch (error) =>
-        @pushSubscribing = false
-        @render()
-        return if error?.message == 'Permission denied'
-        @notifyPushError('Не удалось включить push-уведомления.')
-
-  # Send the browser-generated PushSubscription to the backend.
-  persistPushSubscription: (subscription) =>
-    payload = subscription.toJSON()
-
-    return new Promise (resolve, reject) =>
-      @ajax(
-        id:      'dom_servis_push_subscribe'
-        type:    'POST'
-        url:     "#{@apiPath}/dom_servis/dispatch/push_subscriptions"
-        data:    JSON.stringify(payload)
-        processData: true
-        success: resolve
-        error:   (xhr) => reject(new Error(@extractError(xhr, 'Не удалось сохранить подписку.')))
-      )
+    window.dispatchEvent(new Event('dom-servis-push-open'))
 
   # Sends a test push to all of the current user's subscriptions, so they
   # can confirm the channel works end-to-end after enabling it.
@@ -3060,30 +2995,22 @@ class App.DomServisDispatchBoard extends App.Controller
       id:    'dom_servis_push_test'
       type:  'POST'
       url:   "#{@apiPath}/dom_servis/dispatch/push_subscriptions/test"
-      success: =>
+      success: (data) =>
         @pushTesting = false
         @render()
+        @notify(type: 'success', msg: @pushTestSentMessage(data), timeout: 6000)
       error: (xhr) =>
         @pushTesting = false
         @render()
         @notifyPushError(@extractError(xhr, 'Тестовый пуш не отправлен.'))
     )
 
-  # Decode a base64url VAPID public key into a Uint8Array suitable for
-  # `pushManager.subscribe({ applicationServerKey })`.
-  urlBase64ToUint8Array: (base64String) ->
-    padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-    base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-
-    rawData = window.atob(base64)
-    outputArray = new Uint8Array(rawData.length)
-
-    i = 0
-    while i < rawData.length
-      outputArray[i] = rawData.charCodeAt(i)
-      i++
-
-    outputArray
+  # The test goes to every subscribed device of the user, not only to the
+  # one the button was pressed on.
+  pushTestSentMessage: (data) ->
+    devices = parseInt(data?.sent_to, 10) || 0
+    sent = if devices > 0 then "Тест отправлен, устройств: #{devices}." else 'Тест отправлен.'
+    "#{sent} Если уведомление не появилось, проверьте, что они разрешены браузеру в настройках телефона."
 
   notifyPushError: (message) ->
     App.Toast.create
