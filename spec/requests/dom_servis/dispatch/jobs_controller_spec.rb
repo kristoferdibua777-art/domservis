@@ -660,7 +660,7 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
       end
 
       it 'does not reveal the contacts when another master took the job first', :aggregate_failures do
-        job.update!(assignee: other_master_user)
+        job.update!(status: 'taken', assignee: other_master_user)
         allow_any_instance_of(DomServis::DispatchJobPolicy).to receive(:take?).and_return(true)
         allow_any_instance_of(DomServis::DispatchJobPolicy::Scope).to receive(:resolve).and_return(DomServis::DispatchJob.all)
 
