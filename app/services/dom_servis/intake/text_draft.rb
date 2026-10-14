@@ -77,20 +77,20 @@ class DomServis::Intake::TextDraft
     }
   end
 
-  def merge(rules, ai)
-    visit_date = ai_visit_date(ai[:visit_date], rules) || rules[:visit_date]
+  def merge(rules, suggestion)
+    visit_date = ai_visit_date(suggestion[:visit_date], rules) || rules[:visit_date]
     draft = {
-      client_phone: verified_phone(ai[:client_phone], rules[:phones]),
-      client_name:  verified_name(ai[:client_name]) || rules[:client_name],
-      address:      verified_address(ai[:address]) || rules[:address],
-      service_type: ai[:service_type] || rules[:service_type],
-      priority:     higher_priority(ai[:priority], rules[:priority]),
+      client_phone: verified_phone(suggestion[:client_phone], rules[:phones]),
+      client_name:  verified_name(suggestion[:client_name]) || rules[:client_name],
+      address:      verified_address(suggestion[:address]) || rules[:address],
+      service_type: suggestion[:service_type] || rules[:service_type],
+      priority:     higher_priority(suggestion[:priority], rules[:priority]),
       visit_date:   visit_date,
       visit_day:    visit_date && DomServis::Intake::TextParser::VISIT_DAYS[Date.parse(visit_date).wday],
-      visit_time:   ai_visit_time(ai[:visit_time], rules) || rules[:visit_time],
-      description:  ai[:description] || rules[:description],
+      visit_time:   ai_visit_time(suggestion[:visit_time], rules) || rules[:visit_time],
+      description:  suggestion[:description] || rules[:description],
     }
-    draft[:comment] = "Исходный текст:\n#{text}" if ai[:description].present?
+    draft[:comment] = "Исходный текст:\n#{text}" if suggestion[:description].present?
     draft
   end
 
@@ -194,7 +194,7 @@ class DomServis::Intake::TextDraft
     phone = draft[:client_phone]
     return if phone.blank?
 
-    users = DomServis::Dispatch::ClientResolver.find_by_phone(phone)
+    users = DomServis::Dispatch::ClientResolver.users_with_phone(phone)
     jobs = jobs_for_phone(phone)
     check_users(draft, users)
     check_jobs(draft, jobs)
@@ -229,7 +229,7 @@ class DomServis::Intake::TextDraft
   end
 
   def same_name?(left, right)
-    (left.downcase.split & right.downcase.split).any?
+    left.downcase.split.intersect?(right.downcase.split)
   end
 
   def check_jobs(draft, jobs)

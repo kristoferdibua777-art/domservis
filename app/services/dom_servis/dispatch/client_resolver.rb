@@ -19,7 +19,7 @@ class DomServis::Dispatch::ClientResolver
 
   # The users whose phone or mobile normalizes to the given phone, without
   # creating a client; empty for a phone that is not valid.
-  def self.find_by_phone(value)
+  def self.users_with_phone(value)
     normalized_phone = normalize_phone(value)
     return [] if normalized_phone.blank?
 

@@ -65,13 +65,33 @@ RSpec.describe 'DomServis::Dispatch::AISettingsController', type: :request do
       expect(json_response).to eq('ok' => false, 'error' => 'Не удалось связаться с GigaChat.')
     end
 
-    it 'reports the models of a working connection' do
+    it 'reports the models and a sample reading of a working connection' do
       DomServis::Intake::AISettings.update!('enabled' => true, 'auth_key' => auth_key)
       allow_any_instance_of(DomServis::Intake::GigachatClient).to receive(:models).and_return(%w[GigaChat-2 GigaChat-2-Pro])
+      allow(DomServis::Intake::AIParser).to receive(:new).and_return(instance_double(DomServis::Intake::AIParser, call: { client_phone: '8 900 000-00-00', address: 'ул. Ленина 5', service_type: 'Газовый котёл: Не греет', priority: 'high' }))
 
       post '/api/v1/dom_servis/dispatch/ai_settings/check', as: :json
 
-      expect(json_response).to eq('ok' => true, 'models' => %w[GigaChat-2 GigaChat-2-Pro], 'model_available' => true)
+      expect(json_response).to eq(
+        'ok'              => true,
+        'models'          => %w[GigaChat-2 GigaChat-2-Pro],
+        'model_available' => true,
+        'sample'          => { 'client_phone' => '8 900 000-00-00', 'address' => 'ул. Ленина 5', 'service_type' => 'Газовый котёл: Не греет' },
+      )
+    end
+
+    it 'switches to Cloud.ru with its address and model', :aggregate_failures do
+      put '/api/v1/dom_servis/dispatch/ai_settings', params: { provider: 'chat_completions', auth_key:, model: 'ai-sage/GigaChat3-10B-A1.8B', base_url: 'https://foundation-models.api.cloud.ru/v1/' }, as: :json
+
+      expect(json_response).to include('provider' => 'chat_completions', 'model' => 'ai-sage/GigaChat3-10B-A1.8B', 'base_url' => 'https://foundation-models.api.cloud.ru/v1')
+      expect(DomServis::Intake::AISettings.current.client).to be_a(DomServis::Intake::ChatCompletionsClient)
+    end
+
+    it 'rejects an address without https', :aggregate_failures do
+      put '/api/v1/dom_servis/dispatch/ai_settings', params: { provider: 'chat_completions', base_url: 'http://foundation-models.api.cloud.ru/v1' }, as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(DomServis::Intake::AISettings.current.provider).to eq('gigachat')
     end
   end
 

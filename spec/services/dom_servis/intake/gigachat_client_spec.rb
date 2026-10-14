@@ -5,13 +5,13 @@ require 'rails_helper'
 RSpec.describe DomServis::Intake::GigachatClient do
   subject(:client) { described_class.new(auth_key: auth_key, scope: 'GIGACHAT_API_PERS', model: 'GigaChat-2-Pro') }
 
-  let(:auth_key) { 'a2V5OnNlY3JldGtleTEyMzQ=' }
-  let(:token_url) { described_class::TOKEN_URL }
-  let(:chat_url) { "#{described_class::API_URL}/chat/completions" }
-  let(:expires_at) { (Time.zone.now + 30.minutes).to_i * 1000 }
+  let(:auth_key)       { 'a2V5OnNlY3JldGtleTEyMzQ=' }
+  let(:token_url)      { described_class::TOKEN_URL }
+  let(:chat_url)       { "#{described_class::API_URL}/chat/completions" }
+  let(:expires_at)     { 30.minutes.from_now.to_i * 1000 }
   let(:token_response) { { status: 200, body: { access_token: 'token-1', expires_at: expires_at }.to_json, headers: { 'Content-Type' => 'application/json' } } }
-  let(:answer) { { 'role' => 'assistant', 'function_call' => { 'name' => 'fill_dispatch_job', 'arguments' => { 'client_phone' => '89001234567' } } } }
-  let(:chat_response) { { status: 200, body: { choices: [{ message: answer }] }.to_json, headers: { 'Content-Type' => 'application/json' } } }
+  let(:answer)         { { 'role' => 'assistant', 'function_call' => { 'name' => 'fill_dispatch_job', 'arguments' => { 'client_phone' => '89001234567' } } } }
+  let(:chat_response)  { { status: 200, body: { choices: [{ message: answer }] }.to_json, headers: { 'Content-Type' => 'application/json' } } }
 
   before { Rails.cache.clear }
 
@@ -58,7 +58,7 @@ RSpec.describe DomServis::Intake::GigachatClient do
   it 'explains a missing certificate' do
     stub_request(:post, token_url).to_raise(OpenSSL::SSL::SSLError.new('certificate verify failed (self-signed certificate in certificate chain)'))
 
-    expect { chat }.to raise_error(DomServis::Intake::AIError, %r{сертификат Минцифры})
+    expect { chat }.to raise_error(DomServis::Intake::AIError, %r{Russian Trusted Root CA})
   end
 
   it 'explains used up tokens' do

@@ -84,7 +84,7 @@ class DomServis::Intake::TextParser
     (?:
       (?:\+\s?7|8|7)(?:[\s\-()]{0,3}\d){10}
       |
-      \(?9\d{2}\)?(?:[\s\-]{0,3}\d){7}
+      \(?9\d{2}\)?(?:[\s-]{0,3}\d){7}
       |
       \+\s?[1-689]\d{0,2}(?:[\s\-()]{0,3}\d){7,12}
     )
@@ -95,7 +95,7 @@ class DomServis::Intake::TextParser
   # visit time and are left out before looking for dates and times.
   CHAT_HEADERS = [
     %r{^\[\d{1,2}[./]\d{1,2}[./]\d{2,4},?[ \t]+\d{1,2}:\d{2}(?::\d{2})?\][ \t]*[^:\n]{1,40}:[ \t]*}, # WhatsApp: [14.10.2026, 10:15] Ирина:
-    %r{^\d{1,2}[./]\d{1,2}[./]\d{2,4},?[ \t]+\d{1,2}:\d{2}[ \t]+[-–][ \t]+[^:\n]{1,40}:[ \t]*},     # WhatsApp export: 14.10.2026, 10:15 - Ирина:
+    %r{^\d{1,2}[./]\d{1,2}[./]\d{2,4},?[ \t]+\d{1,2}:\d{2}[ \t]+[-–][ \t]+[^:\n]{1,40}:[ \t]*}, # WhatsApp export: 14.10.2026, 10:15 - Ирина:
     %r{^[^,\n\[]{1,40},[ \t]*\[\d{1,2}[./]\d{1,2}[./]\d{2,4}[ \t]+\d{1,2}:\d{2}(?::\d{2})?\][ \t]*$}, # Telegram: Ирина, [14.10.2026 10:15]
   ].freeze
 
@@ -128,7 +128,7 @@ class DomServis::Intake::TextParser
   CITY_MARKER = %r{(?<![\p{L}\d])(?:(?i:г\.|гор\.|город|пос\.|пос[её]лок|п\.|пгт|дер\.|деревня)[ \t]*[А-ЯЁ]|(?:#{KNOWN_CITIES.join('|')})\p{L}{0,2}(?!\p{L}))}
 
   # A street without a marker: "Ленина 5-12", "Невского, 10".
-  STREET_WITH_HOUSE = %r{(?<![\p{L}\d])[А-ЯЁ][а-яё]+(?:ая|ого|его|ова|ева|ина|ына|ской|цкой|ный|ной|ний|ский|цкий)[ \t]*,?[ \t]*(?:д(?:ом|\.)?[ \t]*)?\d{1,4}[а-яё]?(?:[ \t]*[/-][ \t]*\d{1,4})?(?![\d]|[ \t]*(?i:лет|год|руб|₽|квт|бар|°|градус|мин|час|шт))}
+  STREET_WITH_HOUSE = %r{(?<![\p{L}\d])[А-ЯЁ][а-яё]+(?:ая|ого|его|ова|ева|ина|ына|ской|цкой|ный|ной|ний|ский|цкий)[ \t]*,?[ \t]*(?:д(?:ом|\.)?[ \t]*)?\d{1,4}[а-яё]?(?:[ \t]*[/-][ \t]*\d{1,4})?(?!\d|[ \t]*(?i:лет|год|руб|₽|квт|бар|°|градус|мин|час|шт))}
 
   ADDRESS_STOP = %r{(?<!\p{L})(?:тел(?:ефон|\.)?|моб(?:ильный|\.)?|имя|зовут|звон\p{L}*|контакт|код[ \t]+ошибки|ошибк\p{L}*|марка|модель)(?!\p{L})}i
 
@@ -198,6 +198,11 @@ class DomServis::Intake::TextParser
 
   VISIT_DAYS = %w[sun mon tue wed thu fri sat].freeze
 
+  # Copied chats carry zero-width marks and no-break spaces.
+  INVISIBLE_CHARACTERS = [0x200B, 0x200E, 0x200F, 0x2060, 0xFEFF].pack('U*').freeze
+  WIDE_SPACES = [0x00A0, 0x2007, 0x202F].pack('U*').freeze
+  NAME_ONLY = %r{\A#{NAME_WORD}\z}
+
   def initialize(text, today: Time.zone.today)
     @text = normalize_text(text)
     @body = strip_chat_headers(@text)
@@ -234,8 +239,8 @@ class DomServis::Intake::TextParser
     value.to_s
       .scrub('')
       .unicode_normalize(:nfc)
-      .delete("​‎‏⁠﻿")
-      .tr("   ", '   ')
+      .delete(INVISIBLE_CHARACTERS)
+      .tr(WIDE_SPACES, ' ' * WIDE_SPACES.length)
       .gsub(%r{\r\n?}, "\n")
       .strip
   end
@@ -275,7 +280,7 @@ class DomServis::Intake::TextParser
     return false if words.empty? || words.size > 3
     return false if NOT_A_NAME.include?(words.first)
 
-    words.all? { |word| word.match?(%r{\A#{NAME_WORD}\z}) }
+    words.all? { |word| word.match?(NAME_ONLY) }
   end
 
   def extract_address(name)
@@ -322,18 +327,30 @@ class DomServis::Intake::TextParser
   end
 
   def extract_service_type
-    category = CATEGORIES.find { |_name, pattern| body.match?(pattern) }&.first
-    issues = ISSUES.select { |_label, pattern| body.match?(pattern) }.map(&:first)
-    code = error_code
-    issues.unshift("Ошибка #{code}") if code
     brand = brand_model
-    category ||= CATEGORIES.first.first if brand && BOILER_BRANDS.include?(brand.split.first)
+    category = service_category(brand)
+    issues = found_issues
     return if category.nil? && issues.empty? && brand.nil?
 
     label = category || 'Ремонт'
     label = "#{label}: #{issues.first(3).join(', ')}" if issues.any?
     label = "#{label} · #{brand}" if brand
     label
+  end
+
+  def service_category(brand)
+    category = CATEGORIES.find { |_name, pattern| body.match?(pattern) }&.first
+    return category if category
+    return CATEGORIES.first.first if brand && BOILER_BRANDS.include?(brand.split.first)
+
+    nil
+  end
+
+  def found_issues
+    issues = ISSUES.select { |_label, pattern| body.match?(pattern) }.map(&:first)
+    code = error_code
+
+    code ? ["Ошибка #{code}", *issues] : issues
   end
 
   def error_code
@@ -364,28 +381,37 @@ class DomServis::Intake::TextParser
     nil
   end
 
+  # The date mentioned first wins; each candidate is [position, date].
   def extract_visit_date
-    candidates = []
+    (relative_dates + weekday_dates + numeric_dates + word_dates).min_by(&:first)&.last
+  end
 
-    RELATIVE_DAYS.each do |pattern, offset|
+  def relative_dates
+    RELATIVE_DAYS.filter_map do |pattern, offset|
       match = body.match(pattern)
-      candidates << [match.begin(0), today + offset] if match
+      [match.begin(0), today + offset] if match
     end
+  end
 
-    weekday = body.match(WEEKDAY_PATTERN)
-    candidates << [weekday.begin(0), next_weekday(WEEKDAY_NUMBERS[weekday[:day].downcase])] if weekday
+  def weekday_dates
+    match = body.match(WEEKDAY_PATTERN)
+    return [] if !match
 
-    all_matches(NUMERIC_DATE, body).each do |match|
+    [[match.begin(0), next_weekday(WEEKDAY_NUMBERS[match[:day].downcase])]]
+  end
+
+  def numeric_dates
+    all_matches(NUMERIC_DATE, body).filter_map do |match|
       date = build_date(match[:day], match[:month], match[:year])
-      candidates << [match.begin(0), date] if date
+      [match.begin(0), date] if date
     end
+  end
 
-    all_matches(WORD_DATE, body).each do |match|
+  def word_dates
+    all_matches(WORD_DATE, body).filter_map do |match|
       date = build_date(match[:day], MONTH_NUMBERS[match[:month].downcase], nil)
-      candidates << [match.begin(0), date] if date
+      [match.begin(0), date] if date
     end
-
-    candidates.min_by(&:first)&.last
   end
 
   def next_weekday(wday)

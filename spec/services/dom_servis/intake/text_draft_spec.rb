@@ -3,10 +3,10 @@
 require 'rails_helper'
 
 RSpec.describe DomServis::Intake::TextDraft do
-  let(:today) { Date.new(2026, 10, 14) }
-  let(:text) { 'Котёл Baxi не греет. Адрес: ул. Ленина 5, кв. 12. Тел 8 900 123-45-67, Ирина' }
+  let(:today)  { Date.new(2026, 10, 14) }
+  let(:text)   { 'Котёл Baxi не греет. Адрес: ул. Ленина 5, кв. 12. Тел 8 900 123-45-67, Ирина' }
   let(:ai_off) { DomServis::Intake::AISettings.new({}) }
-  let(:ai_on) { DomServis::Intake::AISettings.new('enabled' => true, 'auth_key' => 'a2V5OnNlY3JldGtleTEyMzQ=', 'model' => 'GigaChat-2-Pro') }
+  let(:ai_on)  { DomServis::Intake::AISettings.new('enabled' => true, 'auth_key' => 'a2V5OnNlY3JldGtleTEyMzQ=', 'model' => 'GigaChat-2-Pro') }
   let(:ai_answer) do
     {
       client_name:  'Ирина',

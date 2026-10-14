@@ -369,8 +369,8 @@ class DomServisDispatch extends App.ControllerSubContent
     }
 
   AI_PROVIDER_LABELS:
-    gigachat: 'GigaChat API Сбера — ключ авторизации (Freemium для новых пользователей)'
-    chat_completions: 'Cloud.ru Foundation Models или другой API как у OpenAI — API-ключ'
+    gigachat: 'Сбер, GigaChat API — ключ авторизации (Freemium для новых пользователей)'
+    chat_completions: 'Через Cloud.ru Foundation Models или другой API как у OpenAI — API-ключ'
 
   # Switching the way re-renders the form; what was typed stays.
   changeAIProvider: (e) =>

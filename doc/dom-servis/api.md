@@ -133,8 +133,8 @@ event_type, actor_user_id, actor_name (имя автора), meta, created_at.
 POST /jobs/parse_input принимает `{ "input": "<текст>" }` — сообщение клиента, скопированное
 из WhatsApp, Telegram, Авито, СМС или почты, можно несколько подряд; не длиннее 6000 символов.
 Текст разбирают правила [TextParser](../../app/services/dom_servis/intake/text_parser.rb), а если
-администратор включил GigaChat, ещё и модель. Значение от модели берётся, только если оно есть
-в тексте: цифры телефона и адреса, слова адреса, имя ([TextDraft](../../app/services/dom_servis/intake/text_draft.rb)).
+администратор включил ИИ (GigaChat Сбера или через Cloud.ru), ещё и модель.
+Значение от модели берётся, только если оно есть в тексте: цифры телефона и адреса, слова адреса, имя ([TextDraft](../../app/services/dom_servis/intake/text_draft.rb)).
 Приоритет берётся наибольший из найденных правилами и моделью. Если модель не ответила, черновик
 собирают одни правила, а в проверках появляется предупреждение.
 
@@ -159,8 +159,8 @@ POST /jobs/parse_input принимает `{ "input": "<текст>" }` — со
 | GET/PUT/PATCH | /api/v1/dom_servis/dispatch/admin_policy | Чтение / сохранение административной политики |
 | POST | /api/v1/dom_servis/dispatch/admin_policy/reset | Сброс политики |
 | GET | /api/v1/dom_servis/dispatch/tags | Общий словарь и использование тегов |
-| GET/PUT | /api/v1/dom_servis/dispatch/ai_settings | Администратор: GigaChat для разбора текста — enabled, scope, model, auth_key_set; новый auth_key или clear_auth_key в PUT, сам ключ не возвращается |
-| POST | /api/v1/dom_servis/dispatch/ai_settings/check | Администратор: проверка ключа, типа доступа и сертификата — { ok, models, model_available } или { ok: false, error } |
+| GET/PUT | /api/v1/dom_servis/dispatch/ai_settings | Администратор: ИИ для разбора текста — enabled, provider (gigachat — GigaChat API Сбера; chat_completions — Cloud.ru Foundation Models или другой API как у OpenAI), scope, model, base_url, auth_key_set; новый auth_key или clear_auth_key в PUT, сам ключ не возвращается |
+| POST | /api/v1/dom_servis/dispatch/ai_settings/check | Администратор: список моделей и пробный разбор образца — { ok, models, model_available, sample } или { ok: false, error } |
 | GET | /api/v1/dom_servis/dispatch/history_exports | Администратор: число событий истории, пора ли выгружать (due), последняя выгрузка |
 | POST | /api/v1/dom_servis/dispatch/history_exports | Администратор: новая выгрузка всех событий до текущего последнего |
 | GET | /api/v1/dom_servis/dispatch/history_exports/:id/download | Администратор: файл выгрузки (.xlsx) |
