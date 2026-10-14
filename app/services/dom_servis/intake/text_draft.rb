@@ -59,12 +59,12 @@ class DomServis::Intake::TextDraft
     return if !ai_settings.usable?
 
     DomServis::Intake::AIParser.new(text:, today:, settings: ai_settings).call
-  rescue DomServis::Intake::GigachatClient::Error => e
+  rescue DomServis::Intake::AIError => e
     @ai_error = e.message
     nil
   rescue => e
-    Rails.logger.error "Dom-Servis text draft: GigaChat reading failed: #{e.class}: #{e.message}"
-    @ai_error = 'Ошибка при разборе ответа GigaChat.'
+    Rails.logger.error "Dom-Servis text draft: AI reading failed: #{e.class}: #{e.message}"
+    @ai_error = 'Ошибка при разборе ответа ИИ.'
     nil
   end
 

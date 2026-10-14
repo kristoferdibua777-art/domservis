@@ -58,7 +58,7 @@ RSpec.describe 'DomServis::Dispatch::AISettingsController', type: :request do
 
     it 'reports a failed connection check' do
       DomServis::Intake::AISettings.update!('enabled' => true, 'auth_key' => auth_key)
-      allow_any_instance_of(DomServis::Intake::GigachatClient).to receive(:models).and_raise(DomServis::Intake::GigachatClient::Error, 'Не удалось связаться с GigaChat.')
+      allow_any_instance_of(DomServis::Intake::GigachatClient).to receive(:models).and_raise(DomServis::Intake::AIError, 'Не удалось связаться с GigaChat.')
 
       post '/api/v1/dom_servis/dispatch/ai_settings/check', as: :json
 

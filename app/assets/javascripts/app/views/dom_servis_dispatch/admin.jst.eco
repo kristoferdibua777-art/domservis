@@ -109,27 +109,45 @@
           <div class="form-group dom-servis-dispatch-admin__setting">
             <label>
               <input type="checkbox" class="js-ai-enabled"<%= ' checked' if @ai.enabled %><%= ' disabled' if !@ai.authKeySet %>>
-              Разбирать текст через GigaChat
+              Разбирать текст через ИИ
             </label>
             <% if !@ai.authKeySet: %>
-              <p class="dom-servis-dispatch-admin__setting-hint">Сначала сохраните ключ авторизации.</p>
+              <p class="dom-servis-dispatch-admin__setting-hint">Сначала сохраните ключ.</p>
             <% end %>
           </div>
 
           <div class="form-group dom-servis-dispatch-admin__setting">
-            <label for="dom-servis-ai-auth-key">Ключ авторизации</label>
-            <input id="dom-servis-ai-auth-key" class="form-control js-ai-auth-key" type="password" autocomplete="off" spellcheck="false" placeholder="<%= if @ai.authKeySet then 'Ключ сохранён — вставьте новый, чтобы заменить' else 'Ключ из личного кабинета GigaChat API' %>">
-            <p class="dom-servis-dispatch-admin__setting-hint">Ключ хранится только на сервере и больше нигде не показывается.</p>
+            <label for="dom-servis-ai-provider">Способ подключения</label>
+            <select id="dom-servis-ai-provider" class="form-control js-ai-provider">
+              <% for provider in @ai.providerOptions: %>
+                <option value="<%= provider.id %>"<%= ' selected' if provider.id is @ai.provider %>><%= provider.label %></option>
+              <% end %>
+            </select>
+            <p class="dom-servis-dispatch-admin__setting-hint">Новым пользователям GigaChat API Сбера даёт бесплатный пакет Freemium. С 1 сентября 2026 года платный доступ к GigaChat для новых клиентов — через Cloud.ru Foundation Models.</p>
           </div>
 
           <div class="form-group dom-servis-dispatch-admin__setting">
-            <label for="dom-servis-ai-scope">Тип доступа</label>
-            <select id="dom-servis-ai-scope" class="form-control js-ai-scope">
-              <% for scope in @ai.scopeOptions: %>
-                <option value="<%= scope.id %>"<%= ' selected' if scope.id is @ai.scope %>><%= scope.label %></option>
-              <% end %>
-            </select>
+            <label for="dom-servis-ai-auth-key"><%= if @ai.provider is 'chat_completions' then 'API-ключ' else 'Ключ авторизации' %></label>
+            <input id="dom-servis-ai-auth-key" class="form-control js-ai-auth-key" type="password" autocomplete="off" spellcheck="false" placeholder="<%= if @ai.authKeySet then 'Ключ сохранён — вставьте новый, чтобы заменить' else 'Ключ из личного кабинета' %>">
+            <p class="dom-servis-dispatch-admin__setting-hint">Ключ хранится только на сервере и больше нигде не показывается.</p>
           </div>
+
+          <% if @ai.provider is 'chat_completions': %>
+            <div class="form-group dom-servis-dispatch-admin__setting">
+              <label for="dom-servis-ai-base-url">Адрес API</label>
+              <input id="dom-servis-ai-base-url" class="form-control js-ai-base-url" type="url" value="<%= @ai.baseUrl %>">
+              <p class="dom-servis-dispatch-admin__setting-hint">Для Cloud.ru — https://foundation-models.api.cloud.ru/v1. Название модели возьмите из списка, который покажет «Проверить подключение».</p>
+            </div>
+          <% else: %>
+            <div class="form-group dom-servis-dispatch-admin__setting">
+              <label for="dom-servis-ai-scope">Тип доступа</label>
+              <select id="dom-servis-ai-scope" class="form-control js-ai-scope">
+                <% for scope in @ai.scopeOptions: %>
+                  <option value="<%= scope.id %>"<%= ' selected' if scope.id is @ai.scope %>><%= scope.label %></option>
+                <% end %>
+              </select>
+            </div>
+          <% end %>
 
           <div class="form-group dom-servis-dispatch-admin__setting">
             <label for="dom-servis-ai-model">Модель</label>
@@ -139,15 +157,20 @@
                 <option value="<%= model %>"></option>
               <% end %>
             </datalist>
-            <p class="dom-servis-dispatch-admin__setting-hint">GigaChat-2 — дешевле, GigaChat-2-Pro — точнее (рекомендуется), GigaChat-2-Max — самая сильная.</p>
+            <% if @ai.provider isnt 'chat_completions': %>
+              <p class="dom-servis-dispatch-admin__setting-hint">GigaChat-2 — дешевле, GigaChat-2-Pro — точнее (рекомендуется), GigaChat-2-Max — самая сильная.</p>
+            <% end %>
           </div>
 
-          <p class="dom-servis-dispatch-admin__setting-hint">GigaChat работает с сертификатом Минцифры: один раз загрузите корневой сертификат Russian Trusted Root CA в Управление → Безопасность → SSL-сертификаты.</p>
+          <% if @ai.provider isnt 'chat_completions': %>
+            <p class="dom-servis-dispatch-admin__setting-hint">GigaChat работает с сертификатом Минцифры: один раз загрузите корневой сертификат Russian Trusted Root CA в Управление → Безопасность → SSL-сертификаты.</p>
+          <% end %>
 
           <% if @ai.check: %>
             <% if @ai.check.ok: %>
               <div class="alert alert-success">
                 Подключение работает.
+                <% if @ai.check.sample: %>Пробный разбор: <%= @ai.check.sample %>.<% end %>
                 <% if @ai.check.models.length > 0: %>Доступные модели: <%= @ai.check.models.join(', ') %>.<% end %>
                 <% if @ai.check.models.length > 0 && !@ai.check.modelAvailable: %> Выбранной модели в этом списке нет — выберите модель из списка.<% end %>
               </div>

@@ -1,6 +1,6 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-# Asks GigaChat to read a pasted client message and fill the dispatch job
+# Asks GigaChat (or the service set in DomServis::Intake::AISettings) to read a pasted client message and fill the dispatch job
 # fields. The model has to answer by calling the fill_dispatch_job function,
 # so the reply is a fixed set of fields instead of free text. The values are
 # not trusted: DomServis::Intake::TextDraft checks them against the text.
@@ -12,7 +12,7 @@ class DomServis::Intake::AIParser
   def initialize(text:, today:, settings:, client: nil)
     @text = text
     @today = today
-    @client = client || DomServis::Intake::GigachatClient.new(auth_key: settings.auth_key, scope: settings.scope, model: settings.model)
+    @client = client || settings.client
   end
 
   attr_reader :text, :today, :client
@@ -86,7 +86,7 @@ class DomServis::Intake::AIParser
     arguments = function_call['arguments'] if function_call.is_a?(Hash)
     arguments = message['content'] if arguments.blank?
     arguments = parse_json(arguments) if arguments.is_a?(String)
-    raise DomServis::Intake::GigachatClient::Error, 'Ответ GigaChat пришёл не в том формате.' if !arguments.is_a?(Hash)
+    raise DomServis::Intake::AIError, 'Ответ ИИ пришёл не в том формате.' if !arguments.is_a?(Hash)
 
     arguments.to_h.stringify_keys
   end

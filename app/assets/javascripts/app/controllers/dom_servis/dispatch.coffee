@@ -14,6 +14,7 @@ class DomServisDispatch extends App.ControllerSubContent
     'click .js-ai-save': 'saveAISettings'
     'click .js-ai-check': 'checkAISettings'
     'click .js-ai-clear-key': 'clearAiKey'
+    'change .js-ai-provider': 'changeAIProvider'
 
   constructor: ->
     super
@@ -343,31 +344,53 @@ class DomServisDispatch extends App.ControllerSubContent
     settings = @aiSettings
     return { loaded: false } if !settings
 
+    form = @aiForm || {}
+    sample = @aiCheck?.sample
     {
       loaded: true
       busy: @aiBusy
-      enabled: settings.enabled is true
+      enabled: if form.enabled? then form.enabled else settings.enabled is true
       authKeySet: settings.auth_key_set is true
-      scope: settings.scope
-      model: settings.model
-      models: settings.models || []
+      provider: form.provider || settings.provider
+      scope: form.scope || settings.scope
+      model: if form.model? then form.model else settings.model
+      baseUrl: form.base_url || settings.base_url
+      models: _.uniq((settings.models || []).concat(@aiCheck?.models || []))
+      providerOptions: ({ id: provider, label: @AI_PROVIDER_LABELS[provider] || provider } for provider in (settings.providers || []))
       scopeOptions: ({ id: scope, label: @AI_SCOPE_LABELS[scope] || scope } for scope in (settings.scopes || []))
       check: if @aiCheck
         ok: @aiCheck.ok is true
         error: @aiCheck.error || 'Проверка не удалась.'
         models: @aiCheck.models || []
         modelAvailable: @aiCheck.model_available is true
+        sample: if sample then _.compact([sample.service_type, sample.address, sample.client_phone]).join('; ') else null
       else
         null
     }
 
+  AI_PROVIDER_LABELS:
+    gigachat: 'GigaChat API Сбера — ключ авторизации (Freemium для новых пользователей)'
+    chat_completions: 'Cloud.ru Foundation Models или другой API как у OpenAI — API-ключ'
+
+  # Switching the way re-renders the form; what was typed stays.
+  changeAIProvider: (e) =>
+    @aiForm = @aiSettingsForm()
+    @aiForm.provider = $(e.currentTarget).val()
+    @aiForm.model = '' if @aiForm.provider is 'chat_completions' && @aiForm.model in (@aiSettings?.models || [])
+    @aiForm.model = 'GigaChat-2-Pro' if @aiForm.provider is 'gigachat' && !@aiForm.model
+    typedKey = @aiForm.auth_key
+    @render()
+    @$('.js-ai-auth-key').val(typedKey) if typedKey
+
   aiSettingsForm: ->
-    {
+    form =
       enabled: @$('.js-ai-enabled').prop('checked') is true
-      scope: @$('.js-ai-scope').val()
+      provider: @$('.js-ai-provider').val()
       model: (@$('.js-ai-model').val() || '').trim()
       auth_key: (@$('.js-ai-auth-key').val() || '').trim()
-    }
+    form.scope = @$('.js-ai-scope').val() if @$('.js-ai-scope').length
+    form.base_url = (@$('.js-ai-base-url').val() || '').trim() if @$('.js-ai-base-url').length
+    form
 
   saveAISettings: (e) =>
     @preventDefault(e)
@@ -382,7 +405,7 @@ class DomServisDispatch extends App.ControllerSubContent
     @preventDefault(e)
     return if @aiBusy
 
-    @sendAISettings({ clear_auth_key: true, enabled: false }, 'Ключ GigaChat удалён, ИИ-разбор выключен.')
+    @sendAISettings({ clear_auth_key: true, enabled: false }, 'Ключ удалён, ИИ-разбор выключен.')
 
   sendAISettings: (data, successMessage) ->
     @aiBusy = true
@@ -397,6 +420,7 @@ class DomServisDispatch extends App.ControllerSubContent
       processData: true
       success: (result) =>
         @aiSettings = result || @aiSettings
+        @aiForm = null
         @aiBusy = false
         @notify(type: 'success', msg: successMessage, timeout: 3000)
         @render()

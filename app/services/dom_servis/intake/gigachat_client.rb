@@ -2,15 +2,16 @@
 
 # Talks to the GigaChat API of Sber (decision 2026-10-14: a service that works
 # from the Russian server without a VPN and keeps the client data in Russia).
+# New users get the free Freemium package here; since 2026-09-01 new clients
+# pay for GigaChat on Cloud.ru instead (DomServis::Intake::ChatCompletionsClient).
 #
 # The authorization key from the GigaChat personal account is exchanged for an
 # access token that lives 30 minutes; the token is cached until shortly before
 # it expires. The GigaChat servers use a certificate of the Russian Trusted
 # Root CA: an admin uploads that root certificate in Manage > Security > SSL
-# Certificates, UserAgent then trusts it. Request bodies are never logged,
-# they contain client data.
+# Certificates, UserAgent then trusts it.
 class DomServis::Intake::GigachatClient
-  class Error < StandardError; end
+  include DomServis::Intake::AIHttp
 
   TOKEN_URL = 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth'.freeze
   API_URL = 'https://api.giga.chat/v1'.freeze
@@ -25,6 +26,10 @@ class DomServis::Intake::GigachatClient
 
   attr_reader :auth_key, :scope, :model
 
+  def service_name
+    'GigaChat'
+  end
+
   # Returns the first answer message, e.g. { 'role' => 'assistant',
   # 'function_call' => { 'name' => ..., 'arguments' => {...} } }.
   def chat(messages:, functions: nil, function_call: nil)
@@ -32,19 +37,12 @@ class DomServis::Intake::GigachatClient
     body[:functions] = functions if functions
     body[:function_call] = function_call if function_call
 
-    result = with_token { |token| UserAgent.post("#{API_URL}/chat/completions", body, api_options(token, read_timeout: 30)) }
-    message = result.data.is_a?(Hash) ? result.data.dig('choices', 0, 'message') : nil
-    raise Error, 'Пустой ответ от GigaChat.' if !message.is_a?(Hash)
-
-    message
+    message_from(with_token { |token| UserAgent.post("#{API_URL}/chat/completions", body, json_options(token, read_timeout: 30)) })
   end
 
   # The model names the key may use; also serves as the connection check.
   def models
-    result = with_token { |token| UserAgent.get("#{API_URL}/models", {}, api_options(token, read_timeout: 15)) }
-    data = result.data.is_a?(Hash) ? result.data['data'] : nil
-
-    Array(data).filter_map { |entry| entry['id'] if entry.is_a?(Hash) }
+    model_ids(with_token { |token| UserAgent.get("#{API_URL}/models", {}, json_options(token, read_timeout: 15)) })
   end
 
   private
@@ -55,20 +53,9 @@ class DomServis::Intake::GigachatClient
       Rails.cache.delete(token_cache_key)
       result = yield(access_token)
     end
-    raise Error, failure_message(result) if !result.success?
+    raise DomServis::Intake::AIError, failure_message(result) if !result.success?
 
     result
-  end
-
-  def api_options(token, read_timeout:)
-    {
-      json:          true,
-      bearer_token:  token,
-      headers:       { 'Accept' => 'application/json' },
-      open_timeout:  5,
-      read_timeout:  read_timeout,
-      total_timeout: read_timeout + 5,
-    }
   end
 
   def access_token
@@ -81,18 +68,18 @@ class DomServis::Intake::GigachatClient
   end
 
   def fetch_token
-    raise Error, 'Не задан ключ авторизации GigaChat.' if auth_key.blank?
+    raise DomServis::Intake::AIError, 'Не задан ключ авторизации GigaChat.' if auth_key.blank?
 
     result = UserAgent.post(TOKEN_URL, { scope: }, token_options)
-    raise Error, failure_message(result, token: true) if !result.success?
+    raise DomServis::Intake::AIError, failure_message(result, key: true) if !result.success?
 
     data = JSON.parse(result.body.to_s)
     token = data['access_token'].presence
-    raise Error, 'Не удалось получить токен доступа GigaChat.' if !token.is_a?(String)
+    raise DomServis::Intake::AIError, 'Не удалось получить токен доступа GigaChat.' if !token.is_a?(String)
 
     [token, token_lifetime(data['expires_at'])]
   rescue JSON::ParserError
-    raise Error, 'Не удалось получить токен доступа GigaChat.'
+    raise DomServis::Intake::AIError, 'Не удалось получить токен доступа GigaChat.'
   end
 
   def token_options
@@ -119,31 +106,5 @@ class DomServis::Intake::GigachatClient
   # The cache key is a digest, so the key itself never lands in the cache.
   def token_cache_key
     "dom_servis/gigachat_token/#{Digest::SHA256.hexdigest("#{auth_key}|#{scope}")}"
-  end
-
-  def failure_message(result, token: false)
-    case result.code.to_s
-    when '400', '401', '403'
-      token ? 'Ключ авторизации GigaChat не принят: проверьте ключ и тип доступа.' : "Доступ к GigaChat запрещён (код #{result.code})."
-    when '402'
-      'В GigaChat закончились оплаченные токены.'
-    when '404'
-      'Модель GigaChat не найдена: проверьте её название.'
-    when '422'
-      'Запрос к GigaChat не принят (код 422).'
-    when '429'
-      'Слишком много запросов к GigaChat, повторите через минуту.'
-    when '0'
-      connection_failure(result.error.to_s)
-    else
-      "Ошибка GigaChat (код #{result.code})."
-    end
-  end
-
-  def connection_failure(error)
-    return 'Нет доверия к сертификату GigaChat: загрузите корневой сертификат Минцифры (Russian Trusted Root CA) в Управление → Безопасность → SSL-сертификаты.' if error.match?(%r{certificate|SSL}i)
-    return 'Нет ответа от GigaChat: время ожидания истекло.' if error.match?(%r{timeout|timed out}i)
-
-    'Не удалось связаться с GigaChat.'
   end
 end

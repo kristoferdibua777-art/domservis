@@ -52,20 +52,20 @@ RSpec.describe DomServis::Intake::GigachatClient do
   it 'explains a rejected key' do
     stub_request(:post, token_url).to_return(status: 401, body: '{}')
 
-    expect { chat }.to raise_error(described_class::Error, 'Ключ авторизации GigaChat не принят: проверьте ключ и тип доступа.')
+    expect { chat }.to raise_error(DomServis::Intake::AIError, 'Ключ GigaChat не принят: проверьте ключ и тип доступа.')
   end
 
   it 'explains a missing certificate' do
     stub_request(:post, token_url).to_raise(OpenSSL::SSL::SSLError.new('certificate verify failed (self-signed certificate in certificate chain)'))
 
-    expect { chat }.to raise_error(described_class::Error, %r{сертификат Минцифры})
+    expect { chat }.to raise_error(DomServis::Intake::AIError, %r{сертификат Минцифры})
   end
 
   it 'explains used up tokens' do
     stub_request(:post, token_url).to_return(token_response)
     stub_request(:post, chat_url).to_return(status: 402, body: '{}')
 
-    expect { chat }.to raise_error(described_class::Error, 'В GigaChat закончились оплаченные токены.')
+    expect { chat }.to raise_error(DomServis::Intake::AIError, 'В GigaChat закончились оплаченные токены.')
   end
 
   it 'lists the models' do
