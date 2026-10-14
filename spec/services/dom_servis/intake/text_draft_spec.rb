@@ -105,7 +105,7 @@ RSpec.describe DomServis::Intake::TextDraft do
   end
 
   context 'with a known client' do
-    let!(:client) { create(:customer, firstname: 'Ирина', lastname: 'Смирнова', phone: '+79001234567') }
+    let!(:client) { create(:customer, firstname: 'Ирина', lastname: 'Смирнова', email: 'irina.smirnova@example.com', phone: '+79001234567') }
 
     before do
       create_job(service_type: 'Газовый котёл: Не греет', address: 'ул. Ленина 5, кв. 12', client_phone: '8 (900) 123-45-67', status: 'pool', ticket: create(:ticket))
@@ -134,7 +134,7 @@ RSpec.describe DomServis::Intake::TextDraft do
     end
 
     it 'warns when the phone belongs to several clients' do
-      create(:customer, firstname: 'Пётр', mobile: '8 900 123 45 67')
+      create(:customer, firstname: 'Пётр', email: 'petr@example.com', mobile: '8 900 123 45 67')
 
       expect(check_texts(draft('89001234567 котёл не греет ул. Ленина 5')).grep(%r{\Aerror: Номер записан у нескольких клиентов})).to be_present
     end
