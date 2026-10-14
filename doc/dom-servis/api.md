@@ -38,7 +38,7 @@
 | POST | /jobs | Создание |
 | PUT/PATCH | /jobs/:id | Generic update, без смены исполнителя |
 | DELETE | /jobs/:id | Удаление |
-| POST | /jobs/parse_input | Черновик из текста по ключевым словам |
+| POST | /jobs/parse_input | Черновик формы из вставленного текста клиента с проверками; заявку не создаёт (диспетчер, администратор) |
 | POST | /jobs/:id/take | Взять |
 | POST | /jobs/:id/assign | Назначить активного мастера |
 | POST | /jobs/:id/release | Вернуть в pool |
@@ -128,6 +128,30 @@ event_type, actor_user_id, actor_name (имя автора), meta, created_at.
 Удаление заявки сохраняет историю: последним пишется deleted, события отвязываются от заявки
 (dispatch_job_id = null) и хранят её код в job_code.
 
+### Черновик из текста клиента
+
+POST /jobs/parse_input принимает `{ "input": "<текст>" }` — сообщение клиента, скопированное
+из WhatsApp, Telegram, Авито, СМС или почты, можно несколько подряд; не длиннее 6000 символов.
+Текст разбирают правила [TextParser](../../app/services/dom_servis/intake/text_parser.rb), а если
+администратор включил ИИ (GigaChat Сбера или через Cloud.ru), ещё и модель.
+Значение от модели берётся, только если оно есть в тексте: цифры телефона и адреса, слова адреса, имя
+([TextDraft](../../app/services/dom_servis/intake/text_draft.rb)).
+Приоритет берётся наибольший из найденных правилами и моделью. Если модель не ответила, черновик
+собирают одни правила, а в проверках появляется предупреждение.
+
+Ответ:
+
+| Поле | Содержимое |
+| --- | --- |
+| draft | найденные поля формы: client_phone, client_name, address, service_type, priority, visit_date, visit_day, visit_time, description, comment (исходный текст, когда описание составила модель) |
+| filled | имена полей в draft |
+| phones | все найденные в тексте номера, нормализованные |
+| checks | список { level: ok / info / warning / error, field, text }: нет телефона или адреса, несколько номеров, клиент есть в базе или новый, другое имя в базе, номер у нескольких клиентов, прошлый адрес, открытые заявки клиента, что уточнить |
+| client | { name, jobs_count, last_address } клиента с этим номером или null |
+| ai | { enabled, used, model, error } |
+
+Доска заполняет только поля, которые диспетчер ещё не менял. Создаёт заявку человек обычным POST /jobs.
+
 ## Политика, теги и источники
 
 | Метод | Путь | Назначение |
@@ -136,6 +160,8 @@ event_type, actor_user_id, actor_name (имя автора), meta, created_at.
 | GET/PUT/PATCH | /api/v1/dom_servis/dispatch/admin_policy | Чтение / сохранение административной политики |
 | POST | /api/v1/dom_servis/dispatch/admin_policy/reset | Сброс политики |
 | GET | /api/v1/dom_servis/dispatch/tags | Общий словарь и использование тегов |
+| GET/PUT | /api/v1/dom_servis/dispatch/ai_settings | Администратор: ИИ для разбора текста — enabled, provider (gigachat — GigaChat API Сбера; chat_completions — Cloud.ru Foundation Models или другой API как у OpenAI), scope, model, base_url, auth_key_set; новый auth_key или clear_auth_key в PUT, сам ключ не возвращается |
+| POST | /api/v1/dom_servis/dispatch/ai_settings/check | Администратор: список моделей и пробный разбор образца — { ok, models, model_available, sample } или { ok: false, error } |
 | GET | /api/v1/dom_servis/dispatch/history_exports | Администратор: число событий истории, пора ли выгружать (due), последняя выгрузка |
 | POST | /api/v1/dom_servis/dispatch/history_exports | Администратор: новая выгрузка всех событий до текущего последнего |
 | GET | /api/v1/dom_servis/dispatch/history_exports/:id/download | Администратор: файл выгрузки (.xlsx) |

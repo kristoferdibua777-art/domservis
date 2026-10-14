@@ -27,6 +27,11 @@ class App.DomServisDispatchBoard extends App.Controller
     'change .js-create-attachment-input': 'selectCreateAttachments'
     'click .js-remove-create-attachment': 'removeCreateAttachment'
     'change .js-create-attachment-kind': 'changeCreateAttachmentKind'
+    'input .js-intake-text': 'updateIntakeText'
+    'paste .js-intake-text': 'intakeTextPasted'
+    'click .js-intake-parse': 'parseIntakeText'
+    'click .js-intake-paste': 'pasteIntakeText'
+    'click .js-intake-use-last-address': 'useIntakeLastAddress'
     'click .js-save-edit': 'saveEdit'
     'input .js-visit-time-input': 'clearVisitTimeError'
     'click .js-edit-tag-toggle': 'toggleEditTag'
@@ -149,6 +154,7 @@ class App.DomServisDispatchBoard extends App.Controller
       createAttachmentKind: @createAttachmentKind
       createAttachmentFiles: @buildCreateAttachmentDraft()
       createAttachmentUploading: @createAttachmentUploading
+      intake: @buildIntakeView()
       stats: @buildStats()
       statusFilters: @buildScopedStatusFilters()
       weekControls: @buildWeekControls()
@@ -713,6 +719,8 @@ class App.DomServisDispatchBoard extends App.Controller
       description: ''
       comment: ''
 
+    @resetIntake()
+
   syncCreateDraftFromForm: ->
     return if !@createOpen
 
@@ -735,6 +743,160 @@ class App.DomServisDispatchBoard extends App.Controller
 
   updateCreateDraft: ->
     @syncCreateDraftFromForm()
+
+  # A client message pasted into the new job form is read on the server (by
+  # rules and, when an admin enabled it, by GigaChat) and fills the form; the
+  # dispatcher checks the fields and creates the job.
+  INTAKE_FIELDS: ['client_phone', 'client_name', 'address', 'service_type', 'priority', 'visit_date', 'visit_day', 'visit_time', 'description', 'comment']
+  INTAKE_MARKS:
+    ok: '✓'
+    info: 'i'
+    warning: '!'
+    error: '✕'
+
+  resetIntake: ->
+    @intake =
+      text: ''
+      busy: false
+      pending: false
+      status: null
+      checks: []
+      client: null
+      values: {}
+    @intakeBaseline = _.clone(@createDraft || {})
+
+  buildIntakeView: ->
+    intake = @intake || {}
+    filled = {}
+    for field, value of (intake.values || {})
+      filled[field] = true if value && @createDraft?[field] is value
+
+    lastAddress = intake.client?.last_address
+    {
+      text: intake.text || ''
+      busy: intake.busy is true
+      status: intake.status || null
+      checks: intake.checks || []
+      filled: filled
+      canPaste: !!window.navigator?.clipboard?.readText
+      lastAddress: if lastAddress && lastAddress isnt @createDraft?.address then lastAddress else null
+    }
+
+  updateIntakeText: =>
+    @intake.text = @$('.js-intake-text').val()?.toString() || ''
+
+  # The pasted text is in the field only after the paste event.
+  intakeTextPasted: =>
+    setTimeout((=> @parseIntakeText()), 50)
+
+  pasteIntakeText: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    clipboard = window.navigator?.clipboard
+    if !clipboard?.readText
+      @notify(type: 'info', msg: 'Браузер не даёт прочитать буфер обмена. Вставьте текст в поле долгим нажатием.', timeout: 5000)
+      return
+
+    clipboard.readText().then(
+      (value) =>
+        pasted = (value || '').trim()
+        return if !pasted
+        field = @$('.js-intake-text')
+        current = (field.val()?.toString() || '').trim()
+        field.val(if current then "#{current}\n\n#{pasted}" else pasted)
+        @parseIntakeText()
+      =>
+        @notify(type: 'info', msg: 'Нет доступа к буферу обмена. Вставьте текст в поле долгим нажатием.', timeout: 5000)
+    )
+
+  parseIntakeText: (e) =>
+    @preventDefaultAndStopPropagation(e) if e
+    return if !@createOpen
+
+    field = @$('.js-intake-text')
+    @intake.text = field.val()?.toString() || '' if field.length
+    text = (@intake.text || '').trim()
+    if !text
+      @notify(type: 'error', msg: 'Вставьте текст от клиента.', timeout: 4000)
+      return
+
+    if @intake.busy
+      @intake.pending = true
+      return
+
+    @syncCreateDraftFromForm()
+    @intake.busy = true
+    @intake.status = null
+    @render()
+
+    @ajax(
+      id: 'dom_servis_dispatch_parse_input'
+      type: 'POST'
+      url: "#{@apiPath}/dom_servis/dispatch/jobs/parse_input"
+      data: JSON.stringify(input: text)
+      processData: true
+      success: (data) =>
+        @intake.busy = false
+        @applyIntakeDraft(data)
+        @rerunPendingIntake()
+      error: (xhr) =>
+        @intake.busy = false
+        return if !@createOpen
+        @intake.status = @extractError(xhr, 'Текст не удалось разобрать.')
+        @render()
+        @rerunPendingIntake()
+    )
+
+  rerunPendingIntake: ->
+    return if !@intake.pending || !@createOpen
+    @intake.pending = false
+    @parseIntakeText()
+
+  # Fills only the fields the dispatcher has not changed: still empty, still
+  # the default of a new job or still the value an earlier reading put there.
+  applyIntakeDraft: (data) =>
+    return if !@createOpen
+
+    @syncCreateDraftFromForm()
+    draft = data?.draft || {}
+    applied = 0
+    for field in @INTAKE_FIELDS
+      value = draft[field]
+      continue if !value? || "#{value}" is ''
+      continue if !@intakeFieldReplaceable(field)
+      @createDraft[field] = "#{value}"
+      @intake.values[field] = "#{value}"
+      applied += 1 if field isnt 'visit_day' && field isnt 'comment'
+
+    @intake.checks = @intakeChecks(data?.checks)
+    @intake.client = data?.client || null
+    @intake.status = @intakeStatus(applied, data?.ai)
+    @render()
+
+  intakeFieldReplaceable: (field) ->
+    current = @createDraft[field] || ''
+    return true if !current
+    return true if current is "#{@intakeBaseline?[field] || ''}"
+    current is @intake.values[field]
+
+  intakeChecks: (checks) ->
+    for check in (checks || []) when check?.text
+      level = if @INTAKE_MARKS[check.level] then check.level else 'info'
+      { level: level, mark: @INTAKE_MARKS[level], text: check.text }
+
+  intakeStatus: (applied, ai) ->
+    return 'В тексте не нашлось новых данных для заявки.' if applied is 0
+    reader = if ai?.used then "ИИ (#{ai.model}) и правила" else 'правила'
+    "Заполнено полей: #{applied}, разбор: #{reader}. Проверьте их перед публикацией."
+
+  useIntakeLastAddress: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    address = @intake.client?.last_address
+    return if !address
+
+    @syncCreateDraftFromForm()
+    @createDraft.address = address
+    @intake.values.address = address
+    @render()
 
   toggleCreateTag: (e) =>
     @preventDefaultAndStopPropagation(e)

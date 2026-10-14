@@ -243,22 +243,17 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     model_item_render(job)
   end
 
+  # Reads a client message pasted into the new job form and returns a draft of
+  # the form with checks (see DomServis::Intake::TextDraft). Nothing is saved:
+  # the dispatcher creates the job after checking the draft.
   def parse_input
-    input = params.require(:input).to_s.strip
+    input = params[:input].to_s.strip
     raise Exceptions::UnprocessableEntity, __('No input submitted.') if input.blank?
+    raise Exceptions::UnprocessableEntity, "Текст слишком длинный: больше #{DomServis::Intake::TextDraft::MAX_LENGTH} символов." if input.length > DomServis::Intake::TextDraft::MAX_LENGTH
 
     ensure_action_allowed!('create_job')
 
-    render json: {
-      draft: {
-        service_type: infer_service_type(input),
-        address:      __('Address to be confirmed'),
-        description:  input,
-        priority:     infer_priority(input),
-        status:       'pool',
-        source:       'ai',
-      }
-    }, status: :ok
+    render json: DomServis::Intake::TextDraft.new(text: input).call, status: :ok
   end
 
   # Syncs the backing ticket again after a failure was recorded on the job.
@@ -438,22 +433,6 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
 
   def normalized_tag_names(tag_names)
     DomServis::DispatchTagCatalog.normalize_names(tag_names).sort
-  end
-
-  def infer_priority(input)
-    lowered = input.downcase
-    return 'critical' if lowered.match?(%r{авар|сроч|горит|замерз|затоп|ошибк}i)
-
-    'medium'
-  end
-
-  def infer_service_type(input)
-    lowered = input.downcase
-    return 'Plumbing' if lowered.match?(%r{кран|смесител|вода|сантех}i)
-    return 'Boiler' if lowered.match?(%r{кот[её]л|отоплен|газ}i)
-    return 'Electrical' if lowered.match?(%r{розет|свет|элект|люстр}i)
-
-    __('General Service')
   end
 
   def master_access?

@@ -3206,6 +3206,21 @@ Setting.create_if_not_exists(
   frontend:    false,
 )
 
+# See also db/migrate/20261014120000_add_dom_servis_ai_intake_setting.rb.
+Setting.create_if_not_exists(
+  title:       'ИИ-разбор текста заявок (GigaChat)',
+  name:        'dom_servis_ai_intake_config',
+  area:        'DomServis::AI',
+  description: 'Ключ авторизации и параметры GigaChat для разбора текста заявок на доске диспетчера. Ключ хранится только на сервере.',
+  options:     {},
+  state:       {},
+  preferences: {
+    prio:       3660,
+    permission: ['dom_servis.admin'],
+  },
+  frontend:    false,
+)
+
 Setting.create_if_not_exists(
   title:       __('Limit tickets by IP per hour'),
   name:        'form_ticket_create_by_ip_per_hour',

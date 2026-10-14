@@ -10,6 +10,11 @@ Zammad::Application.routes.draw do
         end
         resources :tags, only: %i[index], controller: :tags
 
+        # GigaChat settings of the pasted text reading (Dispatch Admin).
+        resource :ai_settings, only: %i[show update], controller: :ai_settings do
+          post :check
+        end
+
         resources :history_exports, only: %i[index create], controller: :history_exports do
           member do
             get :download

@@ -97,6 +97,102 @@
     <section class="dom-servis-dispatch-admin__section">
       <div class="dom-servis-dispatch-admin__section-head">
         <div>
+          <h2>ИИ-разбор текста заявок (GigaChat)</h2>
+          <p>Диспетчер вставляет в форму новой заявки сообщение клиента — из WhatsApp, Telegram, Авито, СМС или почты, — и поля заполняются сами. Без ИИ текст разбирается по правилам; с GigaChat разбор точнее. Телефон и адрес от ИИ подставляются, только если они есть в тексте. Заявку всегда создаёт человек.</p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__settings-card">
+        <% if !@ai.loaded: %>
+          <p class="dom-servis-dispatch-admin__setting-hint">Загрузка настроек…</p>
+        <% else: %>
+          <div class="form-group dom-servis-dispatch-admin__setting">
+            <label>
+              <input type="checkbox" class="js-ai-enabled"<%= ' checked' if @ai.enabled %><%= ' disabled' if !@ai.authKeySet %>>
+              Разбирать текст через ИИ
+            </label>
+            <% if !@ai.authKeySet: %>
+              <p class="dom-servis-dispatch-admin__setting-hint">Сначала сохраните ключ.</p>
+            <% end %>
+          </div>
+
+          <div class="form-group dom-servis-dispatch-admin__setting">
+            <label for="dom-servis-ai-provider">Способ подключения</label>
+            <select id="dom-servis-ai-provider" class="form-control js-ai-provider">
+              <% for provider in @ai.providerOptions: %>
+                <option value="<%= provider.id %>"<%= ' selected' if provider.id is @ai.provider %>><%= provider.label %></option>
+              <% end %>
+            </select>
+            <p class="dom-servis-dispatch-admin__setting-hint">Новым пользователям GigaChat API Сбера даёт бесплатный пакет Freemium. С 1 сентября 2026 года платный доступ к GigaChat для новых клиентов — через Cloud.ru Foundation Models.</p>
+          </div>
+
+          <div class="form-group dom-servis-dispatch-admin__setting">
+            <label for="dom-servis-ai-auth-key"><%= if @ai.provider is 'chat_completions' then 'API-ключ' else 'Ключ авторизации' %></label>
+            <input id="dom-servis-ai-auth-key" class="form-control js-ai-auth-key" type="password" autocomplete="off" spellcheck="false" placeholder="<%= if @ai.authKeySet then 'Ключ сохранён — вставьте новый, чтобы заменить' else 'Ключ из личного кабинета' %>">
+            <p class="dom-servis-dispatch-admin__setting-hint">Ключ хранится только на сервере и больше нигде не показывается.</p>
+          </div>
+
+          <% if @ai.provider is 'chat_completions': %>
+            <div class="form-group dom-servis-dispatch-admin__setting">
+              <label for="dom-servis-ai-base-url">Адрес API</label>
+              <input id="dom-servis-ai-base-url" class="form-control js-ai-base-url" type="url" value="<%= @ai.baseUrl %>">
+              <p class="dom-servis-dispatch-admin__setting-hint">Для Cloud.ru — https://foundation-models.api.cloud.ru/v1. Название модели возьмите из списка, который покажет «Проверить подключение».</p>
+            </div>
+          <% else: %>
+            <div class="form-group dom-servis-dispatch-admin__setting">
+              <label for="dom-servis-ai-scope">Тип доступа</label>
+              <select id="dom-servis-ai-scope" class="form-control js-ai-scope">
+                <% for scope in @ai.scopeOptions: %>
+                  <option value="<%= scope.id %>"<%= ' selected' if scope.id is @ai.scope %>><%= scope.label %></option>
+                <% end %>
+              </select>
+            </div>
+          <% end %>
+
+          <div class="form-group dom-servis-dispatch-admin__setting">
+            <label for="dom-servis-ai-model">Модель</label>
+            <input id="dom-servis-ai-model" class="form-control js-ai-model" type="text" list="dom-servis-ai-models" value="<%= @ai.model %>">
+            <datalist id="dom-servis-ai-models">
+              <% for model in @ai.models: %>
+                <option value="<%= model %>"></option>
+              <% end %>
+            </datalist>
+            <% if @ai.provider isnt 'chat_completions': %>
+              <p class="dom-servis-dispatch-admin__setting-hint">GigaChat-2 — дешевле, GigaChat-2-Pro — точнее (рекомендуется), GigaChat-2-Max — самая сильная.</p>
+            <% end %>
+          </div>
+
+          <% if @ai.provider isnt 'chat_completions': %>
+            <p class="dom-servis-dispatch-admin__setting-hint">GigaChat работает с сертификатом Минцифры: один раз загрузите корневой сертификат Russian Trusted Root CA в Управление → Безопасность → SSL-сертификаты.</p>
+          <% end %>
+
+          <% if @ai.check: %>
+            <% if @ai.check.ok: %>
+              <div class="alert alert-success">
+                Подключение работает.
+                <% if @ai.check.sample: %>Пробный разбор: <%= @ai.check.sample %>.<% end %>
+                <% if @ai.check.models.length > 0: %>Доступные модели: <%= @ai.check.models.join(', ') %>.<% end %>
+                <% if @ai.check.models.length > 0 && !@ai.check.modelAvailable: %> Выбранной модели в этом списке нет — выберите модель из списка.<% end %>
+              </div>
+            <% else: %>
+              <div class="alert alert-danger"><%= @ai.check.error %></div>
+            <% end %>
+          <% end %>
+
+          <div class="dom-servis-dispatch-admin__actions">
+            <button class="btn btn--primary js-ai-save"<%= ' disabled' if @ai.busy %>>Сохранить</button>
+            <button class="btn js-ai-check"<%= ' disabled' if @ai.busy || !@ai.authKeySet %>>Проверить подключение</button>
+            <% if @ai.authKeySet: %>
+              <button class="btn btn--danger js-ai-clear-key"<%= ' disabled' if @ai.busy %>>Удалить ключ</button>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </section>
+
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
           <h2><%- @T('Deadline warning') %></h2>
           <p><%- @T('Set how many minutes before the visit deadline a pool job should turn red on the board.') %></p>
         </div>
