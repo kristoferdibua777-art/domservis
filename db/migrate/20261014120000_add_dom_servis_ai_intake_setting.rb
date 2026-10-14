@@ -2,7 +2,7 @@
 
 # Adds the setting with the GigaChat key and options of the pasted text
 # reading on the dispatch board. Fresh installs get it from the seeds.
-class AddDomServisAiIntakeSetting < ActiveRecord::Migration[7.2]
+class AddDomServisAIIntakeSetting < ActiveRecord::Migration[7.2]
   def up
     return if !Setting.exists?(name: 'system_init_done')
 

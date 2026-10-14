@@ -2,13 +2,13 @@
 
 # GigaChat settings of the pasted text reading in Dispatch Admin. The
 # authorization key can be replaced or removed here but is never sent back.
-class DomServis::Dispatch::AiSettingsController < DomServis::Dispatch::BaseController
+class DomServis::Dispatch::AISettingsController < DomServis::Dispatch::BaseController
   def show
-    render json: DomServis::Intake::AiSettings.current.admin_attributes, status: :ok
+    render json: DomServis::Intake::AISettings.current.admin_attributes, status: :ok
   end
 
   def update
-    settings = DomServis::Intake::AiSettings.update!(params.permit(:enabled, :auth_key, :clear_auth_key, :scope, :model).to_h)
+    settings = DomServis::Intake::AISettings.update!(params.permit(:enabled, :auth_key, :clear_auth_key, :scope, :model).to_h)
 
     render json: settings.admin_attributes, status: :ok
   end
@@ -16,7 +16,7 @@ class DomServis::Dispatch::AiSettingsController < DomServis::Dispatch::BaseContr
   # Gets a token and the model list, so the admin sees right away whether the
   # key, the access type and the certificate work.
   def check
-    settings = DomServis::Intake::AiSettings.current
+    settings = DomServis::Intake::AISettings.current
     raise Exceptions::UnprocessableEntity, 'Сначала сохраните ключ авторизации GigaChat.' if settings.auth_key.blank?
 
     models = DomServis::Intake::GigachatClient.new(auth_key: settings.auth_key, scope: settings.scope, model: settings.model).models

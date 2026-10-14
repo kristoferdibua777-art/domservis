@@ -4,7 +4,7 @@
 # fields. The model has to answer by calling the fill_dispatch_job function,
 # so the reply is a fixed set of fields instead of free text. The values are
 # not trusted: DomServis::Intake::TextDraft checks them against the text.
-class DomServis::Intake::AiParser
+class DomServis::Intake::AIParser
   FUNCTION_NAME = 'fill_dispatch_job'.freeze
   PRIORITIES = %w[low medium high critical].freeze
   WEEKDAY_NAMES = %w[воскресенье понедельник вторник среда четверг пятница суббота].freeze

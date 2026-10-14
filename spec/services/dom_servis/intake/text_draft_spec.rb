@@ -5,8 +5,8 @@ require 'rails_helper'
 RSpec.describe DomServis::Intake::TextDraft do
   let(:today) { Date.new(2026, 10, 14) }
   let(:text) { 'Котёл Baxi не греет. Адрес: ул. Ленина 5, кв. 12. Тел 8 900 123-45-67, Ирина' }
-  let(:ai_off) { DomServis::Intake::AiSettings.new({}) }
-  let(:ai_on) { DomServis::Intake::AiSettings.new('enabled' => true, 'auth_key' => 'a2V5OnNlY3JldGtleTEyMzQ=', 'model' => 'GigaChat-2-Pro') }
+  let(:ai_off) { DomServis::Intake::AISettings.new({}) }
+  let(:ai_on) { DomServis::Intake::AISettings.new('enabled' => true, 'auth_key' => 'a2V5OnNlY3JldGtleTEyMzQ=', 'model' => 'GigaChat-2-Pro') }
   let(:ai_answer) do
     {
       client_name:  'Ирина',
@@ -30,7 +30,7 @@ RSpec.describe DomServis::Intake::TextDraft do
   end
 
   def answer_with(answer)
-    allow(DomServis::Intake::AiParser).to receive(:new).and_return(instance_double(DomServis::Intake::AiParser, call: answer))
+    allow(DomServis::Intake::AIParser).to receive(:new).and_return(instance_double(DomServis::Intake::AIParser, call: answer))
   end
 
   context 'without GigaChat' do
@@ -95,7 +95,7 @@ RSpec.describe DomServis::Intake::TextDraft do
     end
 
     it 'falls back to the rules when GigaChat fails', :aggregate_failures do
-      allow(DomServis::Intake::AiParser).to receive(:new).and_raise(DomServis::Intake::GigachatClient::Error, 'В GigaChat закончились оплаченные токены.')
+      allow(DomServis::Intake::AIParser).to receive(:new).and_raise(DomServis::Intake::GigachatClient::Error, 'В GigaChat закончились оплаченные токены.')
       result = draft(settings: ai_on)
 
       expect(result[:draft]).to include(client_phone: '+79001234567', address: 'ул. Ленина 5, кв. 12')

@@ -5,7 +5,7 @@
 # leaves it out). An admin enters them in Dispatch Admin. The
 # authorization key is stored on the server only: the admin screen learns
 # whether a key is saved, never the key itself.
-class DomServis::Intake::AiSettings
+class DomServis::Intake::AISettings
   SETTING_NAME = 'dom_servis_ai_intake_config'.freeze
 
   # GIGACHAT_API_PERS - a private person, GIGACHAT_API_B2B - a business paying

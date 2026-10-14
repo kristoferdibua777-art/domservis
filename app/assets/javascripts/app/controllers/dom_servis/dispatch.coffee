@@ -11,8 +11,8 @@ class DomServisDispatch extends App.ControllerSubContent
     'change .js-policy-setting': 'updatePolicySetting'
     'click .js-history-export': 'exportHistory'
     'click .js-history-purge': 'purgeLastExport'
-    'click .js-ai-save': 'saveAiSettings'
-    'click .js-ai-check': 'checkAiSettings'
+    'click .js-ai-save': 'saveAISettings'
+    'click .js-ai-check': 'checkAISettings'
     'click .js-ai-clear-key': 'clearAiKey'
 
   constructor: ->
@@ -54,7 +54,7 @@ class DomServisDispatch extends App.ControllerSubContent
     @render()
     @loadPolicy()
     @loadHistory()
-    @loadAiSettings()
+    @loadAISettings()
 
   show: (params) =>
     @navupdate '#manage/dom_servis_dispatch'
@@ -326,7 +326,7 @@ class DomServisDispatch extends App.ControllerSubContent
     GIGACHAT_API_B2B: 'ИП или юрлицо, пакеты или оплата по факту (GIGACHAT_API_B2B)'
     GIGACHAT_API_CORP: 'Юрлицо по договору (GIGACHAT_API_CORP)'
 
-  loadAiSettings: ->
+  loadAISettings: ->
     @ajax(
       id:   'dom_servis_dispatch_ai_settings'
       type: 'GET'
@@ -369,22 +369,22 @@ class DomServisDispatch extends App.ControllerSubContent
       auth_key: (@$('.js-ai-auth-key').val() || '').trim()
     }
 
-  saveAiSettings: (e) =>
+  saveAISettings: (e) =>
     @preventDefault(e)
     return if @aiBusy
 
     form = @aiSettingsForm()
     # A newly saved key turns the reading on, so one click is enough.
     form.enabled = true if form.auth_key && !@aiSettings?.auth_key_set
-    @sendAiSettings(form, 'Настройки ИИ-разбора сохранены.')
+    @sendAISettings(form, 'Настройки ИИ-разбора сохранены.')
 
   clearAiKey: (e) =>
     @preventDefault(e)
     return if @aiBusy
 
-    @sendAiSettings({ clear_auth_key: true, enabled: false }, 'Ключ GigaChat удалён, ИИ-разбор выключен.')
+    @sendAISettings({ clear_auth_key: true, enabled: false }, 'Ключ GigaChat удалён, ИИ-разбор выключен.')
 
-  sendAiSettings: (data, successMessage) ->
+  sendAISettings: (data, successMessage) ->
     @aiBusy = true
     @aiCheck = null
     @render()
@@ -407,7 +407,7 @@ class DomServisDispatch extends App.ControllerSubContent
         @render()
     )
 
-  checkAiSettings: (e) =>
+  checkAISettings: (e) =>
     @preventDefault(e)
     return if @aiBusy
 

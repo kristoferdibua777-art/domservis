@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe AddDomServisAiIntakeSetting, type: :db_migration do
+RSpec.describe AddDomServisAIIntakeSetting, type: :db_migration do
   let(:name) { 'dom_servis_ai_intake_config' }
 
   it 'finds the setting already created by the seeds of a fresh install' do
@@ -22,11 +22,11 @@ RSpec.describe AddDomServisAiIntakeSetting, type: :db_migration do
 
   context 'when the setting holds a key' do
     it 'keeps it' do
-      DomServis::Intake::AiSettings.update!('enabled' => true, 'auth_key' => 'a2V5OnNlY3JldGtleTEyMzQ=')
+      DomServis::Intake::AISettings.update!('enabled' => true, 'auth_key' => 'a2V5OnNlY3JldGtleTEyMzQ=')
 
       migrate
 
-      expect(DomServis::Intake::AiSettings.current.auth_key).to eq('a2V5OnNlY3JldGtleTEyMzQ=')
+      expect(DomServis::Intake::AISettings.current.auth_key).to eq('a2V5OnNlY3JldGtleTEyMzQ=')
     end
   end
 

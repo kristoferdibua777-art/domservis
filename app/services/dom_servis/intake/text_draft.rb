@@ -26,7 +26,7 @@ class DomServis::Intake::TextDraft
   def initialize(text:, today: nil, ai_settings: nil)
     @text = text.to_s.strip
     @today = today || Time.use_zone(Setting.get('timezone_default').presence || 'UTC') { Time.zone.today }
-    @ai_settings = ai_settings || DomServis::Intake::AiSettings.current
+    @ai_settings = ai_settings || DomServis::Intake::AISettings.current
     @checks = []
   end
 
@@ -58,7 +58,7 @@ class DomServis::Intake::TextDraft
   def ai_suggestion
     return if !ai_settings.usable?
 
-    DomServis::Intake::AiParser.new(text:, today:, settings: ai_settings).call
+    DomServis::Intake::AIParser.new(text:, today:, settings: ai_settings).call
   rescue DomServis::Intake::GigachatClient::Error => e
     @ai_error = e.message
     nil
