@@ -37,23 +37,31 @@ class DomServis::Intake::AISettings
   # params: enabled, provider, scope, model, base_url, auth_key (a new key;
   # blank keeps the saved one) and clear_auth_key.
   def self.update!(params)
-    settings = current
-    values = settings.values.merge(
+    values = merged_values(current, params)
+    new_key = params['auth_key'].to_s.gsub(%r{\s+}, '')
+    apply_key!(values, new_key, boolean(params['clear_auth_key']))
+
+    validate!(values, new_key)
+    Setting.set(SETTING_NAME, values)
+    new(values)
+  end
+
+  def self.merged_values(settings, params)
+    settings.values.merge(
       'enabled'  => params.key?('enabled') ? boolean(params['enabled']) : settings.enabled?,
       'provider' => params['provider'].presence || settings.provider,
       'scope'    => params['scope'].presence || settings.scope,
       'model'    => params['model'].to_s.strip.presence || settings.model,
       'base_url' => params['base_url'].to_s.strip.chomp('/').presence || settings.base_url,
     )
+  end
 
-    new_key = params['auth_key'].to_s.gsub(%r{\s+}, '')
+  # A new key replaces the saved one, a blank one keeps it; without a key
+  # the reading is switched off.
+  def self.apply_key!(values, new_key, clear)
     values['auth_key'] = new_key if new_key.present?
-    values['auth_key'] = '' if boolean(params['clear_auth_key'])
+    values['auth_key'] = '' if clear
     values['enabled'] = false if values['auth_key'].blank?
-
-    validate!(values, new_key)
-    Setting.set(SETTING_NAME, values)
-    new(values)
   end
 
   def self.boolean(value)
@@ -76,7 +84,7 @@ class DomServis::Intake::AISettings
   rescue URI::InvalidURIError
     false
   end
-  private_class_method :boolean, :validate!, :https_url?
+  private_class_method :merged_values, :apply_key!, :boolean, :validate!, :https_url?
 
   def initialize(values)
     stored = values.respond_to?(:to_h) ? values.to_h.stringify_keys : {}
