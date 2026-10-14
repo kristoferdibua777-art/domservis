@@ -1390,10 +1390,6 @@ msgstr ""
 msgid "Address of the proxy server for http and https resources."
 msgstr ""
 
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:220
-msgid "Address to be confirmed"
-msgstr ""
-
 #: app/assets/javascripts/app/controllers/_default_navbar.coffee:13
 #: app/assets/javascripts/app/views/dom_servis_dispatch/admin.jst.eco:140
 #: db/seeds/roles.rb:5
@@ -7984,10 +7980,6 @@ msgstr ""
 
 #: app/models/channel/driver/sms/massenversand.rb:43
 msgid "Gateway"
-msgstr ""
-
-#: app/controllers/dom_servis/dispatch/jobs_controller.rb:374
-msgid "General Service"
 msgstr ""
 
 #: app/assets/javascripts/app/controllers/ticket_zoom.coffee:136

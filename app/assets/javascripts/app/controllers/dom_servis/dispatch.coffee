@@ -11,6 +11,9 @@ class DomServisDispatch extends App.ControllerSubContent
     'change .js-policy-setting': 'updatePolicySetting'
     'click .js-history-export': 'exportHistory'
     'click .js-history-purge': 'purgeLastExport'
+    'click .js-ai-save': 'saveAiSettings'
+    'click .js-ai-check': 'checkAiSettings'
+    'click .js-ai-clear-key': 'clearAiKey'
 
   constructor: ->
     super
@@ -44,10 +47,14 @@ class DomServisDispatch extends App.ControllerSubContent
     @errorMessage = null
     @history = null
     @historyBusy = false
+    @aiSettings = null
+    @aiBusy = false
+    @aiCheck = null
 
     @render()
     @loadPolicy()
     @loadHistory()
+    @loadAiSettings()
 
   show: (params) =>
     @navupdate '#manage/dom_servis_dispatch'
@@ -64,6 +71,7 @@ class DomServisDispatch extends App.ControllerSubContent
       registry: @registry
       policy:   @policy
       history:  @historyView()
+      ai:       @aiSettingsView()
     )
 
   loadPolicy: ->
@@ -309,6 +317,117 @@ class DomServisDispatch extends App.ControllerSubContent
     message = xhr?.responseJSON?.error_human || xhr?.responseJSON?.error || fallback
     @notify(type: 'error', msg: message, timeout: 6000)
     @loadHistory()
+
+  # GigaChat settings of the pasted text reading on the board. The server
+  # only tells whether a key is saved; a new key is sent once and the field
+  # is emptied right after.
+  AI_SCOPE_LABELS:
+    GIGACHAT_API_PERS: 'Физическое лицо (GIGACHAT_API_PERS)'
+    GIGACHAT_API_B2B: 'ИП или юрлицо, пакеты или оплата по факту (GIGACHAT_API_B2B)'
+    GIGACHAT_API_CORP: 'Юрлицо по договору (GIGACHAT_API_CORP)'
+
+  loadAiSettings: ->
+    @ajax(
+      id:   'dom_servis_dispatch_ai_settings'
+      type: 'GET'
+      url:  "#{@apiPath}/dom_servis/dispatch/ai_settings"
+      success: (data) =>
+        @aiSettings = data || null
+        @render()
+      error: =>
+        @aiSettings = null
+        @render()
+    )
+
+  aiSettingsView: ->
+    settings = @aiSettings
+    return { loaded: false } if !settings
+
+    {
+      loaded: true
+      busy: @aiBusy
+      enabled: settings.enabled is true
+      authKeySet: settings.auth_key_set is true
+      scope: settings.scope
+      model: settings.model
+      models: settings.models || []
+      scopeOptions: ({ id: scope, label: @AI_SCOPE_LABELS[scope] || scope } for scope in (settings.scopes || []))
+      check: if @aiCheck
+        ok: @aiCheck.ok is true
+        error: @aiCheck.error || 'Проверка не удалась.'
+        models: @aiCheck.models || []
+        modelAvailable: @aiCheck.model_available is true
+      else
+        null
+    }
+
+  aiSettingsForm: ->
+    {
+      enabled: @$('.js-ai-enabled').prop('checked') is true
+      scope: @$('.js-ai-scope').val()
+      model: (@$('.js-ai-model').val() || '').trim()
+      auth_key: (@$('.js-ai-auth-key').val() || '').trim()
+    }
+
+  saveAiSettings: (e) =>
+    @preventDefault(e)
+    return if @aiBusy
+
+    form = @aiSettingsForm()
+    # A newly saved key turns the reading on, so one click is enough.
+    form.enabled = true if form.auth_key && !@aiSettings?.auth_key_set
+    @sendAiSettings(form, 'Настройки ИИ-разбора сохранены.')
+
+  clearAiKey: (e) =>
+    @preventDefault(e)
+    return if @aiBusy
+
+    @sendAiSettings({ clear_auth_key: true, enabled: false }, 'Ключ GigaChat удалён, ИИ-разбор выключен.')
+
+  sendAiSettings: (data, successMessage) ->
+    @aiBusy = true
+    @aiCheck = null
+    @render()
+
+    @ajax(
+      id:   'dom_servis_dispatch_ai_settings_save'
+      type: 'PUT'
+      url:  "#{@apiPath}/dom_servis/dispatch/ai_settings"
+      data: JSON.stringify(data)
+      processData: true
+      success: (result) =>
+        @aiSettings = result || @aiSettings
+        @aiBusy = false
+        @notify(type: 'success', msg: successMessage, timeout: 3000)
+        @render()
+      error: (xhr) =>
+        @aiBusy = false
+        message = xhr?.responseJSON?.error_human || xhr?.responseJSON?.error || 'Не удалось сохранить настройки ИИ-разбора.'
+        @notify(type: 'error', msg: message, timeout: 6000)
+        @render()
+    )
+
+  checkAiSettings: (e) =>
+    @preventDefault(e)
+    return if @aiBusy
+
+    @aiBusy = true
+    @aiCheck = null
+    @render()
+
+    @ajax(
+      id:   'dom_servis_dispatch_ai_settings_check'
+      type: 'POST'
+      url:  "#{@apiPath}/dom_servis/dispatch/ai_settings/check"
+      success: (result) =>
+        @aiBusy = false
+        @aiCheck = result || { ok: false }
+        @render()
+      error: (xhr) =>
+        @aiBusy = false
+        @aiCheck = { ok: false, error: xhr?.responseJSON?.error_human || xhr?.responseJSON?.error || 'Проверка не удалась.' }
+        @render()
+    )
 
   openBoard: (e) =>
     @preventDefault(e)

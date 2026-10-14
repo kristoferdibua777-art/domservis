@@ -17,6 +17,36 @@ class DomServis::Dispatch::ClientResolver
     "+#{digits}"
   end
 
+  # The users whose phone or mobile normalizes to the given phone, without
+  # creating a client; empty for a phone that is not valid.
+  def self.find_by_phone(value)
+    normalized_phone = normalize_phone(value)
+    return [] if normalized_phone.blank?
+
+    matching_users(normalized_phone)
+  end
+
+  # Normalization only changes the leading digits, so a match always ends with
+  # the same ten digits. The database narrows the users down to those; the
+  # exact normalization then runs on these few instead of every user with a
+  # phone.
+  def self.matching_users(normalized_phone)
+    tail = normalized_phone.delete_prefix('+').last(10)
+
+    User
+      .where(
+        "RIGHT(REGEXP_REPLACE(COALESCE(users.phone, ''), '[^0-9]', '', 'g'), 10) = :tail OR " \
+        "RIGHT(REGEXP_REPLACE(COALESCE(users.mobile, ''), '[^0-9]', '', 'g'), 10) = :tail",
+        tail: tail,
+      )
+      .reorder(:id)
+      .select do |user|
+        [user.phone, user.mobile]
+          .filter_map { |value| normalize_phone(value) }
+          .include?(normalized_phone)
+      end
+  end
+
   def initialize(name:, phone:, operator: nil)
     @name = name
     @phone = phone
@@ -29,7 +59,7 @@ class DomServis::Dispatch::ClientResolver
     normalized_phone = self.class.normalize_phone(phone)
     raise Exceptions::UnprocessableEntity, __('A valid client phone is required.') if normalized_phone.blank?
 
-    matches = matching_users(normalized_phone)
+    matches = self.class.matching_users(normalized_phone)
     if matches.many?
       # Names the users, so the dispatcher knows which records to fix.
       users = matches.map { |user| "#{user.fullname} (##{user.id})" }.join(', ')
@@ -43,27 +73,6 @@ class DomServis::Dispatch::ClientResolver
   end
 
   private
-
-  # Normalization only changes the leading digits, so a match always ends with
-  # the same ten digits. The database narrows the users down to those; the
-  # exact normalization then runs on these few instead of every user with a
-  # phone.
-  def matching_users(normalized_phone)
-    tail = normalized_phone.delete_prefix('+').last(10)
-
-    User
-      .where(
-        "RIGHT(REGEXP_REPLACE(COALESCE(users.phone, ''), '[^0-9]', '', 'g'), 10) = :tail OR " \
-        "RIGHT(REGEXP_REPLACE(COALESCE(users.mobile, ''), '[^0-9]', '', 'g'), 10) = :tail",
-        tail: tail,
-      )
-      .reorder(:id)
-      .select do |user|
-        [user.phone, user.mobile]
-          .filter_map { |value| self.class.normalize_phone(value) }
-          .include?(normalized_phone)
-      end
-  end
 
   def create_customer!(normalized_phone)
     firstname, lastname = normalized_name

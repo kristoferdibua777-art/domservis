@@ -139,6 +139,33 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
     end
   end
 
+  describe 'POST /api/v1/dom_servis/dispatch/jobs/parse_input', authenticated_as: :dispatcher_user do
+    it 'returns a checked draft of a pasted client message without saving a job', :aggregate_failures do
+      expect { post '/api/v1/dom_servis/dispatch/jobs/parse_input', params: { input: 'Котёл не греет, ул. Ленина 5, тел 89001234567' }, as: :json }.not_to change(DomServis::DispatchJob, :count)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response['draft']).to include('client_phone' => '+79001234567', 'address' => 'ул. Ленина 5', 'service_type' => 'Газовый котёл: Не греет')
+      expect(json_response['checks']).to be_an(Array)
+      expect(json_response['ai']).to include('enabled' => false)
+    end
+
+    it 'rejects an empty or too long text', :aggregate_failures do
+      post '/api/v1/dom_servis/dispatch/jobs/parse_input', params: { input: '  ' }, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+
+      post '/api/v1/dom_servis/dispatch/jobs/parse_input', params: { input: 'а' * (DomServis::Intake::TextDraft::MAX_LENGTH + 1) }, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+
+    context 'when logged in as a master', authenticated_as: -> { master_user } do
+      it 'does not read the text' do
+        post '/api/v1/dom_servis/dispatch/jobs/parse_input', params: { input: 'Котёл не греет' }, as: :json
+
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+  end
+
   describe 'GET /api/v1/dom_servis/dispatch/jobs', authenticated_as: :dispatcher_user do
     it 'returns the backing ticket number as the job number', :aggregate_failures do
       ticket = create(:ticket)
