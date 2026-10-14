@@ -54,6 +54,30 @@
     </div>
     <% else: %>
     <div class="js-code-fields">
+      <% if @item.quick_form_url: %>
+      <div class="form-group form-group--block">
+        <div class="formGroup-label">
+          <label for="dom-servis-quick-form-url">
+            <%- @T('Короткая ссылка для клиента (1 шаг)') %>
+          </label>
+          <div class="help-message js-helpMessage" title="<%- @T('Партнёр пересылает эту ссылку клиенту, например в чате Авито. Клиент заполняет одну страницу, заявка попадает на доску как заявка этого партнёра.') %>">
+            <%- @Icon('help') %>
+          </div>
+        </div>
+        <div class="controls controls--button ignore-readonly">
+          <input readonly id="dom-servis-quick-form-url" type="text" name="quick_form_url" value="<%= @item.quick_form_url || '' %>" class="form-control js-select js-permanentReadonly">
+          <div class="controls-button u-clickable js-copy" role="button" data-target-field="quick_form_url" aria-label="<%- @T('Copy to clipboard') %>">
+            <span class="controls-button-inner">
+              <%- @Icon('clipboard') %>
+            </span>
+          </div>
+        </div>
+        <div class="controls">
+          <span class="help-block"><%- @T('Одна страница: телефон, имя, что сломалось, модель оборудования и согласие.') %></span>
+        </div>
+      </div>
+      <% end %>
+
       <% if @item.client_form_url: %>
       <div class="form-group form-group--block">
         <div class="formGroup-label">

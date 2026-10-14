@@ -59,4 +59,34 @@ RSpec.describe DomServis::RequestSource, current_user_id: 1 do
       expect(source.attributes_with_association_ids.with_indifferent_access[:client_form_url]).to be_nil
     end
   end
+
+  describe '#quick_form_url' do
+    it 'points to the one-step client page with the source token' do
+      source = described_class.create!(
+        name:           'Quick Link',
+        partner_key:    'quick-link',
+        transport_kind: 'zammad_form',
+        status:         'paused',
+      )
+
+      url = source.quick_form_url
+
+      expect(url).to include('/assets/form/dom-servis-quick-request.html?')
+      expect(url).to include("request_source_token=#{CGI.escape(source.embed_token)}")
+      expect(source.attributes_with_association_ids.with_indifferent_access[:quick_form_url]).to eq(url)
+    end
+
+    it 'is not offered for a source restricted to partner domains' do
+      source = described_class.create!(
+        name:            'Restricted Quick Link',
+        partner_key:     'restricted-quick-link',
+        transport_kind:  'zammad_form',
+        status:          'paused',
+        allowed_domains: ['partner-a.example.com'],
+      )
+
+      expect(source.quick_form_url).to be_nil
+      expect(source.attributes_with_association_ids.with_indifferent_access[:quick_form_url]).to be_nil
+    end
+  end
 end

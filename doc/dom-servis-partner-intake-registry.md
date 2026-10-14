@@ -51,6 +51,19 @@ Every request source also exposes `client_form_url`
 - For a source used only through this link, leave `allowed_domains` empty: the page reports our domain as its origin,
   so the source card offers the link only when no partner domains are set.
 
+## Quick client link (one step)
+
+Every request source not restricted to partner domains also exposes `quick_form_url`
+(`/assets/form/dom-servis-quick-request.html?request_source_token=…`), shown in the admin card as
+"Короткая ссылка для клиента (1 шаг)". It is meant for a partner who forwards a link to a client in a chat
+(for example Avito): one page with phone, name, "Что сломалось", "Модель оборудования" and consent. Phone, name
+and consent are required.
+
+- It is a separate file built from the partner embed, so changing it never affects forms embedded on partner sites.
+- It honours the same `settings` keys as the embed (`brand_label`, `issue_label`, `form_title`, …); without them it
+  uses the client wording above. The model goes into the service type ("Ремонт: Bosch WAN28160") and the description.
+- Create one request source (and organization) per partner, so each partner's requests are attributed separately.
+
 ## Runtime flow
 
 - Partner site submits a Zammad form.

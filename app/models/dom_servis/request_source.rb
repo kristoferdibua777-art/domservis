@@ -80,6 +80,20 @@ class DomServis::RequestSource < ApplicationModel
     "#{base_origin}/assets/form/dom-servis-client-request.html?#{query.to_query}"
   end
 
+  # One-step page for a client the partner forwards a link to (Avito chat,
+  # messenger): phone, name, what broke, model and consent on one screen.
+  # Same rule as client_form_url: only for sources not restricted to domains.
+  def quick_form_url
+    return if allowed_domains.present?
+
+    query = {
+      request_source_token: embed_token,
+      v:                    embed_cache_bust,
+    }
+
+    "#{base_origin}/assets/form/dom-servis-quick-request.html?#{query.to_query}"
+  end
+
   def embed_snippet
     <<~HTML.strip
       <iframe
@@ -189,6 +203,7 @@ class DomServis::RequestSource < ApplicationModel
       organization_name:       Organization.find_by(id: organization_id)&.name,
       embed_url:               embed_url,
       client_form_url:         client_form_url,
+      quick_form_url:          quick_form_url,
       embed_snippet:           embed_snippet,
       embed_js_snippet:        embed_js_snippet,
       privacy_policy_url:      privacy_policy_url,

@@ -4067,11 +4067,11 @@ msgstr ""
 msgid "Copy ticket number"
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:112
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:134
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:114
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:136
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:158
 #: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:30
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:68
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:90
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:92
 #: app/assets/javascripts/app/views/exchange/app_config.jst.eco:35
 #: app/assets/javascripts/app/views/facebook/app_config.jst.eco:27
 #: app/assets/javascripts/app/views/generic/auth_provider.jst.eco:4
@@ -8812,8 +8812,8 @@ msgstr ""
 msgid "If you want to use additional email addresses, you can configure them later."
 msgstr ""
 
-#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:18
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:104
+#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:19
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:128
 msgid "Iframe-код"
 msgstr ""
 
@@ -9516,16 +9516,16 @@ msgstr ""
 msgid "Items per page"
 msgstr ""
 
-#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:19
+#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:20
 msgid "JS-вариант для сайтов, где удобнее подключать форму скриптом."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:128
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:152
 msgid "JS-вариант для сайтов, где форму удобнее подключать через скрипт и контейнер."
 msgstr ""
 
-#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:19
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:126
+#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:20
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:150
 msgid "JS-код"
 msgstr ""
 
@@ -19498,7 +19498,7 @@ msgid "URL (OCR)"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_request_source.coffee:16
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:82
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:106
 msgid "URL встраивания"
 msgstr ""
 
@@ -22798,7 +22798,7 @@ msgstr ""
 msgid "Активный источник принимает заявки. Приостановленный источник блокирует отправку."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:149
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:173
 msgid "Безопасность и запуск"
 msgstr ""
 
@@ -22818,7 +22818,7 @@ msgstr ""
 msgid "Готовый URL, который можно отправить партнёру или вставить в iframe."
 msgstr ""
 
-#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:18
+#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:19
 msgid "Готовый iframe-вариант. Его проще всего вставить на сайт партнёра."
 msgstr ""
 
@@ -22830,11 +22830,11 @@ msgstr ""
 msgid "Добавить текст согласия перед отправкой."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:157
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:181
 msgid "Добавьте домен сайта партнёра в поле «Разрешённые домены»."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:151
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:175
 msgid "Добавьте домен сайта партнёра в разрешённые домены, при необходимости обновите токен и после этого проверьте тестовую отправку."
 msgstr ""
 
@@ -22881,6 +22881,11 @@ msgstr ""
 msgid "Конструктор"
 msgstr ""
 
+#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:18
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:61
+msgid "Короткая ссылка для клиента (1 шаг)"
+msgstr ""
+
 #: app/assets/javascripts/app/models/dom_servis_request_source.coffee:6
 msgid "Название"
 msgstr ""
@@ -22901,8 +22906,16 @@ msgstr ""
 msgid "Нужно добавить следующий фрагмент JavaScript на ваш сайт:"
 msgstr ""
 
-#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:21
+#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:22
 msgid "Обновлено"
+msgstr ""
+
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:76
+msgid "Одна страница: телефон, имя, что сломалось, модель оборудования и согласие."
+msgstr ""
+
+#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:18
+msgid "Одна страница: телефон, имя, что сломалось, модель. Партнёр пересылает ссылку клиенту."
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_request_source.coffee:8
@@ -22926,7 +22939,7 @@ msgstr ""
 msgid "Открыть источники заявок партнёров"
 msgstr ""
 
-#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:20
+#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:21
 msgid "Отображаемое имя"
 msgstr ""
 
@@ -22934,12 +22947,16 @@ msgstr ""
 msgid "Отправить"
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:62
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:86
 msgid "Отправьте эту ссылку клиенту в мессенджере или разместите её в соцсетях. Заявки попадут на доску как заявки этого партнёра."
 msgstr ""
 
 #: app/assets/javascripts/app/views/channel/form.jst.eco:87
 msgid "Параметры"
+msgstr ""
+
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:63
+msgid "Партнёр пересылает эту ссылку клиенту, например в чате Авито. Клиент заполняет одну страницу, заявка попадает на доску как заявка этого партнёра."
 msgstr ""
 
 #: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:13
@@ -22954,11 +22971,11 @@ msgstr ""
 msgid "Показывать заголовок в форме."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:159
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:183
 msgid "Попросите партнёра вставить код на страницу заявки."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:75
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:99
 msgid "Пошаговая форма на нашем домене: что сломалось, адрес, когда удобно, имя и телефон."
 msgstr ""
 
@@ -22994,19 +23011,19 @@ msgstr ""
 msgid "С помощью формы можно добавить форму на сайт, которая напрямую создаёт заявку."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:106
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:130
 msgid "Самый простой вариант подключения. Партнёр вставляет готовый iframe на свою страницу."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:160
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:184
 msgid "Сделайте тестовую заявку и проверьте, что она появилась на доске Дом-Сервис."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:84
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:108
 msgid "Скопируйте URL и отправьте партнёру, если он будет встраивать готовую страницу через iframe."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:158
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:182
 msgid "Скопируйте iframe или JS-код и отправьте партнёру."
 msgstr ""
 
@@ -23022,7 +23039,7 @@ msgstr ""
 msgid "Сначала сохраните источник. После сохранения станут доступны URL встраивания и готовые коды для отправки партнёру."
 msgstr ""
 
-#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:22
+#: app/assets/javascripts/app/models/dom_servis_request_source.coffee:23
 msgid "Создано"
 msgstr ""
 
@@ -23043,7 +23060,7 @@ msgid "Ссылка на политику конфиденциальности"
 msgstr ""
 
 #: app/assets/javascripts/app/models/dom_servis_request_source.coffee:17
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:60
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:84
 msgid "Ссылка на форму для клиентов"
 msgstr ""
 
@@ -23079,7 +23096,7 @@ msgstr ""
 msgid "Укажите домены сайта партнёра через запятую или с новой строки. Например: partner.ru, www.partner.ru."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:156
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:180
 msgid "Укажите ссылку на политику конфиденциальности партнёра, чтобы она появилась в чекбоксе согласия."
 msgstr ""
 
@@ -23099,7 +23116,7 @@ msgstr ""
 msgid "Формам Zammad требуется jQuery. Если на вашем сайте он ещё не подключён, добавьте его так:"
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:141
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:165
 msgid "Это удобный вариант, если партнёр хочет вставлять форму через скрипт на обычную страницу."
 msgstr ""
 
@@ -23107,11 +23124,11 @@ msgstr ""
 msgid "Это экран подключения партнёра. Менеджер заполняет паспорт, добавляет домены сайта партнёра и копирует готовый код встраивания без ручной правки."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:97
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:121
 msgid "Этот URL открывает готовую форму партнёра на нашем домене."
 msgstr ""
 
-#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:119
+#: app/assets/javascripts/app/views/dom_servis/request_source.jst.eco:143
 msgid "Этот вариант подходит, если партнёру нужен минимальный код без JS-обвязки."
 msgstr ""
 

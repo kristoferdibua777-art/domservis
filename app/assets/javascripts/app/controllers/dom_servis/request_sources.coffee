@@ -18,7 +18,7 @@ buildRequestSourceAttributes = (persisted) ->
           attribute.skipRendering = true
         else
           attribute.skipRendering = true
-      when 'client_form_url'
+      when 'client_form_url', 'quick_form_url'
         attribute.skipRendering = true
       when 'embed_snippet'
         if persisted

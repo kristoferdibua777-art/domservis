@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#71747b">
+  <title>Дом-Сервис | Заявка на ремонт</title>
+  <style>
+    /*
+      Quick client link: a separate one-step page a partner forwards to a
+      client (Avito chat, messenger). Phone, name, what broke, model, consent.
+      Built from the partner embed but kept as its own file, so changes here
+      never touch the forms partners embed on their sites.
+    */
+    :root {
+      --page-text: #f4f4f6;
+      --muted: rgba(255, 255, 255, 0.78);
+      --muted-strong: rgba(255, 255, 255, 0.9);
+      --card-border: rgba(255, 255, 255, 0.18);
+      --card-shadow: rgba(20, 22, 28, 0.32);
+      --field-bg: rgba(252, 252, 253, 0.98);
+      --field-border: rgba(27, 30, 37, 0.08);
+      --field-text: #181a20;
+      --field-placeholder: #a7a9b2;
+      --accent: #e2382b;
+      --accent-strong: #f14536;
+      --radius: 24px;
+      --radius-field: 14px;
+      --field-height: 48px;
+      --font-head: "Segoe UI Variable Display", "Segoe UI", "Inter", sans-serif;
+      --font-body: "Segoe UI Variable Text", "Segoe UI", "Inter", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: transparent;
+      color: var(--page-text);
+      font-family: var(--font-body);
+      line-height: 1.4;
+    }
+
+    body {
+      padding: clamp(8px, 1.2vw, 20px);
+      overflow-x: hidden;
+    }
+
+    .page {
+      width: min(920px, 100%);
+      margin: 0 auto;
+    }
+
+    .shell {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      padding: clamp(16px, 3vw, 32px);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(142deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02) 24%),
+        linear-gradient(180deg, #858891 0%, #767981 44%, #666972 100%);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 20px 60px var(--card-shadow);
+      isolation: isolate;
+    }
+
+    .shell::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: calc(var(--radius) - 1px);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 24%),
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.14), transparent 34%),
+        radial-gradient(circle at bottom left, rgba(33, 35, 41, 0.18), transparent 36%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .shell > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--font-head);
+      font-size: clamp(24px, 3.4vw, 36px);
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .lead {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .banner {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-field);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .banner--error {
+      display: block;
+      color: #ffffff;
+      background: rgba(151, 34, 34, 0.26);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .loading {
+      display: grid;
+      place-items: center;
+      min-height: 200px;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.84);
+    }
+
+    .loading__spinner {
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.18);
+      border-top-color: rgba(255, 255, 255, 0.94);
+      animation: spin 0.8s linear infinite;
+    }
+
+    .form {
+      margin-top: 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 4px;
+      align-content: start;
+    }
+
+    .field label {
+      color: var(--muted-strong);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    /* 16px+ text keeps iOS Safari from zooming into a focused field. */
+    .field input {
+      width: 100%;
+      min-height: var(--field-height);
+      border-radius: var(--radius-field);
+      border: 1px solid var(--field-border);
+      background: var(--field-bg);
+      color: var(--field-text);
+      padding: 0 16px;
+      font: inherit;
+      font-size: 17px;
+      line-height: 1;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .field input::placeholder {
+      color: var(--field-placeholder);
+    }
+
+    .field input:focus {
+      border-color: rgba(226, 56, 43, 0.4);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.64),
+        0 0 0 4px rgba(226, 56, 43, 0.1);
+    }
+
+    .field input[aria-invalid="true"] {
+      border-color: rgba(216, 74, 74, 0.84);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.64),
+        0 0 0 4px rgba(216, 74, 74, 0.1);
+    }
+
+    .phone-field {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: stretch;
+      min-height: var(--field-height);
+      border-radius: var(--radius-field);
+      border: 1px solid var(--field-border);
+      background: var(--field-bg);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+      overflow: hidden;
+    }
+
+    .phone-field:focus-within {
+      border-color: rgba(226, 56, 43, 0.4);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.64),
+        0 0 0 4px rgba(226, 56, 43, 0.1);
+    }
+
+    .phone-field.is-invalid {
+      border-color: rgba(216, 74, 74, 0.84);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.64),
+        0 0 0 4px rgba(216, 74, 74, 0.1);
+    }
+
+    .phone-field__prefix {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px 0 14px;
+      color: #3a3d47;
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+      border-right: 1px solid rgba(27, 30, 37, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.56));
+      pointer-events: none;
+    }
+
+    .phone-field__flag {
+      display: inline-flex;
+      width: 24px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1px solid rgba(33, 37, 43, 0.1);
+      background:
+        linear-gradient(180deg, #ffffff 0 33.33%, #3552d8 33.33% 66.66%, #d33434 66.66% 100%);
+    }
+
+    .phone-field input,
+    .phone-field input:focus,
+    .phone-field input[aria-invalid="true"] {
+      min-height: calc(var(--field-height) - 2px);
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      padding: 0 14px 0 12px;
+    }
+
+    /*
+      Errors never add height, so a failed submit cannot push the form past the
+      iframe: field errors sit in the label row, the consent error has its line.
+    */
+    .field-error {
+      min-height: 16px;
+      color: #ffe0dd;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 16px;
+    }
+
+    .field__head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .field__head label {
+      flex: 0 0 auto;
+    }
+
+    .field__head .field-error {
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      text-align: right;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* A server or network error takes the header's place instead of adding a block. */
+    .shell.has-banner h1,
+    .shell.has-banner .lead {
+      display: none;
+    }
+
+    .shell.has-banner .banner {
+      margin-top: 0;
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: var(--muted-strong);
+      font-size: 13px;
+    }
+
+    .checkbox input {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      accent-color: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    .checkbox__copy {
+      line-height: 1.3;
+    }
+
+    .checkbox__copy a {
+      color: #ffffff;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    .submit {
+      appearance: none;
+      width: 100%;
+      min-height: 52px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--accent-strong), var(--accent));
+      color: #ffffff;
+      font: inherit;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 14px 28px rgba(226, 56, 43, 0.26);
+      transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+    }
+
+    .submit:hover:not(:disabled) {
+      transform: translateY(-1px);
+      filter: brightness(1.03);
+    }
+
+    .submit:disabled {
+      cursor: progress;
+      opacity: 0.68;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .success {
+      display: grid;
+      gap: 10px;
+      padding-top: 14px;
+    }
+
+    .success h2 {
+      margin: 0;
+      font-family: var(--font-head);
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .success p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 15px;
+    }
+
+    .again {
+      appearance: none;
+      justify-self: start;
+      min-height: 44px;
+      margin-top: 4px;
+      padding: 0 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      background: transparent;
+      color: #ffffff;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Wide screens: the three fields share one row. */
+    @media (min-width: 760px) {
+      :root {
+        --field-height: 52px;
+      }
+
+      .fields {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .field--wide {
+        grid-column: 1 / -1;
+      }
+
+      .lead {
+        font-size: 15px;
+      }
+
+      .form {
+        margin-top: 18px;
+        gap: 10px;
+      }
+    }
+
+    /* Short windows (phone in landscape, small iframes): trim the header. */
+    @media (max-height: 520px) {
+      .lead {
+        display: none;
+      }
+
+      .form {
+        margin-top: 10px;
+      }
+    }
+
+    /*
+      Standalone: the page is opened as a link (a partner forwards it to a
+      client in a messenger), not inside an iframe. One narrow column on a
+      light background, fields in the order a client answers them.
+    */
+    html.is-standalone,
+    html.is-standalone body {
+      min-height: 100%;
+      background: #eceef2;
+    }
+
+    html.is-standalone body {
+      padding: 16px;
+    }
+
+    html.is-standalone .page {
+      width: min(480px, 100%);
+      padding-top: clamp(0px, 4vh, 40px);
+    }
+
+    html.is-standalone .fields {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    html.is-standalone .field--wide {
+      grid-column: auto;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="shell" aria-live="polite">
+      <h1>Оставьте заявку</h1>
+      <p class="lead">Мастер перезвонит и уточнит детали.</p>
+
+      <div id="banner" class="banner" role="alert" aria-live="assertive"></div>
+
+      <div id="loading" class="loading">
+        <div>
+          <div class="loading__spinner" aria-hidden="true"></div>
+          <div>Загружаем форму...</div>
+        </div>
+      </div>
+
+      <div id="formHost" class="hidden"></div>
+      <div id="successHost" class="hidden"></div>
+    </section>
+  </main>
+
+  <script>
+    (function() {
+      // This page is always opened as a link, never inside an iframe.
+      const STANDALONE = true;
+      document.documentElement.classList.add('is-standalone');
+
+      const state = {
+        fingerprint: ensureFingerprint(),
+        requestSourceToken: new URLSearchParams(window.location.search).get('request_source_token') || '',
+        requestSourceOrigin: inferRequestSourceOrigin(),
+        privacyPolicyUrl: new URLSearchParams(window.location.search).get('privacy_policy_url') || '',
+        config: null,
+        submitting: false,
+      };
+
+      const API_ORIGIN = /^https?:$/i.test(window.location.protocol)
+        ? window.location.origin
+        : 'https://master.svib-dom-service.ru';
+
+      const refs = {
+        page: document.querySelector('.page'),
+        shell: document.querySelector('.shell'),
+        banner: document.getElementById('banner'),
+        loading: document.getElementById('loading'),
+        formHost: document.getElementById('formHost'),
+        successHost: document.getElementById('successHost'),
+      };
+
+      const RESIZE_MESSAGE_TYPE = 'dom-servis:resize';
+      const RESIZE_MIN_HEIGHT = 480;
+      let resizeFrameId = null;
+      let lastPostedHeight = 0;
+      const resizeObserver = 'ResizeObserver' in window ? new ResizeObserver(() => scheduleResize()) : null;
+
+      const ASK_CLIENT = 'Уточнить у клиента';
+      const DEFAULT_BRAND_SUGGESTIONS = ['Bosch', 'Samsung', 'LG', 'Indesit', 'Атлант', 'Electrolux', 'Haier', 'Beko'];
+
+      function ensureFingerprint() {
+        const storageKey = 'dom-servis-partner-fingerprint';
+        const existing = window.localStorage.getItem(storageKey);
+        if (existing && existing.length > 30) return existing;
+
+        const bytes = new Uint8Array(32);
+        window.crypto.getRandomValues(bytes);
+        const value = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('') + Date.now().toString(16);
+        window.localStorage.setItem(storageKey, value);
+        return value;
+      }
+
+      function inferRequestSourceOrigin() {
+        const candidates = [];
+        if (document.referrer) candidates.push(document.referrer);
+        if (window.location.ancestorOrigins && window.location.ancestorOrigins.length) {
+          candidates.push(window.location.ancestorOrigins[0]);
+        }
+
+        for (const candidate of candidates) {
+          try {
+            return new URL(candidate).origin;
+          } catch (error) {
+            continue;
+          }
+        }
+
+        return window.location.origin;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      function currentDispatchDate() {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function weekdayKey(dateValue) {
+        const date = new Date(`${dateValue}T00:00:00`);
+        if (Number.isNaN(date.getTime())) return 'mon';
+
+        switch (date.getDay()) {
+          case 1: return 'mon';
+          case 2: return 'tue';
+          case 3: return 'wed';
+          case 4: return 'thu';
+          case 5: return 'fri';
+          case 6: return 'sat';
+          default: return 'sun';
+        }
+      }
+
+      function generatedEmail() {
+        return `dom-servis-${state.fingerprint.slice(0, 24)}@zammad.com`;
+      }
+
+      function normalizePhone(rawValue) {
+        let digits = String(rawValue || '').replace(/\D/g, '');
+        if (digits.startsWith('8')) digits = digits.slice(1);
+        if (digits.startsWith('7')) digits = digits.slice(1);
+        return digits.slice(0, 10);
+      }
+
+      function formatPhoneValue(rawValue) {
+        const digits = normalizePhone(rawValue);
+        const part1 = digits.slice(0, 3);
+        const part2 = digits.slice(3, 6);
+        const part3 = digits.slice(6, 8);
+        const part4 = digits.slice(8, 10);
+
+        if (!digits.length) return '';
+        if (digits.length <= 3) return `(${part1}`;
+        if (digits.length <= 6) return `(${part1}) ${part2}`;
+        if (digits.length <= 8) return `(${part1}) ${part2}-${part3}`;
+        return `(${part1}) ${part2}-${part3}-${part4}`;
+      }
+
+      function submitPhoneValue(rawValue) {
+        const formatted = formatPhoneValue(rawValue);
+        return formatted ? `+7 ${formatted}` : '';
+      }
+
+      function setBanner(message) {
+        refs.banner.className = 'banner banner--error';
+        refs.banner.textContent = message;
+        refs.shell.classList.add('has-banner');
+        scheduleResize();
+      }
+
+      function hideBanner() {
+        refs.banner.className = 'banner';
+        refs.banner.textContent = '';
+        refs.shell.classList.remove('has-banner');
+        scheduleResize();
+      }
+
+      function setLoading(isLoading) {
+        refs.loading.classList.toggle('hidden', !isLoading);
+        scheduleResize();
+      }
+
+      function measureHeight() {
+        const elements = [
+          document.body,
+          document.documentElement,
+          refs.page,
+          refs.loading,
+          refs.formHost,
+          refs.successHost,
+        ].filter(Boolean);
+
+        const height = elements.reduce((max, element) => {
+          return Math.max(max, element.scrollHeight || 0, element.offsetHeight || 0, element.clientHeight || 0);
+        }, 0);
+
+        return Math.max(RESIZE_MIN_HEIGHT, Math.ceil(height + 2));
+      }
+
+      function postHeight(height) {
+        if (!window.parent || window.parent === window) return;
+        window.parent.postMessage({ type: RESIZE_MESSAGE_TYPE, height }, '*');
+      }
+
+      function scheduleResize() {
+        if (resizeFrameId) return;
+
+        resizeFrameId = window.requestAnimationFrame(() => {
+          resizeFrameId = null;
+          const nextHeight = measureHeight();
+          if (nextHeight === lastPostedHeight) return;
+
+          lastPostedHeight = nextHeight;
+          postHeight(nextHeight);
+        });
+      }
+
+      function setFieldError(field, message) {
+        const error = document.querySelector(`[data-error-for="${field}"]`);
+        const input = document.querySelector(`[name="${field}"]`);
+        if (error) error.textContent = message || '';
+        if (input) {
+          input.setAttribute('aria-invalid', message ? 'true' : 'false');
+          const wrapper = input.closest('.phone-field');
+          if (wrapper) wrapper.classList.toggle('is-invalid', Boolean(message));
+        }
+        scheduleResize();
+      }
+
+      function clearFieldErrors() {
+        document.querySelectorAll('[data-error-for]').forEach((element) => {
+          element.textContent = '';
+        });
+        document.querySelectorAll('[aria-invalid="true"]').forEach((element) => {
+          element.setAttribute('aria-invalid', 'false');
+        });
+        document.querySelectorAll('.phone-field.is-invalid').forEach((element) => {
+          element.classList.remove('is-invalid');
+        });
+        scheduleResize();
+      }
+
+      function humanizeServerError(field, message) {
+        const value = String(message || '').toLowerCase();
+        if (field === 'name' || value.includes('name')) return 'Введите имя';
+        if (field === 'dom_servis_client_phone') return 'Введите телефон';
+        if (field === 'privacy') return 'Подтвердите согласие';
+        if (value.includes('forbidden') || value.includes('paused')) return 'Форма временно недоступна';
+        return 'Не удалось отправить заявку';
+      }
+
+      function validate(values) {
+        const errors = {};
+        if (normalizePhone(values.phone).length < 10) errors.dom_servis_client_phone = 'Введите телефон полностью';
+        if (!values.name) errors.name = 'Введите имя';
+        if (!values.privacyAccepted) errors.privacy = 'Подтвердите согласие';
+        return errors;
+      }
+
+      function renderErrors(errors) {
+        Object.entries(errors).forEach(([field, message]) => {
+          setFieldError(field, message);
+        });
+
+        const order = ['brand', 'dom_servis_client_phone', 'name', 'privacy'];
+        const firstField = order.find((field) => errors[field]);
+        if (firstField) {
+          const target = document.querySelector(`[name="${firstField}"]`);
+          if (target && target.focus) target.focus();
+        }
+      }
+
+      // Per-source texts from form_config (DomServis::RequestSource#settings).
+      // ZIPКОТЛЫ39 asks for the boiler brand and sets a gas boiler service
+      // type; sources without settings keep the defaults.
+      function sourceSetting(key, fallback) {
+        const value = state.config?.request_source?.settings?.[key];
+        return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+      }
+
+      // brand_suggestions is a comma-separated string (or a list) of brands
+      // offered while typing; they take no room on the screen.
+      function brandSuggestions() {
+        const value = state.config?.request_source?.settings?.brand_suggestions;
+        const list = Array.isArray(value) ? value : String(value || '').split(/[,;\n]/);
+        const brands = list.map((item) => String(item).trim()).filter(Boolean).slice(0, 40);
+        return brands.length ? brands : DEFAULT_BRAND_SUGGESTIONS;
+      }
+
+      // The dispatch board shows the service type as the card title, so the
+      // brand goes there too: "Ремонт газового котла — Baxi".
+      function serviceTypeFor(brand) {
+        const base = sourceSetting('service_type', '');
+        if (base && brand) return `${base} — ${brand}`;
+        if (base) return base;
+        if (brand) return `Ремонт: ${brand}`;
+        return ASK_CLIENT;
+      }
+
+      function submitDescription(values, phone) {
+        return [
+          STANDALONE ? 'Клиент оставил заявку по ссылке партнёра.' : 'Клиент оставил заявку через сайт партнёра.',
+          `Имя клиента: ${values.name}.`,
+          `Телефон клиента: ${phone}.`,
+          `${STANDALONE ? 'Модель' : 'Марка'}: ${values.brand || 'не указана'}.`,
+          `Проблема: ${values.issue || 'не указана'}.`,
+          'Нужно уточнить адрес, дату и время визита.'
+        ].join(' ');
+      }
+
+      // privacy_policy_url can come from the page's own query string, so only
+      // http(s) links are rendered; a javascript: URL would run on our domain.
+      function httpUrl(value) {
+        const text = String(value || '').trim();
+        if (!text) return '';
+        try {
+          const url = new URL(text, window.location.href);
+          return /^https?:$/.test(url.protocol) ? url.href : '';
+        } catch (error) {
+          return '';
+        }
+      }
+
+      function consentMarkup() {
+        const policyUrl = httpUrl(state.config?.request_source?.privacy_policy_url || state.privacyPolicyUrl);
+        if (policyUrl) {
+          return `Нажимая на кнопку, вы соглашаетесь с <a href="${escapeHtml(policyUrl)}" target="_blank" rel="noopener noreferrer">политикой конфиденциальности</a>`;
+        }
+
+        return 'Нажимая на кнопку, вы соглашаетесь с обработкой персональных данных';
+      }
+
+      function buildForm() {
+        const submitText = sourceSetting('submit_button_text', 'Отправить заявку');
+        const form = document.createElement('form');
+        form.className = 'form';
+        form.noValidate = true;
+        const fieldMarkup = {
+          brand: `
+            <div class="field">
+              <label for="brand">${escapeHtml(sourceSetting('brand_label', STANDALONE ? 'Модель оборудования' : 'Марка техники'))}</label>
+              <input id="brand" name="brand" type="text" list="brandSuggestions" autocomplete="off" autocapitalize="words" enterkeyhint="next" placeholder="${escapeHtml(sourceSetting('brand_placeholder', STANDALONE ? 'Например: Bosch WAN28160' : 'Например: Bosch'))}" maxlength="80">
+              <datalist id="brandSuggestions">
+                ${brandSuggestions().map((brand) => `<option value="${escapeHtml(brand)}"></option>`).join('')}
+              </datalist>
+            </div>
+            `,
+          phone: `
+            <div class="field">
+              <div class="field__head">
+                <label for="dom_servis_client_phone">Телефон</label>
+                <span class="field-error" id="phone_error" data-error-for="dom_servis_client_phone"></span>
+              </div>
+              <div class="phone-field">
+                <div class="phone-field__prefix" aria-hidden="true">
+                  <span class="phone-field__flag"></span>
+                  <span>+7</span>
+                </div>
+                <input id="dom_servis_client_phone" name="dom_servis_client_phone" type="tel" autocomplete="tel" inputmode="tel" enterkeyhint="next" placeholder="(900) 000-00-00" aria-describedby="phone_error">
+              </div>
+            </div>
+            `,
+          name: `
+            <div class="field">
+              <div class="field__head">
+                <label for="name">Имя</label>
+                <span class="field-error" id="name_error" data-error-for="name"></span>
+              </div>
+              <input id="name" name="name" type="text" autocomplete="name" autocapitalize="words" enterkeyhint="next" placeholder="Имя" maxlength="120" aria-describedby="name_error">
+            </div>
+            `,
+          issue: `
+            <div class="field field--wide">
+              <label for="issue">${escapeHtml(sourceSetting('issue_label', STANDALONE ? 'Что сломалось' : 'Код ошибки или описание проблемы'))}</label>
+              <input id="issue" name="issue" type="text" autocomplete="off" enterkeyhint="send" placeholder="${escapeHtml(sourceSetting('issue_placeholder', STANDALONE ? 'Например: не греет, течёт, ошибка E03' : 'Например: E03, не включается, течёт'))}" maxlength="500">
+            </div>
+            `,
+        };
+        // A client fills the link in the order "how to reach me, what broke";
+        // the embed keeps its compact order that fits a 320 x 600 iframe.
+        const fieldOrder = STANDALONE ? ['phone', 'name', 'issue', 'brand'] : ['brand', 'phone', 'name', 'issue'];
+
+        form.innerHTML = `
+          <div class="fields">
+            ${fieldOrder.map((key) => fieldMarkup[key]).join('\n')}
+          </div>
+
+          <div class="checkbox">
+            <input id="privacy_accepted" name="privacy" type="checkbox" value="1" aria-describedby="privacy_error">
+            <label class="checkbox__copy" for="privacy_accepted">${consentMarkup()}</label>
+          </div>
+          <div class="field-error" id="privacy_error" data-error-for="privacy"></div>
+
+          <button type="submit" class="submit">${escapeHtml(submitText)}</button>
+        `;
+
+        const submitButton = form.querySelector('.submit');
+        const checkbox = form.querySelector('#privacy_accepted');
+        const phoneInput = form.querySelector('[name="dom_servis_client_phone"]');
+        const inputs = Array.from(form.querySelectorAll('.fields input'));
+        inputs.forEach((input, index) => {
+          input.setAttribute('enterkeyhint', index === inputs.length - 1 ? 'send' : 'next');
+        });
+
+        const readValues = () => {
+          const data = new FormData(form);
+          const text = (key) => String(data.get(key) || '').trim();
+          return {
+            brand: text('brand'),
+            phone: text('dom_servis_client_phone'),
+            name: text('name'),
+            issue: text('issue'),
+            privacyAccepted: checkbox.checked,
+          };
+        };
+
+        // Enter (or "next" on a phone keyboard) moves to the next field; only
+        // the last field sends the form.
+        inputs.forEach((input, index) => {
+          input.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' || event.isComposing || index === inputs.length - 1) return;
+            event.preventDefault();
+            inputs[index + 1].focus();
+          });
+        });
+
+        inputs.forEach((input) => {
+          if (input === phoneInput) return;
+          input.addEventListener('input', () => setFieldError(input.name, ''));
+        });
+
+        checkbox.addEventListener('change', () => setFieldError('privacy', ''));
+
+        phoneInput.addEventListener('input', () => {
+          const cursor = phoneInput.selectionStart || 0;
+          const beforeLength = phoneInput.value.length;
+          const nextValue = formatPhoneValue(phoneInput.value);
+          phoneInput.value = nextValue;
+          const afterLength = nextValue.length;
+          const nextCursor = Math.max(0, cursor + (afterLength - beforeLength));
+          window.requestAnimationFrame(() => {
+            phoneInput.setSelectionRange(nextCursor, nextCursor);
+          });
+          setFieldError('dom_servis_client_phone', '');
+        });
+
+        form.addEventListener('input', () => {
+          hideBanner();
+        });
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (state.submitting) return;
+
+          hideBanner();
+          clearFieldErrors();
+
+          const values = readValues();
+          const errors = validate(values);
+          if (Object.keys(errors).length) {
+            renderErrors(errors);
+            return;
+          }
+
+          const dispatchDate = currentDispatchDate();
+          const phone = submitPhoneValue(values.phone);
+          const description = submitDescription(values, phone);
+
+          const payload = new FormData();
+          payload.set('fingerprint', state.fingerprint);
+          payload.set('token', state.config.token || '');
+          payload.set('request_source_token', state.requestSourceToken);
+          payload.set('request_source_origin', state.requestSourceOrigin);
+          payload.set('name', values.name);
+          payload.set('email', generatedEmail());
+          payload.set('title', sourceSetting('form_title', 'Заявка на ремонт'));
+          payload.set('body', description);
+          payload.set('dom_servis_client_name', values.name);
+          payload.set('dom_servis_client_phone', phone);
+          payload.set('dom_servis_service_type', serviceTypeFor(values.brand).slice(0, 200));
+          // The dispatch intake requires an address; the form does not ask for one.
+          payload.set('dom_servis_address', sourceSetting('address_placeholder', ASK_CLIENT));
+          payload.set('dom_servis_visit_date', dispatchDate);
+          payload.set('dom_servis_visit_day', weekdayKey(dispatchDate));
+          payload.set('dom_servis_visit_time', ASK_CLIENT);
+          payload.set('dom_servis_dispatch_priority', 'medium');
+          payload.set('dom_servis_description', description);
+          payload.set('dom_servis_comment', 'Адрес, дату и время визита нужно уточнить у клиента.');
+
+          state.submitting = true;
+          submitButton.disabled = true;
+          submitButton.textContent = 'Отправляем...';
+
+          try {
+            const response = await fetch(state.config.endpoint || `${API_ORIGIN}/api/v1/form_submit`, {
+              method: 'POST',
+              body: payload,
+              credentials: 'same-origin',
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || data.errors) {
+              const mapped = {};
+              Object.entries(data.errors || { base: 'Не удалось отправить заявку' }).forEach(([field, message]) => {
+                if (field === 'base') {
+                  setBanner(humanizeServerError(field, message));
+                } else if (form.querySelector(`[data-error-for="${field}"]`)) {
+                  mapped[field] = humanizeServerError(field, message);
+                } else {
+                  // Errors on fields the visitor never sees (generated email, title, body) must not fail silently.
+                  setBanner('Не удалось отправить заявку. Попробуйте ещё раз чуть позже.');
+                }
+              });
+
+              if (Object.keys(mapped).length) {
+                renderErrors(mapped);
+              } else if (!refs.banner.textContent) {
+                setBanner('Не удалось отправить заявку');
+              }
+              return;
+            }
+
+            showSuccess(data.ticket && data.ticket.number ? data.ticket.number : '');
+          } catch (error) {
+            setBanner('Не удалось отправить заявку. Проверьте соединение и попробуйте ещё раз.');
+          } finally {
+            state.submitting = false;
+            submitButton.disabled = false;
+            submitButton.textContent = submitText;
+          }
+        });
+
+        return form;
+      }
+
+      function showForm(form) {
+        refs.successHost.classList.add('hidden');
+        refs.successHost.innerHTML = '';
+        refs.formHost.innerHTML = '';
+        refs.formHost.appendChild(form);
+        refs.formHost.classList.remove('hidden');
+        scheduleResize();
+      }
+
+      function showSuccess(ticketNumber) {
+        refs.formHost.classList.add('hidden');
+        refs.successHost.innerHTML = `
+          <div class="success">
+            <h2>Заявка отправлена</h2>
+            <p>Мастер свяжется с вами в ближайшее время${ticketNumber ? `. Номер обращения: #${escapeHtml(ticketNumber)}` : ''}.</p>
+            <button type="button" class="again js-again">Отправить ещё одну заявку</button>
+          </div>
+        `;
+        refs.successHost.querySelector('.js-again').addEventListener('click', () => {
+          refs.successHost.classList.add('hidden');
+          setLoading(true);
+          bootstrap();
+        });
+        refs.successHost.classList.remove('hidden');
+        scheduleResize();
+      }
+
+      async function bootstrap() {
+        try {
+          const configPayload = new URLSearchParams();
+          configPayload.set('fingerprint', state.fingerprint);
+          if (state.requestSourceToken) configPayload.set('request_source_token', state.requestSourceToken);
+          if (state.requestSourceOrigin) configPayload.set('request_source_origin', state.requestSourceOrigin);
+
+          const response = await fetch(`${API_ORIGIN}/api/v1/form_config`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+              'Accept': 'application/json',
+            },
+            body: configPayload.toString(),
+            credentials: 'same-origin',
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Форма временно недоступна.');
+          }
+
+          if (!data.enabled) {
+            setBanner('Форма временно недоступна. Попробуйте позже или свяжитесь с менеджером.');
+            setLoading(false);
+            return;
+          }
+
+          state.config = data;
+          if (data.request_source && data.request_source.privacy_policy_url) {
+            state.privacyPolicyUrl = data.request_source.privacy_policy_url;
+          }
+
+          showForm(buildForm());
+          setLoading(false);
+          hideBanner();
+        } catch (error) {
+          setBanner(error.message || 'Не удалось загрузить форму.');
+          setLoading(false);
+        }
+      }
+
+      if (resizeObserver) {
+        [document.body, refs.page, refs.loading, refs.formHost, refs.successHost, refs.banner].forEach((element) => {
+          if (element) resizeObserver.observe(element);
+        });
+      }
+
+      window.addEventListener('resize', scheduleResize);
+      window.addEventListener('orientationchange', scheduleResize);
+      window.addEventListener('load', scheduleResize);
+      scheduleResize();
+
+      bootstrap();
+    })();
+  </script>
+</body>
+</html>
