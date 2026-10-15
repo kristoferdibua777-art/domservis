@@ -37,8 +37,13 @@ RSpec.describe DomServis::Intake::TextDraft do
     it 'fills the draft by the rules and names a new client', :aggregate_failures do
       result = draft
 
-      expect(result[:draft]).to include(client_phone: '+79001234567', address: 'ул. Ленина 5, кв. 12', priority: 'high')
-      expect(result[:draft]).not_to have_key(:comment)
+      expect(result[:draft]).to include(
+        client_phone: '+79001234567',
+        address:      'ул. Ленина 5, кв. 12',
+        priority:     'high',
+        description:  'Котёл Baxi не греет.',
+        comment:      "Исходный текст:\n#{text}",
+      )
       expect(result[:ai]).to eq(enabled: false, used: false, model: nil, error: nil)
       expect(check_texts(result)).to include('info: Новый клиент — он появится в базе, когда заявка будет создана.')
       expect(result[:client]).to be_nil
@@ -47,7 +52,15 @@ RSpec.describe DomServis::Intake::TextDraft do
     it 'reports what is missing', :aggregate_failures do
       result = draft('Здравствуйте, сколько стоит обслуживание котла?')
 
-      expect(check_texts(result)).to include('error: Телефон клиента не найден — без него заявку не создать.', 'error: Адрес не найден — уточните у клиента.')
+      expect(check_texts(result)).to include(
+        'error: Телефон клиента не найден — без него заявку не создать.',
+        'error: Адрес не найден — уточните у клиента.',
+        'warning: Имя клиента не найдено — спросите у клиента.',
+      )
+    end
+
+    it 'keeps a text that is only the description without a comment' do
+      expect(draft('Котёл не греет')[:draft]).to include(description: 'Котёл не греет').and(not_include(:comment))
     end
   end
 

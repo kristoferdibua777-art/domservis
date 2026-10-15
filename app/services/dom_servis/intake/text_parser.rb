@@ -4,7 +4,9 @@
 # any external service: a WhatsApp, Telegram or Avito chat, an SMS, an e-mail
 # or several of them pasted one after another. It finds what a dispatch job
 # needs - the client's phone numbers, name and address, the kind of work, the
-# urgency and the wished visit day and time. Every value is a suggestion: the
+# urgency and the wished visit day and time. The description is the rest of
+# the client's words: without the client phone, the name, the address, the
+# greetings and the closing words. Every value is a suggestion: the
 # dispatcher checks the filled form before the job is created.
 class DomServis::Intake::TextParser
   # Same names as the service tiles of the client request form, so jobs from
@@ -103,9 +105,10 @@ class DomServis::Intake::TextParser
 
   NAME_PATTERNS = [
     %r{(?<!\p{L})(?:(?i:меня[ \t]+зовут|зовут|мо[её][ \t]+имя)[ \t]*[:\-–—,]?[ \t]*|(?i:имя|клиент|контакт(?:ное[ \t]+лицо)?|заказчик|покупатель|фио|ф\.и\.о\.)[ \t]*[:\-–—][ \t]*)(?<name>#{NAME_WORD}(?:[ \t]+#{NAME_WORD}){0,2})},
-    %r{(?<!\p{L})(?i:это)[ \t]+(?<name>#{NAME_WORD})(?!\p{L})},
-    %r{^[ \t]*(?<name>#{NAME_WORD}(?:[ \t]+#{NAME_WORD}){0,2})[ \t]*[,:\-–—]?[ \t]*(?:(?i:тел(?:ефон)?\.?)[ \t:]*)?(?=(?:\+[ \t]?7|8|7)[\s\-(]*\d)},
-    %r{(?:\d[ \t\-)]*){10,11}[ \t]*[,\-–—]?[ \t]*(?<name>#{NAME_WORD}(?:[ \t]+#{NAME_WORD})?)[ \t]*$},
+    %r{(?<!\p{L})(?i:с[ \t]+уважением)[ \t]*[,.!]?\s*(?<name>#{NAME_WORD}(?:[ \t]+#{NAME_WORD}){0,2})[ \t]*[.!]?[ \t]*$},
+    %r{(?<!\p{L})(?i:это)[ \t]+(?<name>#{NAME_WORD})(?!\p{L})(?![ \t,]*\d)},
+    %r{^[ \t]*(?<name>#{NAME_WORD}(?:[ \t]+#{NAME_WORD}){0,2})[ \t]*[,:\-–—(]?[ \t]*(?:(?i:тел(?:ефон)?\.?)[ \t:]*)?(?=(?:\+[ \t]?7|8|7)[\s\-(]*\d)},
+    %r{(?:\d[ \t\-)]*){10,11}[ \t]*[,.\-–—(]?[ \t]*(?<name>#{NAME_WORD}(?:[ \t]+#{NAME_WORD})?)\)?[ \t]*[.!]?[ \t]*$},
     %r{^\[[^\]\n]{6,25}\][ \t]*(?<name>[^:\n]{2,40}):},
     %r{^\d{1,2}[./]\d{1,2}[./]\d{2,4},?[ \t]+\d{1,2}:\d{2}[ \t]+[-–][ \t]+(?<name>[^:\n]{2,40}):},
     %r{^(?<name>[^,\n\[]{2,40}),[ \t]*\[\d{1,2}[./]\d{1,2}[./]\d{2,4}[ \t]+\d{1,2}:\d{2}},
@@ -116,16 +119,39 @@ class DomServis::Intake::TextParser
     Багратионовск Полесск Правдинск Мамоново Ладушкин Янтарный Неман Озёрск Нестеров Славск Краснознаменск Приморск
   ].freeze
 
+  # The cities as they are written after "в", "из", "по": "в Гурьевске",
+  # "из Калининграда", "в Светлом". The address keeps the plain name.
+  CITY_FORMS = KNOWN_CITIES.to_h do |city|
+    stem = city.sub(%r{(?:ый|ий)\z}, '')
+    endings = stem == city ? '(?:а|е|у|ом)?' : '(?:ый|ий|ого|ому|ом|ым)'
+    [city, %r{(?<![\p{L}\d])#{stem.gsub(%r{[её]}, '[её]')}#{endings}(?!\p{L})}]
+  end.freeze
+
   NOT_A_NAME = (%w[
-    Здравствуйте Добрый Доброе Привет Спасибо Пожалуйста Срочно Адрес Телефон Улица Котел Котёл Мастер
-    Заявка Диспетчер Клиент Сегодня Завтра Послезавтра Ошибка Бойлер Колонка Сантехника Электрика
+    Здравствуйте Добрый Доброе Доброй Привет Приветствую Алло Спасибо Благодарю Заранее Пожалуйста Срочно
+    Помогите Жду Ждём Ждем Хорошо Понятно Отлично Ок Да Нет Вопрос Проблема Описание Сообщение Отправлено
+    Звоните Позвоните Перезвоните Пишите Напишите Под Около Возле Рядом Город Посёлок Поселок Деревня
+    Адрес Телефон Улица Котел Котёл Мастер Ремонт Заявка Диспетчер Клиент Сегодня Завтра Послезавтра Ошибка
+    Бойлер Колонка Сантехника Электрика Течёт Течет Протекает Капает Искрит
   ] + KNOWN_CITIES).freeze
 
-  LABELLED_ADDRESS = %r{(?<!\p{L})(?:адрес(?:[ \t]+(?:клиента|выезда|объекта))?[ \t]*[:\-–—]|по[ \t]+адресу[ \t]*[:\-–—]?)[ \t]*(?<value>[^\n]+)}i
+  ADDRESS_LABEL = %r{(?<!\p{L})(?:адрес(?:[ \t]+(?:клиента|выезда|объекта))?[ \t]*[:\-–—]|по[ \t]+адресу[ \t]*[:\-–—]?)}i
+  LABELLED_ADDRESS = %r{#{ADDRESS_LABEL}[ \t]*(?<value>[^\n]+)}
 
-  STREET_MARKER = %r{(?<![\p{L}\d])(?:ул(?:ица|\.)?|пр(?:оспект|-т|-кт|осп\.?|\.)|пер(?:еулок|\.)?|бульвар|б-р|шоссе|ш\.|площадь|пл\.|наб(?:ережная|\.)?|мкр(?:н)?\.?|микрорайон|проезд|туп(?:ик|\.)|аллея|тракт|снт|днт)(?!\p{L})}i
+  # Also as written after "на": "на улице Ленина", "на Ленинском проспекте".
+  STREET_MARKER = %r{(?<![\p{L}\d])(?:ул(?:иц[аеуы]|\.)?|пр(?:оспект[еау]?|-т|-кт|осп\.?|\.)|пер(?:еул(?:ок|к[еау])|\.)?|бульвар[еау]?|б-р|шоссе|ш\.|площад[ьи]|пл\.|наб(?:ережн(?:ая|ой|ую)|\.)?|мкр(?:н)?\.?|микрорайон[еау]?|проезд[еау]?|туп(?:ик[еау]?|\.)|алле[яеи]|тракт[еау]?|снт|днт)(?!\p{L})}i
 
-  CITY_MARKER = %r{(?<![\p{L}\d])(?:(?i:г\.|гор\.|город|пос\.|пос[её]лок|п\.|пгт|дер\.|деревня)[ \t]*[А-ЯЁ]|(?:#{KNOWN_CITIES.join('|')})\p{L}{0,2}(?!\p{L}))}
+  # "Московский проспект 120": the street name before the marker.
+  STREET_ADJECTIVE = %r{[А-ЯЁ][а-яё]*(?:ий|ый|ой|ая|ое|ом|ем|ую|ей)[ \t]+\z}
+
+  CITY_MARKER = %r{(?<![\p{L}\d])(?:(?i:г\.|гор\.|город[еа]?|пос\.|пос[её]л(?:ок|ке|ка)|п\.|пгт|дер\.|деревн[яеи]|с\.|сел[оеа])[ \t]*[А-ЯЁ]|#{Regexp.union(CITY_FORMS.values)})}
+
+  # The settlement words of an address put back after "в": "в посёлке Васильково".
+  SETTLEMENT_WORDS = {
+    'посёлок' => %r{(?<!\p{L})пос[её]лк[еа](?!\p{L})}i,
+    'город'   => %r{(?<!\p{L})город[еа](?!\p{L})}i,
+    'деревня' => %r{(?<!\p{L})деревн[еи](?!\p{L})}i,
+  }.freeze
 
   # A street without a marker: "Ленина 5-12", "Невского, 10".
   STREET_WITH_HOUSE = %r{(?<![\p{L}\d])[А-ЯЁ][а-яё]+(?:ая|ого|его|ова|ева|ина|ына|ской|цкой|ный|ной|ний|ский|цкий)[ \t]*,?[ \t]*(?:д(?:ом|\.)?[ \t]*)?\d{1,4}[а-яё]?(?:[ \t]*[/-][ \t]*\d{1,4})?(?!\d|[ \t]*(?i:лет|год|руб|₽|квт|бар|°|градус|мин|час|шт))}
@@ -133,7 +159,29 @@ class DomServis::Intake::TextParser
   ADDRESS_STOP = %r{(?<!\p{L})(?:тел(?:ефон|\.)?|моб(?:ильный|\.)?|имя|зовут|звон\p{L}*|контакт|код[ \t]+ошибки|ошибк\p{L}*|марка|модель)(?!\p{L})}i
 
   # Abbreviations whose period does not end the address.
-  ADDRESS_ABBREVIATIONS = %w[ул д кв г гор пр просп пос п корп к стр эт под наб пер ш пл мкр мкрн тер туп пгт с дер б р].freeze
+  ADDRESS_ABBREVIATIONS = %w[ул д кв г гор пр просп пос п корп к стр эт под наб пер ш пл мкр мкрн тер туп пгт с дер б р им].freeze
+
+  # Lowercase words that may follow the house number in an address. Any other
+  # lowercase word there starts the client's own words: "Мира 5 кв 3 засор в ванной".
+  ADDRESS_WORDS = %w[кв квартира корп корпус к стр строение подъезд под эт этаж д дом лит литер литера оф офис пом помещение уч участок секция комн комната домофон код].freeze
+  ADDRESS_TAIL = %r{[ \t,]+(?<word>\p{Ll}+)(?=[ \t]+\p{Ll}|[ \t]*(?:[,.!?;]|\z))}
+
+  # Words the description leaves out: the label before the client phone, the
+  # label or "в" before the name and the address, greetings, closing words and
+  # the lines a chat or Avito adds.
+  PHONE_LABEL = %r{(?<!\p{L})(?:(?:мой|мобильный|контактный|сотовый)[ \t]+)?(?:номер(?:[ \t]+телефона)?|тел(?:ефон)?\.?|моб(?:ильный)?\.?|сот(?:овый)?\.?|звоните|позвоните|звонить|для[ \t]+связи)[ \t]*[:\-–—]?[ \t]*\z}i
+  PHONE_JOINER = %r{\A[ \t]*(?:или|либо|,|/)[ \t]*}i
+  PHONE_AT_START = %r{\A#{PHONE_PATTERN}}
+  NAME_LABEL = %r{(?:меня[ \t]+зовут|зовут|мо[её][ \t]+имя|имя|клиент|контакт(?:ное[ \t]+лицо)?|заказчик|покупатель|фио|ф\.и\.о\.|это|с[ \t]+уважением)[ \t]*[:\-–—,]?\s*}i
+  ADDRESS_PREFIX = %r{(?:#{ADDRESS_LABEL}|(?<!\p{L})(?i:в|во|на|с|со|из|по)(?=[ \t]))[ \t]*}
+  GREETING = %r{(?:^|(?<=[.!?]))[ \t]*(?i:здравствуйте|здравствуй|добр(?:ый|ое|ой|ого)[ \t]+(?:день|вечер|утро|ночи|дня|вечера|утра|времени[ \t]+суток)|день[ \t]+добрый|вечер[ \t]+добрый|приветствую|привет|алло|ал[её])(?!\p{L})[ \t]*[!.,)]*}
+  CLOSING = %r{(?:^|(?<=[.!?,]))[ \t]*(?i:с[ \t]+уважением|заранее[ \t]+(?:спасибо|благодар\p{L}*)|спасибо(?:[ \t]+(?:заранее|большое))?|благодар(?:ю|им)|отправлено[ \t]+(?:с|из)[ \t][^\n]*)(?!\p{L})[ \t!.,)]*\s*\z}
+  SERVICE_LINE = %r{^[ \t]*(?i:сообщение[ \t]+от[ \t]+(?:покупателя|продавца|клиента|пользователя)|новое[ \t]+сообщение)[ \t.:]*$}
+  PROBLEM_LABEL = %r{^[ \t]*(?i:проблема|описание(?:[ \t]+проблемы)?|что[ \t]+случилось|неисправность|поломка|суть(?:[ \t]+проблемы)?|причина(?:[ \t]+обращения)?|комментарий|вопрос|что[ \t]+нужно(?:[ \t]+сделать)?)[ \t]*:[ \t]*}
+
+  # Punctuation left together once a phone or an address is cut out: "срочно!!! ,".
+  PUNCTUATION_RUN = %r{(?<run>[,;:.!?](?:[ \t]*[,;:.!?])+)(?<space>[ \t]*)(?<letter>\p{Ll})?}
+  PUNCTUATION_RANK = '!?.;:,'.freeze
 
   ERROR_CODE_LABELLED = %r{(?<!\p{L})(?:ошибк\p{L}*|код[ \t]+ошибки|error|err)[ \t]*[:\-–№]?[ \t]*(?<code>[A-ZА-ЯЁ]{0,2}[ \t]?-?\d{1,3}[A-ZА-ЯЁ]?)(?![\p{L}\d])}i
   ERROR_CODE_BARE = %r{(?<![\p{L}\d])(?<code>[EFЕ][ \t]?-?\d{2,3})(?![\p{L}\d])}
@@ -213,19 +261,20 @@ class DomServis::Intake::TextParser
 
   def call
     name = extract_name
+    address = extract_address(name)
     visit_date = extract_visit_date
 
     {
       phones:       phones,
       client_phone: phones.first,
       client_name:  name,
-      address:      extract_address(name),
+      address:      address && plain_address(address),
       service_type: extract_service_type,
       priority:     extract_priority,
       visit_date:   visit_date&.iso8601,
       visit_day:    visit_date && VISIT_DAYS[visit_date.wday],
       visit_time:   extract_visit_time,
-      description:  description,
+      description:  description(name, address),
     }
   end
 
@@ -272,6 +321,18 @@ class DomServis::Intake::TextParser
       end
     end
 
+    name_line
+  end
+
+  # A name alone on the last or the first line: a signature, or the client's
+  # name an Avito chat starts with.
+  def name_line
+    lines = body.lines.map(&:squish).compact_blank
+    [lines.last, lines.first].compact.uniq.each do |line|
+      name = line.delete_suffix('.')
+      return name if name?(name)
+    end
+
     nil
   end
 
@@ -279,10 +340,12 @@ class DomServis::Intake::TextParser
     words = value.split
     return false if words.empty? || words.size > 3
     return false if NOT_A_NAME.include?(words.first)
+    return false if words.one? && CITY_FORMS.values.any? { |pattern| value.match?(pattern) }
 
     words.all? { |word| word.match?(NAME_ONLY) }
   end
 
+  # The address as it is written in the text; #plain_address tidies it for the form.
   def extract_address(name)
     labelled = body.match(LABELLED_ADDRESS)
     if labelled
@@ -291,7 +354,7 @@ class DomServis::Intake::TextParser
     end
 
     body.each_line do |line|
-      start = [STREET_MARKER, CITY_MARKER].filter_map { |pattern| line.index(pattern) }.min
+      start = address_start(line, name)
       next if start.nil?
 
       value = clean_address(line[start..], name)
@@ -302,11 +365,29 @@ class DomServis::Intake::TextParser
     start && clean_address(body[start..].lines.first, name).presence
   end
 
+  def address_start(line, name)
+    street = line.index(STREET_MARKER)
+    street -= line[0...street][STREET_ADJECTIVE].to_s.length if street
+    city = all_matches(CITY_MARKER, line).find { |match| !surname?(match, line, name) }&.begin(0)
+
+    [street, city].compact.min
+  end
+
+  # "Анна Гусева": a city word that is a part of the client's name or comes
+  # right after a name is a surname, not the city of Гусев.
+  def surname?(match, line, name)
+    return false if !match[0].match?(%r{\A\p{L}+\z})
+    return true if name.to_s.split.include?(match[0])
+
+    before = line[0...match.begin(0)][%r{(?<!\p{L})[А-ЯЁ][а-яё]{2,}[ \t]+\z}].to_s.strip
+    before.present? && name?(before)
+  end
+
   # Cuts the address before the phone, the client name, a label like
-  # "телефон" or the end of the sentence.
+  # "телефон", the end of the sentence or the client's words after the house.
   def clean_address(value, name)
     fragment = value.to_s
-    cuts = [fragment.index(PHONE_PATTERN), fragment.index(ADDRESS_STOP), sentence_end(fragment)]
+    cuts = [fragment.index(PHONE_PATTERN), fragment.index(ADDRESS_STOP), sentence_end(fragment), address_tail(fragment)]
     cuts << fragment.index(%r{[,;][ \t]*#{Regexp.escape(name.split.first)}(?!\p{L})}) if name.present?
     cut = cuts.compact.min
     fragment = fragment[0...cut] if cut
@@ -314,13 +395,40 @@ class DomServis::Intake::TextParser
     fragment.squish.sub(%r{[\s,.;:\-–—]+\z}, '').truncate(200, omission: '')
   end
 
+  # A lowercase word after the house number that is not part of an address
+  # and is followed by another lowercase word or ends the sentence.
+  # "ул. 50 лет Октября 10" keeps its words: a capital follows "лет".
+  def address_tail(fragment)
+    digit = fragment.index(%r{\d})
+    return if !digit
+
+    all_matches(ADDRESS_TAIL, fragment[digit..]).each do |match|
+      return digit + match.begin(0) if ADDRESS_WORDS.exclude?(match[:word])
+    end
+
+    nil
+  end
+
+  # "Гурьевске, ул. Каштановая 7" -> "Гурьевск, ул. Каштановая 7",
+  # "Светлом на ул. Лесной 4" -> "Светлый, ул. Лесной 4".
+  def plain_address(value)
+    value = CITY_FORMS.inject(value) { |result, (city, pattern)| result.gsub(pattern, city) }
+    value = SETTLEMENT_WORDS.inject(value) do |result, (word, pattern)|
+      result.gsub(pattern) { |found| found.match?(%r{\A[А-ЯЁ]}) ? word.capitalize : word }
+    end
+
+    value.gsub(%r{,?[ \t]+(?i:на|в|во|по)[ \t]+(?=(?:[А-ЯЁ][а-яё]+[ \t]+)?#{STREET_MARKER})}, ', ')
+  end
+
+  # The period after an abbreviation or an initial ("ул. Ю. Гагарина") does
+  # not end the address.
   def sentence_end(fragment)
     all_matches(%r{[.!?;](?=\s|\z)}, fragment).each do |match|
       position = match.begin(0)
       return position if match[0] != '.'
 
-      word = fragment[0...position][%r{\p{L}+\z}].to_s.downcase
-      return position if ADDRESS_ABBREVIATIONS.exclude?(word)
+      word = fragment[0...position][%r{\p{L}+\z}].to_s
+      return position if ADDRESS_ABBREVIATIONS.exclude?(word.downcase) && !word.match?(%r{\A\p{Lu}\z})
     end
 
     nil
@@ -499,7 +607,81 @@ class DomServis::Intake::TextParser
     format('%<hour>02d:%<minute>02d', hour:, minute:)
   end
 
-  def description
-    body.lines.map(&:squish).compact_blank.join("\n").truncate(3000)
+  # Other phones stay in the description: "если не возьму — звоните мужу 8…".
+  def description(name, address)
+    value = remove_client_phone(remove_address(body, address))
+    value = remove_name(value, name)
+    value = remove_closing(value.gsub(SERVICE_LINE, '').gsub(PROBLEM_LABEL, '').gsub(GREETING, ''))
+
+    value.lines.map { |line| tidy_line(line) }.compact_blank.join("\n").truncate(3000).presence
+  end
+
+  def remove_address(value, address)
+    return value if address.blank?
+
+    words = address.split.map { |word| Regexp.escape(word) }.join('[ \t]+')
+    value.sub(%r{#{ADDRESS_PREFIX}?#{words}}, '')
+  end
+
+  def remove_client_phone(value)
+    return value if phones.empty?
+
+    all_matches(PHONE_PATTERN, value).reverse_each do |match|
+      next if normalize_found_phone(match[0]) != phones.first
+
+      cut = phone_cut(value, match)
+      value = value[0...cut.begin] + value[cut.end..]
+    end
+
+    value
+  end
+
+  # The phone with its label, or with the "или" before another phone:
+  # "Телефон 89000000001 или 89000000002" keeps "Телефон 89000000002".
+  def phone_cut(value, match)
+    joiner = value[match.end(0)..][PHONE_JOINER].to_s
+    return match.begin(0)...(match.end(0) + joiner.length) if joiner.present? && value[(match.end(0) + joiner.length)..].match?(PHONE_AT_START)
+
+    (match.begin(0) - value[0...match.begin(0)][PHONE_LABEL].to_s.length)...match.end(0)
+  end
+
+  def remove_name(value, name)
+    return value if name.blank?
+
+    words = name.split.map { |word| Regexp.escape(word) }.join('[ \t]+')
+    value.gsub(%r{(?<!\p{L})(?:#{NAME_LABEL})?#{words}(?!\p{L})}, '')
+  end
+
+  def remove_closing(value)
+    loop do
+      shorter = value.sub(CLOSING, '')
+      return shorter if shorter == value
+
+      value = shorter
+    end
+  end
+
+  def tidy_line(line)
+    line = line.gsub(%r{\([ \t]*\)}, '').gsub(PUNCTUATION_RUN) do
+      match = Regexp.last_match
+      mark = collapse_punctuation(match[:run])
+      letter = match[:letter].to_s
+      letter = letter.upcase if mark != match[:run] && mark.match?(%r{\A[!?]+\z|\A\.\z})
+
+      "#{mark}#{match[:space]}#{letter}"
+    end
+
+    line.squish.gsub(%r{ (?=[,.;:!?])}, '').sub(%r{\A[ ,.;:!?)\-–—]+}, '').sub(%r{[ ,;:(\-–—]+\z}, '').upcase_first
+  end
+
+  # The client's own "..." and "?!" stay, "!!!" becomes "!"; what a cut
+  # leaves (". ," or ", .") becomes the strongest mark of the run.
+  def collapse_punctuation(run)
+    lead = run[%r{\A[.!?]+}]
+    return PUNCTUATION_RANK.chars.find { |mark| run.include?(mark) } if lead.nil?
+    return lead if lead.match?(%r{\A\.{3,}\z})
+    return '.' if lead.match?(%r{\A\.+\z})
+
+    lead.delete('.').squeeze
   end
 end

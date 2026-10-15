@@ -90,7 +90,9 @@ class DomServis::Intake::TextDraft
       visit_time:   ai_visit_time(suggestion[:visit_time], rules) || rules[:visit_time],
       description:  suggestion[:description] || rules[:description],
     }
-    draft[:comment] = "Исходный текст:\n#{text}" if suggestion[:description].present?
+    # The description leaves out the contacts and greetings; the job keeps
+    # the whole message in case something was cut out by mistake.
+    draft[:comment] = "Исходный текст:\n#{text}" if draft[:description] != text
     draft
   end
 
@@ -151,6 +153,7 @@ class DomServis::Intake::TextDraft
   def check_draft(draft, phones)
     check_phone(draft, phones)
     client = check_client(draft)
+    add_check('warning', 'client_name', 'Имя клиента не найдено — спросите у клиента.') if draft[:client_name].blank?
     check_address(draft)
     add_check('warning', 'service_type', 'Не понятно, какие работы нужны, — укажите тип работ.') if draft[:service_type].blank?
     check_visit_date(draft)
