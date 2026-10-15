@@ -141,6 +141,9 @@ class DomServis::Intake::TextParser
   # Also as written after "на": "на улице Ленина", "на Ленинском проспекте".
   STREET_MARKER = %r{(?<![\p{L}\d])(?:ул(?:иц[аеуы]|\.)?|пр(?:оспект[еау]?|-т|-кт|осп\.?|\.)|пер(?:еул(?:ок|к[еау])|\.)?|бульвар[еау]?|б-р|шоссе|ш\.|площад[ьи]|пл\.|наб(?:ережн(?:ая|ой|ую)|\.)?|мкр(?:н)?\.?|микрорайон[еау]?|проезд[еау]?|туп(?:ик[еау]?|\.)|алле[яеи]|тракт[еау]?|снт|днт)(?!\p{L})}i
 
+  # The preposition before the street after the city: "Светлом на ул. Лесной 4".
+  STREET_PREPOSITION = %r{,?[ \t]+(?i:на|в|во|по)[ \t]+(?=(?:[А-ЯЁ][а-яё]+[ \t]+)?#{STREET_MARKER})}
+
   # "Московский проспект 120": the street name before the marker.
   STREET_ADJECTIVE = %r{[А-ЯЁ][а-яё]*(?:ий|ый|ой|ая|ое|ом|ем|ую|ей)[ \t]+\z}
 
@@ -417,7 +420,7 @@ class DomServis::Intake::TextParser
       result.gsub(pattern) { |found| found.match?(%r{\A[А-ЯЁ]}) ? word.capitalize : word }
     end
 
-    value.gsub(%r{,?[ \t]+(?i:на|в|во|по)[ \t]+(?=(?:[А-ЯЁ][а-яё]+[ \t]+)?#{STREET_MARKER})}, ', ')
+    value.gsub(STREET_PREPOSITION, ', ')
   end
 
   # The period after an abbreviation or an initial ("ул. Ю. Гагарина") does
