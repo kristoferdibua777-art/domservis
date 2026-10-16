@@ -346,16 +346,18 @@ class DomServisDispatch extends App.ControllerSubContent
 
     form = @aiForm || {}
     sample = @aiCheck?.sample
+    provider = form.provider || settings.provider
     {
       loaded: true
       busy: @aiBusy
       enabled: if form.enabled? then form.enabled else settings.enabled is true
       authKeySet: settings.auth_key_set is true
-      provider: form.provider || settings.provider
+      provider: provider
       scope: form.scope || settings.scope
       model: if form.model? then form.model else settings.model
       baseUrl: form.base_url || settings.base_url
-      models: _.uniq((settings.models || []).concat(@aiCheck?.models || []))
+      folderId: if form.folder_id? then form.folder_id else (settings.folder_id || '')
+      models: _.uniq(@aiProviderModels(provider).concat(@aiCheck?.models || []))
       providerOptions: ({ id: provider, label: @AI_PROVIDER_LABELS[provider] || provider } for provider in (settings.providers || []))
       scopeOptions: ({ id: scope, label: @AI_SCOPE_LABELS[scope] || scope } for scope in (settings.scopes || []))
       check: if @aiCheck
@@ -370,14 +372,29 @@ class DomServisDispatch extends App.ControllerSubContent
 
   AI_PROVIDER_LABELS:
     gigachat: 'Сбер, GigaChat API — ключ авторизации (Freemium для новых пользователей)'
+    yandex: 'Яндекс, YandexGPT в AI Studio — API-ключ сервисного аккаунта'
     chat_completions: 'Через Cloud.ru Foundation Models или другой API как у OpenAI — API-ключ'
 
-  # Switching the way re-renders the form; what was typed stays.
+  AI_DEFAULT_MODELS:
+    gigachat: 'GigaChat-2-Pro'
+    yandex: 'yandexgpt/latest'
+
+  aiProviderModels: (provider) ->
+    switch provider
+      when 'gigachat' then @aiSettings?.models || []
+      when 'yandex' then @aiSettings?.yandex_models || []
+      else []
+
+  # Switching the way re-renders the form; what was typed stays, except a
+  # model name the new way does not know.
   changeAIProvider: (e) =>
     @aiForm = @aiSettingsForm()
-    @aiForm.provider = $(e.currentTarget).val()
-    @aiForm.model = '' if @aiForm.provider is 'chat_completions' && @aiForm.model in (@aiSettings?.models || [])
-    @aiForm.model = 'GigaChat-2-Pro' if @aiForm.provider is 'gigachat' && !@aiForm.model
+    provider = @aiForm.provider = $(e.currentTarget).val()
+    if @AI_DEFAULT_MODELS[provider]
+      fullYandexUri = provider is 'yandex' && /^gpt:\/\//.test(@aiForm.model)
+      @aiForm.model = @AI_DEFAULT_MODELS[provider] if @aiForm.model not in @aiProviderModels(provider) && !fullYandexUri
+    else
+      @aiForm.model = '' if @aiForm.model in @aiProviderModels('gigachat').concat(@aiProviderModels('yandex'))
     typedKey = @aiForm.auth_key
     @render()
     @$('.js-ai-auth-key').val(typedKey) if typedKey
@@ -390,6 +407,7 @@ class DomServisDispatch extends App.ControllerSubContent
       auth_key: (@$('.js-ai-auth-key').val() || '').trim()
     form.scope = @$('.js-ai-scope').val() if @$('.js-ai-scope').length
     form.base_url = (@$('.js-ai-base-url').val() || '').trim() if @$('.js-ai-base-url').length
+    form.folder_id = (@$('.js-ai-folder-id').val() || '').trim() if @$('.js-ai-folder-id').length
     form
 
   saveAISettings: (e) =>
