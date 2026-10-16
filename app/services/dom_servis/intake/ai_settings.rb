@@ -6,36 +6,43 @@
 # on the server only: the admin screen learns whether a key is saved, never
 # the key itself.
 #
-# Two ways to reach GigaChat (decision 2026-10-14):
+# Ways to reach a model (decisions 2026-10-14 and 2026-10-16):
 # - gigachat: the GigaChat API of Sber with the authorization key of the
-#   personal account - the free Freemium package of a new user is here;
+#   personal account - the free Freemium package of a new user is here; the
+#   server has to trust the Russian Trusted Root CA;
+# - yandex: YandexGPT of Yandex AI Studio with the API key of a service
+#   account and the folder id;
 # - chat_completions: Cloud.ru Foundation Models with an API key, where new
 #   clients pay for GigaChat since 2026-09-01, or another service with the
 #   OpenAI chat completions API.
 class DomServis::Intake::AISettings
   SETTING_NAME = 'dom_servis_ai_intake_config'.freeze
-  PROVIDERS = %w[gigachat chat_completions].freeze
+  PROVIDERS = %w[gigachat yandex chat_completions].freeze
 
   # GIGACHAT_API_PERS - a private person, GIGACHAT_API_B2B - a business paying
   # for packages or by use, GIGACHAT_API_CORP - a business with a contract.
   SCOPES = %w[GIGACHAT_API_PERS GIGACHAT_API_B2B GIGACHAT_API_CORP].freeze
   MODELS = %w[GigaChat-2 GigaChat-2-Pro GigaChat-2-Max].freeze
 
+  # A Yandex Cloud folder id, like "b1gabcdefghijklmnopq".
+  FOLDER_ID = %r{\A[a-z0-9]{8,64}\z}
+
   DEFAULTS = {
-    'enabled'  => false,
-    'provider' => 'gigachat',
-    'auth_key' => '',
-    'scope'    => 'GIGACHAT_API_PERS',
-    'model'    => 'GigaChat-2-Pro',
-    'base_url' => DomServis::Intake::ChatCompletionsClient::DEFAULT_URL,
+    'enabled'   => false,
+    'provider'  => 'gigachat',
+    'auth_key'  => '',
+    'scope'     => 'GIGACHAT_API_PERS',
+    'model'     => 'GigaChat-2-Pro',
+    'base_url'  => DomServis::Intake::ChatCompletionsClient::DEFAULT_URL,
+    'folder_id' => '',
   }.freeze
 
   def self.current
     new(Setting.get(SETTING_NAME))
   end
 
-  # params: enabled, provider, scope, model, base_url, auth_key (a new key;
-  # blank keeps the saved one) and clear_auth_key.
+  # params: enabled, provider, scope, model, base_url, folder_id, auth_key (a
+  # new key; blank keeps the saved one) and clear_auth_key.
   def self.update!(params)
     values = merged_values(current, params)
     new_key = params['auth_key'].to_s.gsub(%r{\s+}, '')
@@ -48,11 +55,12 @@ class DomServis::Intake::AISettings
 
   def self.merged_values(settings, params)
     settings.values.merge(
-      'enabled'  => params.key?('enabled') ? boolean(params['enabled']) : settings.enabled?,
-      'provider' => params['provider'].presence || settings.provider,
-      'scope'    => params['scope'].presence || settings.scope,
-      'model'    => params['model'].to_s.strip.presence || settings.model,
-      'base_url' => params['base_url'].to_s.strip.chomp('/').presence || settings.base_url,
+      'enabled'   => params.key?('enabled') ? boolean(params['enabled']) : settings.enabled?,
+      'provider'  => params['provider'].presence || settings.provider,
+      'scope'     => params['scope'].presence || settings.scope,
+      'model'     => params['model'].to_s.strip.presence || settings.model,
+      'base_url'  => params['base_url'].to_s.strip.chomp('/').presence || settings.base_url,
+      'folder_id' => params.key?('folder_id') ? params['folder_id'].to_s.strip : settings.folder_id,
     )
   end
 
@@ -73,9 +81,21 @@ class DomServis::Intake::AISettings
     raise Exceptions::UnprocessableEntity, 'Неизвестный тип доступа GigaChat.' if SCOPES.exclude?(values['scope'])
     raise Exceptions::UnprocessableEntity, 'Неверное название модели.' if !values['model'].match?(%r{\A[\w.:/-]{1,128}\z})
     raise Exceptions::UnprocessableEntity, 'Адрес API должен начинаться с https://.' if !https_url?(values['base_url'])
+
+    validate_folder!(values)
     return if new_key.blank? || new_key.match?(%r{\A[\x21-\x7E]{16,2048}\z})
 
     raise Exceptions::UnprocessableEntity, 'Ключ выглядит неверно: скопируйте его целиком из личного кабинета.'
+  end
+
+  # Yandex needs the folder id, unless the model is given as a full URI
+  # "gpt://<folder id>/...".
+  def self.validate_folder!(values)
+    folder = values['folder_id'].to_s
+    raise Exceptions::UnprocessableEntity, 'Неверный ID каталога Yandex Cloud: скопируйте его со страницы каталога.' if folder.present? && !folder.match?(FOLDER_ID)
+    return if values['provider'] != 'yandex' || folder.present? || values['model'].start_with?('gpt://')
+
+    raise Exceptions::UnprocessableEntity, 'Укажите ID каталога Yandex Cloud.'
   end
 
   def self.https_url?(value)
@@ -84,7 +104,7 @@ class DomServis::Intake::AISettings
   rescue URI::InvalidURIError
     false
   end
-  private_class_method :merged_values, :apply_key!, :boolean, :validate!, :https_url?
+  private_class_method :merged_values, :apply_key!, :boolean, :validate!, :validate_folder!, :https_url?
 
   def initialize(values)
     stored = values.respond_to?(:to_h) ? values.to_h.stringify_keys : {}
@@ -117,27 +137,38 @@ class DomServis::Intake::AISettings
     values['base_url'].to_s
   end
 
+  def folder_id
+    values['folder_id'].to_s
+  end
+
   def usable?
     enabled? && auth_key.present?
   end
 
   def client
-    return DomServis::Intake::ChatCompletionsClient.new(api_key: auth_key, base_url:, model:) if provider == 'chat_completions'
-
-    DomServis::Intake::GigachatClient.new(auth_key:, scope:, model:)
+    case provider
+    when 'chat_completions'
+      DomServis::Intake::ChatCompletionsClient.new(api_key: auth_key, base_url:, model:)
+    when 'yandex'
+      DomServis::Intake::YandexClient.new(api_key: auth_key, folder_id:, model:)
+    else
+      DomServis::Intake::GigachatClient.new(auth_key:, scope:, model:)
+    end
   end
 
   def admin_attributes
     {
-      enabled:      enabled?,
-      provider:     provider,
-      scope:        scope,
-      model:        model,
-      base_url:     base_url,
-      auth_key_set: auth_key.present?,
-      providers:    PROVIDERS,
-      scopes:       SCOPES,
-      models:       MODELS,
+      enabled:       enabled?,
+      provider:      provider,
+      scope:         scope,
+      model:         model,
+      base_url:      base_url,
+      folder_id:     folder_id,
+      auth_key_set:  auth_key.present?,
+      providers:     PROVIDERS,
+      scopes:        SCOPES,
+      models:        MODELS,
+      yandex_models: DomServis::Intake::YandexClient::MODELS,
     }
   end
 end

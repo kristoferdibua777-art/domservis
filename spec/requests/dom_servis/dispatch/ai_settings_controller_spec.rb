@@ -87,6 +87,20 @@ RSpec.describe 'DomServis::Dispatch::AISettingsController', type: :request do
       expect(DomServis::Intake::AISettings.current.client).to be_a(DomServis::Intake::ChatCompletionsClient)
     end
 
+    it 'switches to YandexGPT with the folder id', :aggregate_failures do
+      put '/api/v1/dom_servis/dispatch/ai_settings', params: { provider: 'yandex', auth_key: 'AQVN-yandex-api-key-0123456789', model: 'yandexgpt/latest', folder_id: ' b1gtestfolder01 ' }, as: :json
+
+      expect(json_response).to include('provider' => 'yandex', 'model' => 'yandexgpt/latest', 'folder_id' => 'b1gtestfolder01', 'yandex_models' => DomServis::Intake::YandexClient::MODELS)
+      expect(DomServis::Intake::AISettings.current.client).to be_a(DomServis::Intake::YandexClient).and(have_attributes(model: 'gpt://b1gtestfolder01/yandexgpt/latest'))
+    end
+
+    it 'asks for the folder id of YandexGPT', :aggregate_failures do
+      put '/api/v1/dom_servis/dispatch/ai_settings', params: { provider: 'yandex', model: 'yandexgpt/latest' }, as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(DomServis::Intake::AISettings.current.provider).to eq('gigachat')
+    end
+
     it 'rejects an address without https', :aggregate_failures do
       put '/api/v1/dom_servis/dispatch/ai_settings', params: { provider: 'chat_completions', base_url: 'http://foundation-models.api.cloud.ru/v1' }, as: :json
 
