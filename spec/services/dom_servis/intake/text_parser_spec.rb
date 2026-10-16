@@ -41,6 +41,7 @@ RSpec.describe DomServis::Intake::TextParser do
       address:      'Ленина 10-25',
       service_type: 'Сантехника: Течёт, Установка или замена',
       priority:     'high',
+      description:  'Нужно заменить смеситель на кухне, течёт.',
     )
   end
 
@@ -114,5 +115,123 @@ RSpec.describe DomServis::Intake::TextParser do
 
   it 'does not take a street named after a brand for the brand' do
     expect(parse('Мария, тел. 89001234567, котёл течёт, ул. Нева 1')).to include(service_type: 'Газовый котёл: Течёт', client_name: 'Мария')
+  end
+
+  # The description is what is left of the client's words once the client
+  # phone, the name, the address, the greetings and the closing words are out.
+  describe 'messages as clients write them' do
+    it 'reads a short message with the name at the end' do
+      expect(parse('Протекает унитаз, срочно!!! Ленина 10 кв 5, 89114443322 Галина')).to include(
+        client_phone: '+79114443322',
+        client_name:  'Галина',
+        address:      'Ленина 10 кв 5',
+        description:  'Протекает унитаз, срочно!',
+      )
+    end
+
+    it 'reads a WhatsApp message sent from a number' do
+      result = parse('[15.10.2026, 09:12] +7 921 555-12-34: Добрый день! Меня зовут Сергей. Не работает розетка на кухне, искрит. Адрес: ул. Гагарина 15, кв 8')
+
+      expect(result).to include(client_phone: '+79215551234', client_name: 'Сергей', address: 'ул. Гагарина 15, кв 8', description: 'Не работает розетка на кухне, искрит.')
+    end
+
+    it 'reads a signature and a settlement' do
+      result = parse('Здравствуйте. Нужно установить смеситель в ванной. Посёлок Васильково, ул. Шатурская 3. Тел. 8 (909) 777-66-55. С уважением, Ольга')
+
+      expect(result).to include(client_name: 'Ольга', address: 'Посёлок Васильково, ул. Шатурская 3', description: 'Нужно установить смеситель в ванной.')
+    end
+
+    it 'puts a city written after "в" back in its plain form', :aggregate_failures do
+      expect(parse('Добрый вечер, это Наталья. Котёл не греет, в Гурьевске, ул. Каштановая 7. 89062223344')).to include(
+        client_name: 'Наталья',
+        address:     'Гурьевск, ул. Каштановая 7',
+        description: 'Котёл не греет.',
+      )
+      expect(parse('В Светлом на ул. Лесной 4 не работает свет, 89001112233')).to include(address: 'Светлый, ул. Лесной 4', description: 'Не работает свет')
+    end
+
+    it 'keeps the second phone in the description' do
+      result = parse("Добрый день! Течёт батарея в спальне. Калининград, Московский проспект 120, кв. 45. Мой номер 89114445566, если не возьму — звоните мужу 89217778899.\nТатьяна")
+
+      expect(result).to include(
+        phones:       %w[+79114445566 +79217778899],
+        client_phone: '+79114445566',
+        client_name:  'Татьяна',
+        address:      'Калининград, Московский проспект 120, кв. 45',
+        description:  'Течёт батарея в спальне. Если не возьму — звоните мужу 89217778899.',
+      )
+    end
+
+    it 'leaves the name empty when the text has none' do
+      result = parse('Здравствуйте! Не сливает воду стиральная машина LG. Светлогорск, ул. Октябрьская 22. 8 911 000 11 22')
+
+      expect(result).to include(client_name: nil, address: 'Светлогорск, ул. Октябрьская 22', description: 'Не сливает воду стиральная машина LG.')
+    end
+
+    it 'ends the address at the house when there is no punctuation', :aggregate_failures do
+      expect(parse('Ирина 89001234567 ул. Мира 5 кв 3 засор в ванной')).to include(client_name: 'Ирина', address: 'ул. Мира 5 кв 3', description: 'Засор в ванной')
+      expect(parse('Алло, это Сергей с Невского 12 кв 40, опять засор на кухне, 89051234567')).to include(
+        client_name: 'Сергей',
+        address:     'Невского 12 кв 40',
+        description: 'Опять засор на кухне',
+      )
+    end
+
+    it 'reads a form with labels' do
+      result = parse("Имя: Андрей\nТелефон: +7(911)123-45-67\nАдрес: пос. Малое Исаково, ул. Пушкина 4\nПроблема: не включается бойлер Thermex")
+
+      expect(result).to include(client_name: 'Андрей', address: 'пос. Малое Исаково, ул. Пушкина 4', description: 'Не включается бойлер Thermex')
+    end
+
+    it 'keeps the wished time in the description' do
+      result = parse('Здравствуйте, меня зовут Галина Петровна. Не работает духовка. Зеленоградск, ул. Тургенева 8. Звоните после 17, 8-906-123-45-67')
+
+      expect(result).to include(client_name: 'Галина Петровна', description: 'Не работает духовка. Звоните после 17', visit_time: '17:00-20:00')
+    end
+
+    it 'takes the name on the first line of an Avito chat' do
+      result = parse("Елена\nЗдравствуйте! Нужен мастер повесить люстру и карниз. Янтарный, ул. Советская 30, кв 2\n89112223344")
+
+      expect(result).to include(client_name: 'Елена', address: 'Янтарный, ул. Советская 30, кв 2', description: 'Нужен мастер повесить люстру и карниз.')
+    end
+
+    it 'leaves out the closing words but not a last line that is no name', :aggregate_failures do
+      expect(parse("Кран капает в ванной, Советский проспект 15-3.\n89003334455 Вера\nЗаранее спасибо!")).to include(
+        client_name: 'Вера',
+        address:     'Советский проспект 15-3',
+        description: 'Кран капает в ванной.',
+      )
+      expect(parse("Котёл не греет, ул. Ленина 5, 89001234567\nЖду")).to include(client_name: nil, description: "Котёл не греет\nЖду")
+    end
+
+    it 'keeps the other phone written after "или"' do
+      result = parse('Нужен электрик, частный дом в пос. Ушаково, ул. Центральная 12. Телефон 89000000001 или 89000000002. Михаил')
+
+      expect(result).to include(client_name: 'Михаил', address: 'пос. Ушаково, ул. Центральная 12', description: 'Нужен электрик, частный дом. Телефон 89000000002.')
+    end
+
+    it 'does not take a street or a surname for a name or a city', :aggregate_failures do
+      expect(parse('Это Ленина 5, течёт кран, 89001234567')).to include(client_name: nil, address: 'Ленина 5')
+      expect(parse('Анна Гусева, Гусев, ул. Мира 5, 89001234567, не греет батарея')).to include(address: 'Гусев, ул. Мира 5')
+      expect(parse('Котёл Navien ошибка 03, г. Калининград, ул. Ю. Гагарина 5. Тел: 8 911 111 22 33 (Светлана)')).to include(
+        client_name: 'Светлана',
+        address:     'г. Калининград, ул. Ю. Гагарина 5',
+        description: 'Котёл Navien ошибка 03.',
+      )
+    end
+
+    it 'reads a street written after "на"' do
+      result = parse('Добрый вечер! В квартире на Ленинском проспекте 30 кв 15 нет света, выбивает автомат. Можно сегодня после 19? Мой номер +7 (921) 000-11-22, Павел')
+
+      expect(result).to include(client_name: 'Павел', address: 'Ленинском проспекте 30 кв 15', description: 'В квартире нет света, выбивает автомат. Можно сегодня после 19?')
+    end
+
+    it 'keeps the punctuation of the client' do
+      expect(parse('Течёт... и капает?! ул. 50 лет Октября 10, 89001234567')).to include(address: 'ул. 50 лет Октября 10', description: 'Течёт... и капает?!')
+    end
+
+    it 'gives no description when the text has only the contacts' do
+      expect(parse('Ул. Ленина 5, 89001234567, Ирина')).to include(client_name: 'Ирина', address: 'Ул. Ленина 5', description: nil)
+    end
   end
 end
