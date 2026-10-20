@@ -713,8 +713,13 @@
         <div class="dom-servis-dispatch-modal__body">
         <div class="dom-servis-dispatch-intake">
           <div class="form-group">
-            <label for="dom-servis-intake-text">Текст от клиента</label>
-            <textarea id="dom-servis-intake-text" class="form-control js-intake-text" rows="4" placeholder="Вставьте сообщение клиента из WhatsApp, Telegram, Авито, СМС или почты — можно несколько подряд. Телефон, адрес и остальное заполнятся сами."><%= @intake.text %></textarea>
+            <div class="dom-servis-dispatch-intake__head">
+              <label for="dom-servis-intake-text">Текст от клиента</label>
+              <% if @intake.canClear: %>
+                <button type="button" class="btn btn--text js-intake-clear"<%= ' disabled' if @intake.busy %>>Очистить</button>
+              <% end %>
+            </div>
+            <textarea id="dom-servis-intake-text" class="form-control js-intake-text" rows="4" placeholder="Вставьте сообщение клиента — можно несколько подряд. Телефон, адрес и остальное заполнятся сами."><%= @intake.text %></textarea>
           </div>
           <div class="dom-servis-dispatch-intake__actions">
             <% if @intake.canPaste: %>
@@ -758,7 +763,7 @@
 
           <div class="form-group">
             <label>Телефон *</label>
-            <input class="form-control js-create-client-phone js-create-draft-field<%= ' is-from-text' if @intake.filled.client_phone %>" type="text" placeholder="+7 900 000 00 00" value="<%= @createDraft.client_phone %>">
+            <input class="form-control js-create-client-phone js-create-draft-field<%= ' is-from-text' if @intake.filled.client_phone %>" type="tel" autocomplete="off" placeholder="+7 900 000 00 00" value="<%= @createDraft.client_phone %>">
           </div>
         </div>
 

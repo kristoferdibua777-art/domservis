@@ -5,6 +5,7 @@ function intakeBoard(draft) {
   const board = Object.create(App.DomServisDispatchBoard.prototype)
   const requests = []
   const notes = []
+  const delays = {}
   let renders = 0
 
   Object.assign(board, {
@@ -12,6 +13,8 @@ function intakeBoard(draft) {
     createOpen: true,
     ajax: (options) => requests.push(options),
     notify: (options) => notes.push(options),
+    delay: (callback, timeout, key) => { delays[key] = callback },
+    clearDelay: (key) => { delete delays[key] },
     render: () => { renders += 1 },
     syncCreateDraftFromForm: () => {},
     extractError: (xhr, fallback) => fallback,
@@ -26,7 +29,7 @@ function intakeBoard(draft) {
   board.resetIntake()
   Object.assign(board.createDraft, draft || {})
 
-  return { board, requests, notes, renders: () => renders }
+  return { board, requests, notes, delays, renders: () => renders }
 }
 
 QUnit.test('a reading fills the untouched fields and keeps what the dispatcher typed', assert => {
@@ -101,6 +104,71 @@ QUnit.test('the text goes to the server once at a time', assert => {
   requests[0].success({ draft: { client_phone: '+79001234567' } })
   assert.strictEqual(requests.length, 2, 'the waiting reading runs after the first one')
   assert.deepEqual(JSON.parse(requests[1].data), { input: 'Котёл не греет, 89001234567\n\nул. Ленина 5' })
+});
+
+QUnit.test('a long insert is read like a paste, typing is not', assert => {
+  const { board, requests, delays } = intakeBoard()
+
+  board.fieldText = 'Кот'
+  board.updateIntakeText({ originalEvent: { inputType: 'insertText', data: 'т' } })
+  assert.deepEqual(Object.keys(delays), [], 'typing is not read')
+
+  // An Android keyboard pastes from its clipboard strip without a paste event.
+  board.fieldText = 'Котёл не греет, ул. Ленина 5, 89001234567'
+  board.updateIntakeText({ originalEvent: { inputType: 'insertText', data: 'ёл не греет, ул. Ленина 5, 89001234567' } })
+  assert.deepEqual(Object.keys(delays), ['dom_servis_dispatch_intake_reading'])
+
+  board.intakeTextPasted()
+  assert.strictEqual(Object.keys(delays).length, 1, 'a paste and its input event lead to one reading')
+
+  delays.dom_servis_dispatch_intake_reading()
+  assert.strictEqual(requests.length, 1)
+  assert.deepEqual(JSON.parse(requests[0].data), { input: 'Котёл не греет, ул. Ленина 5, 89001234567' })
+
+  // Pasted over the whole text, the new text may be shorter than the old one.
+  delete delays.dom_servis_dispatch_intake_reading
+  board.fieldText = 'Течёт кран, Мира 3, 89007654321'
+  board.updateIntakeText({ originalEvent: { inputType: 'insertText', data: 'Течёт кран, Мира 3, 89007654321' } })
+  assert.deepEqual(Object.keys(delays), ['dom_servis_dispatch_intake_reading'])
+});
+
+QUnit.test('clearing takes out the text and what its reading filled, not what was typed', assert => {
+  const { board, delays } = intakeBoard({ client_name: 'Мария' })
+
+  assert.strictEqual(board.buildIntakeView().canClear, false, 'nothing to clear in a new form')
+
+  board.fieldText = 'Котёл не греет, ул. Ленина 5, 89001234567'
+  board.updateIntakeText({ originalEvent: {} })
+  board.applyIntakeDraft({
+    draft: { client_phone: '+79001234567', address: 'ул. Ленина 5', priority: 'high', visit_date: '2026-10-15', visit_day: 'thu', comment: 'Исходный текст' },
+    checks: [{ level: 'info', text: 'Новый клиент' }],
+  })
+  board.createDraft.address = 'ул. Ленина 5, кв. 12'
+  assert.strictEqual(board.buildIntakeView().canClear, true)
+
+  board.intake.busy = true
+  board.clearIntakeText()
+  assert.strictEqual(board.createDraft.client_phone, '+79001234567', 'nothing is cleared while the text is being read')
+  board.intake.busy = false
+
+  board.clearIntakeText()
+
+  assert.strictEqual(board.intake.text, '')
+  assert.strictEqual(board.intake.status, null)
+  assert.deepEqual(board.intake.checks, [])
+  assert.strictEqual(delays.dom_servis_dispatch_intake_reading, undefined, 'a waiting reading is dropped')
+  assert.strictEqual(board.createDraft.client_phone, '', 'the read phone goes')
+  assert.strictEqual(board.createDraft.priority, 'medium', 'the default priority comes back')
+  assert.strictEqual(board.createDraft.visit_date, '2026-10-14')
+  assert.strictEqual(board.createDraft.visit_day, 'wed')
+  assert.strictEqual(board.createDraft.comment, '')
+  assert.strictEqual(board.createDraft.address, 'ул. Ленина 5, кв. 12', 'the edited address stays')
+  assert.strictEqual(board.createDraft.client_name, 'Мария', 'the typed name stays')
+  assert.strictEqual(board.buildIntakeView().canClear, false)
+
+  board.applyIntakeDraft({ draft: { client_name: 'Ирина', client_phone: '+79007654321' } })
+  assert.strictEqual(board.createDraft.client_name, 'Мария', 'the next reading still keeps the typed name')
+  assert.strictEqual(board.createDraft.client_phone, '+79007654321')
 });
 
 QUnit.test('a reading that comes back after the form was closed is dropped', assert => {

@@ -31,6 +31,7 @@ class App.DomServisDispatchBoard extends App.Controller
     'paste .js-intake-text': 'intakeTextPasted'
     'click .js-intake-parse': 'parseIntakeText'
     'click .js-intake-paste': 'pasteIntakeText'
+    'click .js-intake-clear': 'clearIntakeText'
     'click .js-intake-use-last-address': 'useIntakeLastAddress'
     'click .js-save-edit': 'saveEdit'
     'input .js-visit-time-input': 'clearVisitTimeError'
@@ -754,6 +755,9 @@ class App.DomServisDispatchBoard extends App.Controller
     warning: '!'
     error: '✕'
 
+  # An insert into the text field at least this long is read like a paste.
+  INTAKE_PASTE_LENGTH: 20
+
   resetIntake: ->
     @intake =
       text: ''
@@ -779,15 +783,42 @@ class App.DomServisDispatchBoard extends App.Controller
       checks: intake.checks || []
       filled: filled
       canPaste: !!window.navigator?.clipboard?.readText
+      canClear: !!(intake.text || '').trim() || _.size(intake.values) > 0
       lastAddress: if lastAddress && lastAddress isnt @createDraft?.address then lastAddress else null
     }
 
-  updateIntakeText: =>
+  # Android keyboards paste from their clipboard strip without a paste event,
+  # so a long insert is read like a paste too.
+  updateIntakeText: (e) =>
+    previous = @intake.text || ''
     @intake.text = @$('.js-intake-text').val()?.toString() || ''
+    inserted = Math.max(@intake.text.length - previous.length, e?.originalEvent?.data?.length || 0)
+    @scheduleIntakeReading() if inserted >= @INTAKE_PASTE_LENGTH
 
-  # The pasted text is in the field only after the paste event.
   intakeTextPasted: =>
-    setTimeout((=> @parseIntakeText()), 50)
+    @scheduleIntakeReading()
+
+  # The pasted text is in the field only after the paste event, and a paste
+  # also fires an input event: both lead to one reading.
+  scheduleIntakeReading: ->
+    @delay((=> @parseIntakeText()), 300, 'dom_servis_dispatch_intake_reading')
+
+  # Takes the text out with the values its reading put into the form that
+  # nobody changed since, so another message is read from scratch. On a phone
+  # this is easier than selecting the whole text.
+  clearIntakeText: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    return if @intake.busy
+
+    @clearDelay('dom_servis_dispatch_intake_reading')
+    @syncCreateDraftFromForm()
+    for field, value of @intake.values when @createDraft[field] is value
+      @createDraft[field] = @intakeBaseline?[field] || ''
+
+    baseline = @intakeBaseline
+    @resetIntake()
+    @intakeBaseline = baseline
+    @render()
 
   pasteIntakeText: (e) =>
     @preventDefaultAndStopPropagation(e)
@@ -871,6 +902,18 @@ class App.DomServisDispatchBoard extends App.Controller
     @intake.client = data?.client || null
     @intake.status = @intakeStatus(applied, data?.ai)
     @render()
+    @revealIntakeResult()
+
+  # On a phone the filled fields are below the pasted text: after a reading
+  # the form scrolls to its result, with the fields right under it.
+  revealIntakeResult: ->
+    return if !@mobileView
+
+    body = @$('.dom-servis-dispatch-modal__body')[0]
+    result = @$('.dom-servis-dispatch-intake__status')[0]
+    return if !body || !result
+
+    body.scrollTop += result.getBoundingClientRect().top - body.getBoundingClientRect().top - 12
 
   intakeFieldReplaceable: (field) ->
     current = @createDraft[field] || ''
