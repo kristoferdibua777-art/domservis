@@ -1794,10 +1794,28 @@ summary.dom-servis-dispatch-drawer__history-row {
   resize: vertical;
 }
 
+.dom-servis-dispatch-intake__head {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.dom-servis-dispatch-intake__head label {
+  margin-bottom: 0;
+}
+
 .dom-servis-dispatch-intake__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* Zammad's `.btn + .btn` margin pushed the second button sideways when the
+   buttons wrapped on a phone; the gap spaces them. */
+.dom-servis-dispatch-intake__actions .btn {
+  margin: 0;
 }
 
 .dom-servis-dispatch-intake__status {
@@ -1996,14 +2014,50 @@ summary.dom-servis-dispatch-drawer__history-row {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* On a phone the new job form takes the whole screen. 100vh reaches behind
+     the browser's address bar and hid the publish button; 100dvh is the
+     visible height. The subtitle and the footer hint gave up a third of the
+     screen, so the pasted text and the fields it filled get it instead. */
   .dom-servis-dispatch-modal__dialog {
-    max-height: calc(100vh - 20px);
-    margin: 10px auto;
-    width: calc(100vw - 20px);
+    border-radius: 0;
+    border-width: 0;
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    max-height: none;
+    width: 100%;
+  }
+
+  .dom-servis-dispatch-modal__header,
+  .dom-servis-dispatch-modal__footer {
+    padding: 12px 16px;
+  }
+
+  .dom-servis-dispatch-modal__header p,
+  .dom-servis-dispatch-modal__hint {
+    display: none;
+  }
+
+  .dom-servis-dispatch-modal__body {
+    padding: 16px;
   }
 
   .dom-servis-dispatch-modal__footer-actions {
     width: 100%;
+  }
+
+  .dom-servis-dispatch-modal__footer-actions .btn {
+    flex: 1 1 auto;
+    margin: 0;
+  }
+
+  .dom-servis-dispatch-intake {
+    margin-bottom: 16px;
+    padding: 12px;
+  }
+
+  .dom-servis-dispatch-intake__actions .btn {
+    flex: 1 1 auto;
   }
 
   .dom-servis-dispatch-drawer__attachment-item {
