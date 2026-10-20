@@ -10,7 +10,7 @@ class DomServis::Dispatch::AISettingsController < DomServis::Dispatch::BaseContr
   end
 
   def update
-    settings = DomServis::Intake::AISettings.update!(params.permit(:enabled, :provider, :auth_key, :clear_auth_key, :scope, :model, :base_url).to_h)
+    settings = DomServis::Intake::AISettings.update!(params.permit(:enabled, :provider, :auth_key, :clear_auth_key, :scope, :model, :base_url, :folder_id).to_h)
 
     render json: settings.admin_attributes, status: :ok
   end

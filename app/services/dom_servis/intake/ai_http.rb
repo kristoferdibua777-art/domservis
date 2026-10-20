@@ -6,11 +6,11 @@
 module DomServis::Intake::AIHttp
   private
 
-  def json_options(token, read_timeout:)
+  def json_options(token, read_timeout:, headers: {})
     {
       json:          true,
       bearer_token:  token,
-      headers:       { 'Accept' => 'application/json' },
+      headers:       { 'Accept' => 'application/json' }.merge(headers),
       open_timeout:  5,
       read_timeout:  read_timeout,
       total_timeout: read_timeout + 5,

@@ -47,11 +47,19 @@ class DomServis::Intake::ChatCompletionsClient
   private
 
   def request(method, path, body, read_timeout:)
-    raise DomServis::Intake::AIError, "Не задан API-ключ #{service_name}." if api_key.blank?
-
-    result = UserAgent.public_send(method, "#{base_url}/#{path}", body, json_options(api_key, read_timeout:))
+    result = send_request(method, path, body, read_timeout:)
     raise DomServis::Intake::AIError, failure_message(result, key: %w[401 403].include?(result.code.to_s)) if !result.success?
 
     result
+  end
+
+  def send_request(method, path, body, read_timeout:)
+    raise DomServis::Intake::AIError, "Не задан API-ключ #{service_name}." if api_key.blank?
+
+    UserAgent.public_send(method, "#{base_url}/#{path}", body, json_options(api_key, read_timeout:, headers: request_headers))
+  end
+
+  def request_headers
+    {}
   end
 end
