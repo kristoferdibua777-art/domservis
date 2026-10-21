@@ -2257,6 +2257,31 @@ summary.dom-servis-dispatch-drawer__history-row {
     padding: 14px 14px 28px;
   }
 
+  /* The hero with «Новая заявка» is hidden on a phone, so a phone had no way
+     to open the new job form. The button stays at the bottom in thumb reach,
+     above the home indicator; the shell leaves room for it under the cards. */
+  .dom-servis-dispatch-board__shell.is-mobile.has-mobile-create {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .dom-servis-dispatch-board__mobile-create {
+    background: linear-gradient(180deg, rgba(24, 28, 38, 0), rgba(24, 28, 38, 0.96) 40%);
+    bottom: 0;
+    left: 0;
+    padding: 20px 16px calc(12px + env(safe-area-inset-bottom));
+    pointer-events: none;
+    position: fixed;
+    right: 0;
+    z-index: 30;
+  }
+
+  .dom-servis-dispatch-board__mobile-create .btn {
+    font-size: 16px;
+    min-height: 52px;
+    pointer-events: auto;
+    width: 100%;
+  }
+
   .dom-servis-dispatch-board__shell.is-mobile .dom-servis-dispatch-board__mobile-shell {
     display: block;
     margin-bottom: 14px;
