@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xml:lang="ru" width="48" height="48" viewBox="0 0 48 48">
+<title>СВИБ Дом Сервис — иконка «Адрес» (для светлого фона)</title>
+<desc>Сетка 48 × 48, рабочее поле 40 × 40, линия 3, скруглённые окончания и углы.</desc>
+<g id="icon-contact-address" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><g id="icon-contact-address-base" stroke="#0052CC"><path d="M24 43C24 43 37 30.5 37 19A13 13 0 0 0 11 19C11 30.5 24 43 24 43Z"/></g><g id="icon-contact-address-accent" stroke="#E30613"><circle cx="24" cy="19" r="4.5"/></g></g>
+</svg>

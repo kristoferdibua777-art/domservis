@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xml:lang="ru" width="100" height="100" viewBox="0 0 100 100">
+<title>СВИБ Дом Сервис — favicon</title>
+<desc>Иконка с оптической версией символа для 16–48 px.</desc>
+<rect id="icon-background" width="100" height="100" rx="22" fill="#0052CC"/><g transform="translate(19 23.6) scale(0.62)"><g id="symbol"><path id="symbol-wall-left-roof-left" d="M0 90L0 28.87L46 2.31L46 21.94L18 38.11L18 90Z" fill="#FFFFFF"/><path id="symbol-wall-right" d="M82 38.11L100 48.5L100 90L82 90Z" fill="#FFFFFF"/><path id="symbol-roof-right-accent" d="M54 2.31L100 28.87L100 48.5L54 21.94Z" fill="#E30613"/><path id="symbol-window" d="M36.5 45.5L47.5 45.5L47.5 56.5L36.5 56.5ZM52.5 45.5L63.5 45.5L63.5 56.5L52.5 56.5ZM36.5 61.5L47.5 61.5L47.5 72.5L36.5 72.5ZM52.5 61.5L63.5 61.5L63.5 72.5L52.5 72.5Z" fill="#FFFFFF"/></g></g>
+</svg>
