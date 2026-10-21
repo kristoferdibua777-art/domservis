@@ -1,4 +1,4 @@
-<div class="dom-servis-dispatch-board__shell<%= ' is-mobile' if @mobileView %>">
+<div class="dom-servis-dispatch-board__shell<%= ' is-mobile' if @mobileView %><%= ' has-mobile-create' if @mobileView && @canCreateJob %>">
   <% if @mobileView: %>
     <section class="dom-servis-dispatch-board__mobile-shell">
       <div class="dom-servis-dispatch-board__mobile-topbar">
@@ -111,6 +111,11 @@
         </details>
       </section>
     </section>
+    <% if @canCreateJob: %>
+      <div class="dom-servis-dispatch-board__mobile-create">
+        <button type="button" class="btn btn--success js-open-create">Новая заявка</button>
+      </div>
+    <% end %>
   <% end %>
   <div class="dom-servis-dispatch-board__hero">
     <div class="dom-servis-dispatch-board__hero-copy">
