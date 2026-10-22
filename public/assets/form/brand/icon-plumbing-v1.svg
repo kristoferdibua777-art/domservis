@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xml:lang="ru" width="48" height="48" viewBox="0 0 48 48">
+<title>СВИБ Дом Сервис — иконка «Сантехника» (для светлого фона)</title>
+<desc>Сетка 48 × 48, рабочее поле 40 × 40, линия 3, скруглённые окончания и углы.</desc>
+<g id="icon-plumbing" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><g id="icon-plumbing-base" stroke="#0052CC"><path d="M8 15.5H30A10 10 0 0 1 40 25.5V28.5H33V26.5A4 4 0 0 0 29 22.5H8Z"/><path d="M36.5 33.5C36.5 33.5 39.5 37.1 39.5 39.2A3 3 0 0 1 33.5 39.2C33.5 37.1 36.5 33.5 36.5 33.5Z"/></g><g id="icon-plumbing-accent" stroke="#E30613"><path d="M14 8.5H26M20 8.5V15.5"/></g></g>
+</svg>

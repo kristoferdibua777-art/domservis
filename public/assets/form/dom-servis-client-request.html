@@ -3,210 +3,238 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#1f6b54">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="color-scheme" content="light">
   <meta name="robots" content="noindex">
-  <title>Свиб-Дом Сервис | Заявка на ремонт</title>
+  <title>Заявка на ремонт — СВИБ Дом Сервис</title>
+  <link rel="icon" type="image/svg+xml" href="brand/svib-favicon-v1.svg">
   <style>
     /* Standalone client request page in two steps: pick a service, then say
        what happened and how to reach you (photos welcome). Submits through
        the same Zammad form channel as the partner embed
-       (form_config -> form_submit with request_source_token). */
+       (form_config -> form_submit with request_source_token).
+       Look: СВИБ Дом Сервис brand book v1.0, the same tokens as the company site.
+       Blue leads; red is an accent only (the send button, a picked option). */
+
+    /* Files in brand/ come from /assets with a ten-year cache (nginx "expires max"),
+       while this page itself is no-cache. A changed file gets a new name (-v2),
+       otherwise returning visitors keep the old one. */
+    @font-face { font-family: Montserrat; font-style: normal; font-weight: 400; font-display: swap; src: url("brand/montserrat-400-v1.woff2") format("woff2"); }
+    @font-face { font-family: Montserrat; font-style: normal; font-weight: 600; font-display: swap; src: url("brand/montserrat-600-v1.woff2") format("woff2"); }
+    @font-face { font-family: Montserrat; font-style: normal; font-weight: 700; font-display: swap; src: url("brand/montserrat-700-v1.woff2") format("woff2"); }
+    @font-face { font-family: Montserrat; font-style: normal; font-weight: 800; font-display: swap; src: url("brand/montserrat-800-v1.woff2") format("woff2"); }
+
     :root {
-      --bg: #f4f1ea;
-      --bg-glow: #e4eee6;
-      --card: #fffdf9;
-      --field: #f8f5ee;
-      --ink: #1c2420;
-      --muted: #667069;
-      --line: #e3ddd0;
-      --accent: #1f6b54;
-      --accent-deep: #18523f;
-      --accent-ink: #ffffff;
-      --accent-soft: #e2efe8;
-      --warm: #c9531c;
-      --warm-soft: #fbe8db;
-      --danger: #b3402a;
-      --shadow: 0 1px 2px rgba(28, 36, 32, .05), 0 14px 36px rgba(28, 36, 32, .09);
-      --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-head: "Palatino Linotype", Palatino, Georgia, "Noto Serif", serif;
+      --blue: #0052cc;
+      --blue-hover: #0046ad;
+      --red: #e30613;
+      --red-hover: #c10510;
+      --white: #ffffff;
+      --grey: #eef2f7;
+      --line: #c9d2de;
+      --muted: #5b6678;
+      --ink: #1c2533;
+      --radius: 8px;
+      /* Arial stands in for Montserrat, as the brand book says. */
+      --font: Montserrat, Arial, sans-serif;
       color-scheme: light;
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #131a17;
-        --bg-glow: #1b2a24;
-        --card: #1c2521;
-        --field: #232d28;
-        --ink: #e9efeb;
-        --muted: #9eaea7;
-        --line: #33403a;
-        --accent: #6fc3a6;
-        --accent-deep: #8fd6bc;
-        --accent-ink: #0f1a16;
-        --accent-soft: #24392f;
-        --warm: #f0a070;
-        --warm-soft: #3b2a20;
-        --danger: #f08a74;
-        --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 14px 36px rgba(0, 0, 0, .35);
-        color-scheme: dark;
-      }
-    }
-
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
 
     html, body { margin: 0; }
 
     body {
       min-height: 100vh;
-      background: radial-gradient(900px 520px at 12% -8%, var(--bg-glow), transparent 62%), var(--bg);
+      background: var(--white);
       color: var(--ink);
-      font: 16px/1.5 var(--font);
-      padding: max(20px, env(safe-area-inset-top)) 14px max(36px, env(safe-area-inset-bottom));
+      font: 400 16px/1.45 var(--font);
       -webkit-tap-highlight-color: transparent;
     }
 
-    .wrap { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+    a { color: var(--blue); }
+    a[href^="tel:"] { white-space: nowrap; }
+    img { display: block; }
 
-    header { display: flex; align-items: center; gap: 12px; padding: 0 4px; }
-    .mark { width: 44px; height: 44px; border-radius: 14px; background: var(--accent); display: grid; place-items: center; flex: none; }
-    .mark svg { width: 26px; height: 26px; stroke: var(--accent-ink); }
-    .brand { font-weight: 700; font-size: 17px; line-height: 1.2; }
-    .tag { color: var(--muted); font-size: 13px; }
+    /* Header: logo without the slogan (28 px high at least) and a call link. */
+    .top { background: var(--white); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top); }
+    .top__in { max-width: 680px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .top__logo { width: auto; height: 32px; }
+    .top__phone { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--ink); font-weight: 700; font-size: 15px; text-decoration: none; white-space: nowrap; }
+    .top__phone img { width: 24px; height: 24px; }
+    .top__phone:hover { color: var(--blue); }
 
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); padding: 20px 18px 20px; }
-    .step { display: flex; flex-direction: column; gap: 16px; animation: in .28s ease; }
-    @keyframes in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .wrap { max-width: 680px; margin: 0 auto; padding: 20px 16px max(32px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 24px; }
 
-    .steps { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
-    .steps i { flex: 1; height: 5px; border-radius: 5px; background: var(--line); }
-    .steps i.on { background: var(--accent); }
+    .card { min-width: 0; }
+    .step { display: flex; flex-direction: column; gap: 18px; animation: in .25s ease; }
+    @keyframes in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    .steps { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .steps i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+    .steps i.on { background: var(--blue); }
     .steps span { flex: none; }
 
-    h1 { font-family: var(--font-head); font-weight: 600; font-size: 27px; line-height: 1.15; letter-spacing: -.01em; margin: 2px 0 0; text-wrap: balance; }
-    h2 { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 6px 0 -4px; display: flex; align-items: center; gap: 10px; }
+    h1 { color: var(--blue); font-weight: 800; font-size: 26px; line-height: 1.15; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+    h2 { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 8px 0 -4px; display: flex; align-items: center; gap: 12px; }
     h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-    .hint { color: var(--muted); margin: -8px 0 0; font-size: 14.5px; }
+    .hint { color: var(--muted); margin: -8px 0 0; font-size: 15px; }
 
     button, input, textarea { font: inherit; color: inherit; }
     button { cursor: pointer; }
-    button:focus-visible, a:focus-visible, input[type="checkbox"]:focus-visible, .add:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
+    button:focus-visible, a:focus-visible, input[type="checkbox"]:focus-visible, .add:focus-within { outline: 3px solid var(--blue); outline-offset: 3px; }
 
-    /* Step 1: services */
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .tile { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; text-align: left; min-height: 118px; padding: 14px 14px 13px; border-radius: 18px; border: 1.5px solid var(--line); background: var(--field); transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease; }
-    .tile:hover { border-color: var(--ic); box-shadow: 0 6px 18px rgba(28, 36, 32, .08); transform: translateY(-1px); }
-    .tile:active { transform: scale(.985); }
-    .tile[aria-pressed="true"] { border-color: var(--ic); }
-    .tile b { display: block; font-weight: 650; font-size: 15.5px; line-height: 1.2; }
-    .tile small { display: block; margin-top: 3px; color: var(--muted); font-size: 12.5px; line-height: 1.3; }
-    .badge { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; flex: none; background: var(--accent-soft); background: color-mix(in srgb, var(--ic) 15%, transparent); }
-    .badge svg { width: 24px; height: 24px; stroke: var(--ic); }
+    /* Step 1: services in a grid with hairline dividers, as on the site. */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .tile { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-height: 132px; padding: 16px 14px 14px; border: 0; border-radius: 0; background: var(--white); text-align: left; transition: background-color .15s ease; }
+    .tile:hover { background: var(--grey); }
+    .tile:focus-visible { outline-offset: -3px; }
+    .tile img { width: 44px; height: 44px; }
+    .tile b { display: block; font-weight: 700; font-size: 15px; line-height: 1.25; }
+    .tile small { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .tile[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--red); }
+    .tile[aria-pressed="true"]::after { content: ""; position: absolute; top: 10px; right: 10px; width: 22px; height: 22px; border-radius: 50%; background: var(--red) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 12.5l4 4 9-9'/%3E%3C/svg%3E") center / 14px no-repeat; }
 
     /* Step 2 */
-    .picked { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 9px 12px 9px 9px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--field); }
-    .picked:hover { border-color: var(--ic); }
-    .picked small { display: block; color: var(--muted); font-size: 12px; line-height: 1.2; }
-    .picked b { display: block; font-weight: 650; font-size: 15.5px; line-height: 1.25; }
+    .picked { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px 14px 10px 10px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--white); transition: border-color .15s ease; }
+    .picked:hover { border-color: var(--blue); }
+    .picked img { width: 40px; height: 40px; flex: none; }
+    .picked small { display: block; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; line-height: 1.3; }
+    .picked b { display: block; font-weight: 700; font-size: 15.5px; line-height: 1.25; }
     .picked .txt { flex: 1; min-width: 0; }
-    .picked em { font-style: normal; font-size: 13.5px; font-weight: 600; color: var(--accent); }
+    .picked em { font-style: normal; font-size: 14px; font-weight: 700; color: var(--blue); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 
-    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip { min-height: 38px; padding: 7px 13px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--field); font-size: 14.5px; line-height: 1.2; transition: border-color .15s ease, background-color .15s ease; }
-    .chip:hover { border-color: var(--accent); }
-    .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-deep); font-weight: 600; }
-    .chip--urgent { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; }
-    .chip--urgent svg { width: 18px; height: 18px; stroke: currentColor; }
-    .chip--urgent[aria-pressed="true"] { border-color: var(--warm); background: var(--warm-soft); color: var(--warm); }
+    /* Multi-select chips: "+" turns into a red tick when picked. Montserrat is
+       wide, so a phone lays them out in two even columns instead of a ragged list. */
+    .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 14px 8px 10px; border-radius: var(--radius); border: 1.5px solid var(--line); background: var(--white); font-size: 14.5px; line-height: 1.2; text-align: left; transition: border-color .15s ease, box-shadow .15s ease; }
+    .chip svg { width: 16px; height: 16px; flex: none; stroke: var(--blue); }
+    .chip .tick { display: none; }
+    .chip:hover { border-color: var(--blue); }
+    .chip[aria-pressed="true"] { border-color: var(--red); box-shadow: inset 0 0 0 1px var(--red); }
+    .chip[aria-pressed="true"] svg { stroke: var(--red); }
+    .chip[aria-pressed="true"] .add-mark { display: none; }
+    .chip[aria-pressed="true"] .tick { display: inline; }
+
+    .toggle { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 14px 10px 12px; border-radius: var(--radius); border: 1.5px solid var(--line); background: var(--white); text-align: left; font-weight: 600; font-size: 15px; line-height: 1.3; transition: border-color .15s ease, box-shadow .15s ease; }
+    .toggle img { width: 32px; height: 32px; flex: none; }
+    .toggle .txt { flex: 1; min-width: 0; }
+    .toggle .box { width: 24px; height: 24px; flex: none; border-radius: 6px; border: 1.5px solid var(--muted); background: var(--white); }
+    .toggle:hover { border-color: var(--blue); }
+    .toggle[aria-pressed="true"] { border-color: var(--red); box-shadow: inset 0 0 0 1px var(--red); }
+    .toggle[aria-pressed="true"] .box { border-color: var(--red); background: var(--red) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 12.5l4 4 9-9'/%3E%3C/svg%3E") center / 16px no-repeat; }
 
     .group { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-    .pair { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    .pair { display: grid; grid-template-columns: 1fr; gap: 16px; }
     .label { font-size: 14px; font-weight: 600; }
     .label span { font-weight: 400; color: var(--muted); }
 
     /* 16px text keeps iOS Safari from zooming into a focused field. */
-    input[type="text"], input[type="tel"], textarea { width: 100%; background: var(--field); border: 1.5px solid var(--line); border-radius: 14px; padding: 13px 14px; transition: border-color .15s ease, background-color .15s ease; }
-    textarea { min-height: 72px; resize: vertical; display: block; }
-    input::placeholder, textarea::placeholder { color: var(--muted); opacity: .75; }
-    input:focus, textarea:focus { outline: none; border-color: var(--accent); background: var(--card); }
-    [aria-invalid="true"] { border-color: var(--danger) !important; }
+    input[type="text"], input[type="tel"], textarea { width: 100%; background: var(--grey); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 13px 14px; font-size: 16px; transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease; }
+    textarea { min-height: 76px; resize: vertical; display: block; }
+    input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
+    input[type="text"]:hover, input[type="tel"]:hover, textarea:hover { border-color: var(--muted); }
+    input:focus, textarea:focus { outline: none; border-color: var(--blue); background: var(--white); box-shadow: 0 0 0 3px rgba(0, 82, 204, .18); }
+    [aria-invalid="true"] { border-color: var(--red) !important; box-shadow: 0 0 0 3px rgba(227, 6, 19, .16); }
 
     .phone { display: flex; align-items: stretch; }
-    .phone span { display: grid; place-items: center; padding: 0 13px; border: 1.5px solid var(--line); border-right: 0; border-radius: 14px 0 0 14px; background: var(--field); color: var(--muted); font-weight: 600; }
-    .phone input { border-radius: 0 14px 14px 0; }
+    .phone span { display: grid; place-items: center; padding: 0 13px; border: 1.5px solid var(--line); border-right: 0; border-radius: var(--radius) 0 0 var(--radius); background: var(--grey); font-weight: 600; transition: border-color .15s ease; }
+    .phone input { border-radius: 0 var(--radius) var(--radius) 0; }
+    .phone:focus-within span { border-color: var(--blue); }
+    .phone:has([aria-invalid="true"]) span { border-color: var(--red); }
 
     /* Photos */
     .photos { display: flex; flex-wrap: wrap; gap: 10px; }
-    .add { position: relative; display: flex; align-items: center; gap: 12px; flex: 1 1 220px; min-height: 72px; padding: 12px 14px; border-radius: 16px; border: 1.5px dashed var(--muted); background: transparent; cursor: pointer; transition: border-color .15s ease, background-color .15s ease; }
-    .add:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .add { position: relative; display: flex; align-items: center; gap: 14px; flex: 1 1 220px; min-height: 76px; padding: 12px 16px; border-radius: var(--radius); border: 1.5px dashed var(--blue); background: var(--white); cursor: pointer; transition: background-color .15s ease; }
+    .add:hover { background: var(--grey); }
     .add input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-    .add .badge { background: var(--accent-soft); }
-    .add .badge svg { stroke: var(--accent); }
-    .add b { display: block; font-weight: 650; font-size: 15px; line-height: 1.25; }
-    .add small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.3; }
-    .add--more { flex: 0 0 66px; width: 66px; min-height: 66px; justify-content: center; padding: 0; }
-    .thumb { position: relative; width: 66px; height: 66px; flex: none; border-radius: 14px; overflow: hidden; background: var(--field); border: 1px solid var(--line); }
-    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .thumb button { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(20, 26, 23, .72); color: #fff; display: grid; place-items: center; padding: 0; }
-    .thumb button svg { width: 14px; height: 14px; stroke: #fff; }
-    .note { color: var(--muted); font-size: 13px; margin: 0; }
+    .add svg { width: 40px; height: 40px; flex: none; }
+    .add b { display: block; font-weight: 700; font-size: 15px; line-height: 1.25; color: var(--blue); }
+    .add small { display: block; margin-top: 2px; color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .add--more { flex: 0 0 72px; width: 72px; min-height: 72px; justify-content: center; padding: 0; }
+    .add--more svg { width: 28px; height: 28px; stroke: var(--blue); }
+    .thumb { position: relative; width: 72px; height: 72px; flex: none; border-radius: var(--radius); overflow: hidden; background: var(--grey); border: 1px solid var(--line); }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb button { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(28, 37, 51, .78); display: grid; place-items: center; padding: 0; }
+    .thumb button svg { width: 14px; height: 14px; stroke: var(--white); }
+    .note { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
 
     .consent { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--muted); }
-    .consent input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--accent); flex: none; }
-    .consent a { color: var(--accent); }
+    .consent input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--blue); flex: none; }
 
-    .err { color: var(--danger); font-size: 14px; font-weight: 600; margin: 0; }
-    .banner { background: var(--warm-soft); border-radius: 14px; padding: 12px 14px; font-size: 14.5px; margin: 0; }
+    .err, .banner { margin: 0; padding: 12px 14px; border-left: 4px solid var(--red); border-radius: 0 var(--radius) var(--radius) 0; background: var(--grey); color: var(--ink); font-size: 14.5px; font-weight: 600; }
+    .banner { font-weight: 400; }
 
-    .btn { appearance: none; border: 0; border-radius: 16px; min-height: 56px; padding: 14px 20px; font-weight: 650; font-size: 16.5px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
-    .btn[disabled] { opacity: .6; cursor: progress; }
-    .primary { width: 100%; background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 24px rgba(31, 107, 84, .28); transition: transform .15s ease, filter .15s ease; }
-    .primary:hover:not([disabled]) { filter: brightness(1.06); transform: translateY(-1px); }
-    .ghost { background: transparent; color: var(--accent); border: 1.5px solid var(--line); }
+    .btn { appearance: none; border: 2px solid transparent; border-radius: var(--radius); min-height: 56px; padding: 14px 22px; font-weight: 700; font-size: 17px; line-height: 1.2; display: inline-flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; transition: background-color .15s ease, border-color .15s ease; }
+    .btn[disabled] { opacity: .65; cursor: progress; }
+    .primary { width: 100%; background: var(--red); color: var(--white); }
+    .primary:hover:not([disabled]) { background: var(--red-hover); }
+    .ghost { background: var(--white); color: var(--blue); border-color: var(--blue); }
+    .ghost:hover { background: var(--grey); }
 
-    .done { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 8px 0 4px; }
-    .done .ok { width: 72px; height: 72px; border-radius: 50%; background: var(--accent-soft); display: grid; place-items: center; }
-    .done .ok svg { width: 36px; height: 36px; stroke: var(--accent); }
-    .done .num { display: inline-block; padding: 6px 14px; border-radius: 999px; background: var(--field); border: 1px solid var(--line); font-weight: 700; }
-    .done p { margin: 0; color: var(--muted); max-width: 34ch; }
+    .done { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 4px 0; }
+    .done .mark { width: 136px; height: 80px; }
+    .done .num { display: inline-block; padding: 6px 14px; border-radius: var(--radius); background: var(--grey); font-weight: 700; }
+    .done p { margin: 0; color: var(--muted); max-width: 36ch; }
+    .done .call { color: var(--ink); font-weight: 600; }
+    .done .call a { font-weight: 700; white-space: nowrap; }
 
-    footer { text-align: center; color: var(--muted); font-size: 13px; padding: 0 12px; }
+    footer { border-top: 1px solid var(--line); padding-top: 20px; color: var(--muted); font-size: 13.5px; }
+    footer p { margin: 14px 0 0; }
+    .contacts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 24px; color: var(--ink); font-weight: 600; }
+    .contacts li { display: flex; align-items: center; gap: 8px; }
+    .contacts img { width: 24px; height: 24px; flex: none; }
+    .contacts a { color: inherit; text-decoration: none; white-space: nowrap; }
+    .contacts a:hover { color: var(--blue); }
 
-    @media (min-width: 520px) {
-      body { padding-top: 36px; }
-      .card { padding: 26px 26px 26px; }
+    /* Wider screens: the form sits on a white card over the light grey page. */
+    @media (min-width: 560px) {
+      body { background: var(--grey); }
+      .top__logo { height: 40px; }
+      .wrap { padding-top: 32px; }
+      .card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; }
       h1 { font-size: 30px; }
+      .grid { grid-template-columns: repeat(3, 1fr); }
+      .chips { display: flex; flex-wrap: wrap; }
       .pair { grid-template-columns: 1fr 1fr; }
+      footer { border-top: 0; padding: 0 4px; }
     }
 
-    @media (max-width: 340px) {
-      .grid { grid-template-columns: 1fr; }
+    /* A narrow phone keeps the call icon; the number stays for screen readers. */
+    @media (max-width: 359px) {
+      .top__phone span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+      .grid, .chips { grid-template-columns: 1fr; }
       .tile { min-height: 0; flex-direction: row; align-items: center; }
     }
 
     @media (prefers-reduced-motion: reduce) {
       .step { animation: none; }
-      .tile, .primary, .chip { transition: none; }
+      .tile, .chip, .toggle, .btn, .picked { transition: none; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M12 17c-1.6 0-2.5-1.1-2.5-2.4 0-1.6 1.6-2.4 2.5-4.1.9 1.7 2.5 2.5 2.5 4.1 0 1.3-.9 2.4-2.5 2.4z"/></svg>
-      </div>
-      <div>
-        <div class="brand">Свиб-Дом Сервис</div>
-        <div class="tag">Честный сервис для вашего дома · Калининград и область</div>
-      </div>
-    </header>
+  <header class="top">
+    <div class="top__in">
+      <img class="top__logo" src="brand/svib-logo-horizontal-v1.svg" width="136" height="40" alt="СВИБ Дом Сервис">
+      <a class="top__phone" href="tel:+79114856632"><img src="brand/icon-contact-phone-v1.svg" width="24" height="24" alt=""><span>+7 (911) 485-66-32</span></a>
+    </div>
+  </header>
 
+  <div class="wrap">
     <main class="card" id="card" aria-live="polite">
       <p class="hint">Загружаем форму…</p>
     </main>
 
-    <footer>Мастер перезвонит, уточнит детали и назовёт цену до начала работ.</footer>
+    <footer>
+      <ul class="contacts">
+        <li><img src="brand/icon-contact-phone-v1.svg" width="24" height="24" alt=""><a href="tel:+79114856632">+7 (911) 485-66-32</a></li>
+        <li><img src="brand/icon-contact-address-v1.svg" width="24" height="24" alt=""><span>Калининград и Гурьевск</span></li>
+        <li><img src="brand/icon-contact-hours-v1.svg" width="24" height="24" alt=""><span>Работаем с&nbsp;10:00 до&nbsp;18:00</span></li>
+      </ul>
+      <p>Мастер перезвонит, уточнит детали и назовёт цену до начала работ.</p>
+    </footer>
   </div>
 
   <script>
@@ -229,44 +257,47 @@
       // breakdown just as well and uploads fast on a mobile network.
       var MAX_PHOTO_SIDE = 1600;
 
+      var PHONE_HREF = 'tel:+79114856632';
+      var PHONE_TEXT = '+7 (911) 485-66-32';
+
+      // Interface glyphs; the service icons are brand files in brand/.
       var ICON = {
-        boiler: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="15" rx="2"/><path d="M9 21v-3M15 21v-3"/><path d="M12 14c-1.4 0-2.2-.9-2.2-2 0-1.4 1.4-2 2.2-3.5.8 1.5 2.2 2.1 2.2 3.5 0 1.1-.8 2-2.2 2z"/></svg>',
-        heater: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="17" rx="6"/><path d="M10 22v-2.5M14 22v-2.5M12 8v5"/></svg>',
-        pipe: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h9a3 3 0 0 1 3 3v3"/><path d="M3 11h7a1 1 0 0 1 1 1v1"/><path d="M13 13h4v2h-4z"/><path d="M15 18.5c0 1-.7 1.7-1.5 1.7S12 19.5 12 18.5c0-.9 1.5-2.5 1.5-2.5s1.5 1.6 1.5 2.5z"/></svg>',
-        bolt: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 5 13.5h6L10 22l8-11.5h-6z"/></svg>',
-        wash: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2"/><circle cx="12" cy="13" r="4.5"/><path d="M7 6h2"/></svg>',
-        tool: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3z"/><path d="M14.5 6.5 17 4l3 3-2.5 2.5"/></svg>',
-        camera: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2.5h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>',
-        plus: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
-        close: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
-        clock: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
-        check: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+        camera: '<svg viewBox="0 0 48 48" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="#0052CC" d="M6 17a3.5 3.5 0 0 1 3.5-3.5H15l3.5-5h11l3.5 5h5.5A3.5 3.5 0 0 1 42 17v20a3.5 3.5 0 0 1-3.5 3.5h-29A3.5 3.5 0 0 1 6 37z"/><circle stroke="#E30613" cx="24" cy="26.5" r="7.5"/></svg>',
+        plus: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+        close: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+        mark: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="add-mark" d="M12 6v12M6 12h12"/><path class="tick" d="M5.5 12.5l4 4 9-9"/></svg>',
+        // Brand stripes at 30° and the blue plate, as on the site's first screen.
+        done: '<svg class="mark" viewBox="0 0 136 80" aria-hidden="true"><path fill="#0052CC" d="M0 80h4.5L50.7 0h-4.5z"/><path fill="#E30613" d="M9.5 80h11L66.7 0h-11z"/><path fill="#0052CC" d="M25.5 80 71.7 0H136v80z"/><path fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M85 41l8.5 8.5L111 32"/></svg>'
       };
 
       // model: the master needs the brand and model (spare parts), so the
       // step asks for it; ask/issues word the question for the service.
       var CATS = [
-        { id: 'boiler', name: 'Газовый котёл', hint: 'Не греет, ошибка, обслуживание', icon: 'boiler', color: '#d9622b',
+        { id: 'boiler', name: 'Газовый котёл', hint: 'Не греет, ошибка, обслуживание', icon: 'heating',
           issues: ['Не греет отопление', 'Нет горячей воды', 'Ошибка на дисплее', 'Не включается', 'Течёт или капает', 'Шумит, хлопает', 'Падает давление', 'Плановое обслуживание'],
           model: 'Марка и модель котла', modelHint: 'Например: Baxi Eco Four 24', details: 'Например: ошибка E10, давление 0,5 бар' },
-        { id: 'heater', name: 'Бойлер, колонка', hint: 'Нет горячей воды, течёт', icon: 'heater', color: '#0f8a8a',
+        { id: 'heater', name: 'Бойлер, колонка', hint: 'Нет горячей воды, течёт', icon: 'water-heater',
           issues: ['Не греет воду', 'Течёт', 'Не зажигается колонка', 'Выбивает автомат', 'Чистка от накипи', 'Установка или замена'],
           model: 'Марка и модель', modelHint: 'Например: Ariston ABS 80', details: 'Например: греет час и отключается' },
-        { id: 'plumb', name: 'Сантехника', hint: 'Протечка, засор, смеситель', icon: 'pipe', color: '#2f6fd0',
+        { id: 'plumb', name: 'Сантехника', hint: 'Протечка, засор, смеситель', icon: 'plumbing',
           issues: ['Протечка', 'Засор', 'Кран или смеситель', 'Унитаз', 'Радиатор отопления', 'Установка или замена'],
           details: 'Например: течёт под раковиной на кухне' },
-        { id: 'electric', name: 'Электрика', hint: 'Розетки, автоматы, свет', icon: 'bolt', color: '#c98a00',
+        { id: 'electric', name: 'Электрика', hint: 'Розетки, автоматы, свет', icon: 'electrics',
           issues: ['Нет света', 'Выбивает автомат', 'Розетка или выключатель', 'Подключить прибор', 'Люстра или светильник'],
           details: 'Например: выбивает автомат, когда включаю чайник' },
-        { id: 'appliance', name: 'Бытовая техника', hint: 'Стиральная, холодильник, плита', icon: 'wash', color: '#7a55c7',
+        { id: 'appliance', name: 'Бытовая техника', hint: 'Стиральная, холодильник, плита', icon: 'appliances',
           ask: 'Какая техника?',
           issues: ['Стиральная машина', 'Посудомоечная машина', 'Холодильник', 'Плита, варочная панель', 'Духовой шкаф', 'Микроволновка', 'Другая техника'],
           model: 'Марка и модель техники', modelHint: 'Например: Bosch WAN 24260', details: 'Например: не сливает воду, ошибка E18' },
-        { id: 'other', name: 'Другое по дому', hint: 'Мелкий ремонт, сборка, замки', icon: 'tool', color: '#2f7a5f',
+        { id: 'other', name: 'Другое по дому', hint: 'Окна, двери, сборка, мелкий ремонт', icon: 'home-repair',
           ask: 'Что нужно сделать?',
           issues: ['Мелкий ремонт', 'Повесить или собрать', 'Двери, замки', 'Окна', 'Нужна консультация'],
           details: 'Например: повесить телевизор на стену' }
       ];
+
+      function catIcon(c, size) {
+        return '<img src="brand/icon-' + c.icon + '-v1.svg" width="' + size + '" height="' + size + '" alt="">';
+      }
 
       function emptyState() {
         return { step: 1, cat: null, issues: [], model: '', details: '', address: '', urgent: false, name: '', phone: '', consent: false };
@@ -358,7 +389,7 @@
 
       function chips(list, selected) {
         return '<div class="chips">' + list.map(function(value) {
-          return '<button type="button" class="chip" data-issue="' + esc(value) + '" aria-pressed="' + (selected.indexOf(value) !== -1) + '">' + esc(value) + '</button>';
+          return '<button type="button" class="chip" data-issue="' + esc(value) + '" aria-pressed="' + (selected.indexOf(value) !== -1) + '">' + ICON.mark + esc(value) + '</button>';
         }).join('') + '</div>';
       }
 
@@ -368,11 +399,11 @@
         var add = '';
 
         if (!photos.length) {
-          add = '<label class="add"><span class="badge">' + ICON.camera + '</span>' +
+          add = '<label class="add">' + ICON.camera +
             '<span><b>' + (app.photoBusy ? 'Готовим фото…' : 'Добавить фото поломки') + '</b>' +
             '<small>До ' + MAX_PHOTOS + ' снимков — мастер заранее поймёт, что взять с собой</small></span>' + input + '</label>';
         } else if (!full) {
-          add = '<label class="add add--more" title="Добавить ещё фото"><span class="badge">' + ICON.plus + '</span>' + input + '</label>';
+          add = '<label class="add add--more" title="Добавить ещё фото">' + ICON.plus + input + '</label>';
         }
 
         return '<div class="photos">' + photos.map(function(photo, index) {
@@ -397,7 +428,8 @@
 
       function render() {
         if (app.fatal) {
-          card.innerHTML = '<div class="step"><h1>Форма временно недоступна</h1><p class="banner">' + esc(app.fatal) + '</p></div>';
+          card.innerHTML = '<div class="step"><h1>Форма временно недоступна</h1><p class="banner">' + esc(app.fatal) + '</p>' +
+            '<p class="hint">Оставить заявку можно по телефону: <a href="' + PHONE_HREF + '">' + PHONE_TEXT + '</a></p></div>';
           return;
         }
 
@@ -408,15 +440,15 @@
           h = stepsMarkup() +
             '<h1>С чем помочь?</h1><p class="hint">Выберите услугу — останется оставить телефон.</p>' +
             '<div class="grid">' + CATS.map(function(c) {
-              return '<button type="button" class="tile" style="--ic:' + c.color + '" data-cat="' + c.id + '" aria-pressed="' + (S.cat === c.id) + '">' +
-                '<span class="badge">' + ICON[c.icon] + '</span>' +
+              return '<button type="button" class="tile" data-cat="' + c.id + '" aria-pressed="' + (S.cat === c.id) + '">' +
+                catIcon(c, 44) +
                 '<span><b>' + esc(c.name) + '</b><small>' + esc(c.hint) + '</small></span></button>';
             }).join('') + '</div>';
         } else if (S.step === 2) {
           var c = cat();
           h = stepsMarkup() +
-            '<button type="button" class="picked" style="--ic:' + c.color + '" data-act="back">' +
-            '<span class="badge">' + ICON[c.icon] + '</span><span class="txt"><small>Услуга</small><b>' + esc(c.name) + '</b></span><em>Изменить</em></button>' +
+            '<button type="button" class="picked" data-act="back">' +
+            catIcon(c, 40) + '<span class="txt"><small>Услуга</small><b>' + esc(c.name) + '</b></span><em>Изменить</em></button>' +
             '<h1>' + esc(c.ask || 'Что случилось?') + '</h1>' +
             chips(c.issues, S.issues) +
             '<div class="group"><label class="label" for="details">Опишите проблему <span>— своими словами</span></label>' +
@@ -433,15 +465,17 @@
             '</div>' +
             '<div class="group"><label class="label" for="address">Адрес <span>— можно уточнить по телефону</span></label>' +
             '<input id="address" type="text" maxlength="300" autocomplete="street-address" placeholder="Город, улица, дом, квартира" value="' + esc(S.address) + '"></div>' +
-            '<button type="button" class="chip chip--urgent" data-act="urgent" aria-pressed="' + S.urgent + '">' + ICON.clock + 'Срочно — нужен мастер сегодня</button>' +
+            '<button type="button" class="toggle" data-act="urgent" aria-pressed="' + S.urgent + '">' +
+            '<img src="brand/icon-contact-hours-v1.svg" width="32" height="32" alt=""><span class="txt">Срочно — нужен мастер сегодня</span><span class="box"></span></button>' +
             consentMarkup() +
             '<p class="err" id="err" role="alert" hidden></p>' +
             '<button class="btn primary" type="button" data-act="send" id="send"' + (app.submitting ? ' disabled' : '') + '>' + sendLabel() + '</button>';
         } else {
-          h = '<div class="done"><div class="ok">' + ICON.check + '</div>' +
+          h = '<div class="done">' + ICON.done +
             '<h1>Заявка принята</h1>' +
             (app.ticketNumber ? '<div class="num">№ ' + esc(app.ticketNumber) + '</div>' : '') +
-            '<p>Мастер перезвонит вам в рабочее время, уточнит детали и назовёт стоимость до начала работ.</p>' +
+            '<p>Мастер перезвонит вам в рабочее время, с&nbsp;10:00 до&nbsp;18:00, уточнит детали и назовёт стоимость до начала работ.</p>' +
+            '<p class="call">Срочно? Позвоните: <a href="' + PHONE_HREF + '">' + PHONE_TEXT + '</a></p>' +
             '<button class="btn ghost" type="button" data-act="reset">Оставить ещё одну заявку</button></div>';
         }
 

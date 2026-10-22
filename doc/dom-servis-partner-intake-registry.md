@@ -50,6 +50,11 @@ Every request source also exposes `client_form_url`
   address and the visit time become "Уточнить у клиента".
 - For a source used only through this link, leave `allowed_domains` empty: the page reports our domain as its origin,
   so the source card offers the link only when no partner domains are set.
+- Look: the СВИБ Дом Сервис brand book v1.0, as on the company site. Montserrat, blue `#0052CC` leads, red `#E30613`
+  only on the send button and picked options; the logo and the phone sit in the header, area and hours in the footer.
+  Fonts, logo and icons live in `public/assets/form/brand/`. Like everything under `/assets` they are cached for ten
+  years, while the form pages themselves are `no-cache`, so a changed brand file gets a new name (`-v2`) instead of
+  replacing the old one.
 
 ## Runtime flow
 
