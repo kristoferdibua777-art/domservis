@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xml:lang="ru" width="48" height="48" viewBox="0 0 48 48">
+<title>СВИБ Дом Сервис — иконка «Часы работы» (белая для тёмного фона)</title>
+<desc>Сетка 48 × 48, рабочее поле 40 × 40, линия 3, скруглённые окончания и углы.</desc>
+<g id="icon-contact-hours" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><g id="icon-contact-hours-base" stroke="#FFFFFF"><circle cx="24" cy="24" r="18"/></g><g id="icon-contact-hours-accent" stroke="#FFFFFF"><path d="M24 14V24L31 28.5"/></g></g>
+</svg>

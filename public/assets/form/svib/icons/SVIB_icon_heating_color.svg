@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xml:lang="ru" width="48" height="48" viewBox="0 0 48 48">
+<title>СВИБ Дом Сервис — иконка «Газовые котлы и отопление» (для светлого фона)</title>
+<desc>Сетка 48 × 48, рабочее поле 40 × 40, линия 3, скруглённые окончания и углы.</desc>
+<g id="icon-heating" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><g id="icon-heating-base" stroke="#0052CC"><rect x="11" y="5" width="26" height="31" rx="4"/><path d="M17 11.5H24M18 36V42.5M30 36V42.5"/></g><g id="icon-heating-base-fill" fill="#0052CC" stroke="none"><circle cx="31" cy="11.5" r="2"/></g><g id="icon-heating-accent" stroke="#E30613"><path d="M18 27C18 24.2 19.4 22.2 20.8 20.2C21.2 21.8 22 22.8 23.1 23.3C23.1 20.5 24.1 18.3 26.1 16.5C27.2 20 30 22.6 30 27A6 6 0 0 1 18 27Z"/></g></g>
+</svg>
