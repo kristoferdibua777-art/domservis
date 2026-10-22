@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xml:lang="ru" width="48" height="48" viewBox="0 0 48 48">
+<title>СВИБ Дом Сервис — иконка «Бытовая техника» (для светлого фона)</title>
+<desc>Сетка 48 × 48, рабочее поле 40 × 40, линия 3, скруглённые окончания и углы.</desc>
+<g id="icon-appliances" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><g id="icon-appliances-base" stroke="#0052CC"><rect x="10" y="4.5" width="28" height="39" rx="4"/><path d="M10 14H38M15.5 9.25H21.5"/><circle cx="24" cy="28.5" r="8.5"/></g><g id="icon-appliances-accent-fill" fill="#E30613" stroke="none"><circle cx="31.5" cy="9.25" r="2.2"/></g></g>
+</svg>

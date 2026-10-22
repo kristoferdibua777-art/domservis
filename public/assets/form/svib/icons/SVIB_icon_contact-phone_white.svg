@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xml:lang="ru" width="48" height="48" viewBox="0 0 48 48">
+<title>СВИБ Дом Сервис — иконка «Телефон» (белая для тёмного фона)</title>
+<desc>Сетка 48 × 48, рабочее поле 40 × 40, линия 3, скруглённые окончания и углы.</desc>
+<g id="icon-contact-phone" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><g id="icon-contact-phone-base" stroke="#FFFFFF"><rect x="14" y="5" width="20" height="38" rx="4"/><path d="M21 37.5H27"/></g><g id="icon-contact-phone-accent" stroke="#FFFFFF"><path d="M20.5 11H27.5"/></g></g>
+</svg>

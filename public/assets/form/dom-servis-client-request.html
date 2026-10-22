@@ -3,53 +3,60 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#1f6b54">
+  <meta name="theme-color" content="#0052cc">
+  <!-- The page has its own dark variant: without it a browser or an in-app
+       webview may darken the page by itself and recolor the logo. -->
+  <meta name="color-scheme" content="light dark">
   <meta name="robots" content="noindex">
-  <title>Свиб-Дом Сервис | Заявка на ремонт</title>
+  <meta name="description" content="Заявка мастеру СВИБ Дом Сервис: котлы, бойлеры, сантехника, электрика, бытовая техника. Калининград и Гурьевск.">
+  <title>СВИБ Дом Сервис | Заявка на ремонт</title>
+  <link rel="icon" href="svib/SVIB_favicon.svg?v=1" type="image/svg+xml">
+  <link rel="icon" href="svib/favicon-32.png?v=1" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="svib/apple-touch-icon-180.png?v=1">
   <style>
     /* Standalone client request page in two steps: pick a service, then say
        what happened and how to reach you (photos welcome). Submits through
        the same Zammad form channel as the partner embed
-       (form_config -> form_submit with request_source_token). */
+       (form_config -> form_submit with request_source_token).
+
+       Look: СВИБ Дом Сервис brand book v1.0. Brand files live in svib/
+       (nginx caches /assets/ for years, so bump ?v= when one changes). */
+
+    @font-face { font-family: 'Montserrat'; font-style: normal; font-weight: 400; font-display: swap; src: url('svib/fonts/montserrat-400.woff2?v=1') format('woff2'); }
+    @font-face { font-family: 'Montserrat'; font-style: normal; font-weight: 500; font-display: swap; src: url('svib/fonts/montserrat-500.woff2?v=1') format('woff2'); }
+    @font-face { font-family: 'Montserrat'; font-style: normal; font-weight: 600; font-display: swap; src: url('svib/fonts/montserrat-600.woff2?v=1') format('woff2'); }
+    @font-face { font-family: 'Montserrat'; font-style: normal; font-weight: 700; font-display: swap; src: url('svib/fonts/montserrat-700.woff2?v=1') format('woff2'); }
+    @font-face { font-family: 'Montserrat'; font-style: normal; font-weight: 800; font-display: swap; src: url('svib/fonts/montserrat-800.woff2?v=1') format('woff2'); }
+
     :root {
-      --bg: #f4f1ea;
-      --bg-glow: #e4eee6;
-      --card: #fffdf9;
-      --field: #f8f5ee;
-      --ink: #1c2420;
-      --muted: #667069;
-      --line: #e3ddd0;
-      --accent: #1f6b54;
-      --accent-deep: #18523f;
-      --accent-ink: #ffffff;
-      --accent-soft: #e2efe8;
-      --warm: #c9531c;
-      --warm-soft: #fbe8db;
-      --danger: #b3402a;
-      --shadow: 0 1px 2px rgba(28, 36, 32, .05), 0 14px 36px rgba(28, 36, 32, .09);
-      --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-head: "Palatino Linotype", Palatino, Georgia, "Noto Serif", serif;
-      color-scheme: light;
+      /* Brand palette (brand book, section 6). Red is an accent only:
+         the call to action, the urgent mark, errors. */
+      --blue: #0052cc;
+      --blue-hover: #0046ad;
+      --blue-soft: #e6eefa;
+      --red: #e30613;
+      --red-hover: #c10510;
+      --red-soft: #fdecee;
+      --navy: #0b2f6b;
+      --grey: #eef2f7;
+      --line: #c9d2de;
+      /* Field borders need 3:1 against white (WCAG 1.4.11); tech grey is 1.5:1. */
+      --field-line: #8592a6;
+      --slate: #5b6678;
+      --ink: #1c2533;
+      --white: #ffffff;
+      --page: var(--grey);
+      --radius: 8px;
+      --shadow: 0 1px 2px rgba(11, 47, 107, .06), 0 12px 32px rgba(11, 47, 107, .09);
+      --font: 'Montserrat', 'Arial', sans-serif;
+      color-scheme: light dark;
     }
 
+    /* Dark mode keeps the form itself on white: only the page around it goes navy. */
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #131a17;
-        --bg-glow: #1b2a24;
-        --card: #1c2521;
-        --field: #232d28;
-        --ink: #e9efeb;
-        --muted: #9eaea7;
-        --line: #33403a;
-        --accent: #6fc3a6;
-        --accent-deep: #8fd6bc;
-        --accent-ink: #0f1a16;
-        --accent-soft: #24392f;
-        --warm: #f0a070;
-        --warm-soft: #3b2a20;
-        --danger: #f08a74;
+        --page: #081f47;
         --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 14px 36px rgba(0, 0, 0, .35);
-        color-scheme: dark;
       }
     }
 
@@ -59,129 +66,189 @@
 
     body {
       min-height: 100vh;
-      background: radial-gradient(900px 520px at 12% -8%, var(--bg-glow), transparent 62%), var(--bg);
+      background: var(--page);
       color: var(--ink);
-      font: 16px/1.5 var(--font);
-      padding: max(20px, env(safe-area-inset-top)) 14px max(36px, env(safe-area-inset-bottom));
+      font: 400 16px/1.45 var(--font);
+      padding: 0 0 max(28px, env(safe-area-inset-bottom));
       -webkit-tap-highlight-color: transparent;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
-    .wrap { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+    /* Header: blue plate, white logo with the red roof (brand book, section 10). */
+    .top { background: var(--blue); color: var(--white); padding-top: env(safe-area-inset-top); }
+    .top__in { max-width: 1040px; margin: 0 auto; padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left)); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .logo { display: block; width: 122px; height: 36px; flex: none; }
+    .call { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 2px; color: var(--white); text-decoration: none; font-weight: 700; font-size: 15px; white-space: nowrap; border-radius: var(--radius); }
+    .call img { width: 22px; height: 22px; flex: none; }
+    .call small { display: none; }
+    .top a:focus-visible { outline-color: var(--white); }
 
-    header { display: flex; align-items: center; gap: 12px; padding: 0 4px; }
-    .mark { width: 44px; height: 44px; border-radius: 14px; background: var(--accent); display: grid; place-items: center; flex: none; }
-    .mark svg { width: 26px; height: 26px; stroke: var(--accent-ink); }
-    .brand { font-weight: 700; font-size: 17px; line-height: 1.2; }
-    .tag { color: var(--muted); font-size: 13px; }
+    .wrap { max-width: 560px; margin: 16px auto 0; padding: 0 12px; display: grid; gap: 16px; }
 
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); padding: 20px 18px 20px; }
+    .card { background: var(--white); color: var(--ink); color-scheme: light; border-radius: 12px; box-shadow: var(--shadow); padding: 20px 16px 22px; min-width: 0; }
     .step { display: flex; flex-direction: column; gap: 16px; animation: in .28s ease; }
     @keyframes in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-    .steps { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
-    .steps i { flex: 1; height: 5px; border-radius: 5px; background: var(--line); }
-    .steps i.on { background: var(--accent); }
-    .steps span { flex: none; }
+    /* Accidence: Bold caps, 0.12em tracking. Bars lean at the roof's 30 degrees. */
+    .steps { display: flex; align-items: center; gap: 10px; color: var(--slate); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .steps span { flex: none; margin-right: 4px; }
+    .steps i { flex: 1; height: 6px; background: var(--line); transform: skewX(-30deg); }
+    .steps i.on { background: var(--blue); }
 
-    h1 { font-family: var(--font-head); font-weight: 600; font-size: 27px; line-height: 1.15; letter-spacing: -.01em; margin: 2px 0 0; text-wrap: balance; }
-    h2 { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 6px 0 -4px; display: flex; align-items: center; gap: 10px; }
+    h1 { font-weight: 800; font-size: 26px; line-height: 1.15; letter-spacing: -.01em; color: var(--navy); margin: 2px 0 0; text-wrap: balance; }
+    h2 { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--slate); margin: 6px 0 -4px; display: flex; align-items: center; gap: 10px; }
     h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-    .hint { color: var(--muted); margin: -8px 0 0; font-size: 14.5px; }
+    .hint { color: var(--slate); margin: -8px 0 0; font-size: 15px; }
 
     button, input, textarea { font: inherit; color: inherit; }
     button { cursor: pointer; }
-    button:focus-visible, a:focus-visible, input[type="checkbox"]:focus-visible, .add:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
+    :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+    input[type="checkbox"]:focus-visible, .add:focus-within { outline: 3px solid var(--blue); outline-offset: 2px; }
 
     /* Step 1: services */
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .tile { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; text-align: left; min-height: 118px; padding: 14px 14px 13px; border-radius: 18px; border: 1.5px solid var(--line); background: var(--field); transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease; }
-    .tile:hover { border-color: var(--ic); box-shadow: 0 6px 18px rgba(28, 36, 32, .08); transform: translateY(-1px); }
+    .tile { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; text-align: left; min-height: 132px; padding: 12px 12px 13px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--white); transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+    .tile:hover { border-color: var(--blue); box-shadow: 0 6px 18px rgba(0, 82, 204, .12); transform: translateY(-1px); }
     .tile:active { transform: scale(.985); }
-    .tile[aria-pressed="true"] { border-color: var(--ic); }
-    .tile b { display: block; font-weight: 650; font-size: 15.5px; line-height: 1.2; }
-    .tile small { display: block; margin-top: 3px; color: var(--muted); font-size: 12.5px; line-height: 1.3; }
-    .badge { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; flex: none; background: var(--accent-soft); background: color-mix(in srgb, var(--ic) 15%, transparent); }
-    .badge svg { width: 24px; height: 24px; stroke: var(--ic); }
+    .tile[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-soft); }
+    .tile b { display: block; font-weight: 700; font-size: 15px; line-height: 1.2; color: var(--ink); }
+    .tile small { display: block; margin-top: 4px; color: var(--slate); font-weight: 500; font-size: 12.5px; line-height: 1.3; }
+    .badge { width: 48px; height: 48px; border-radius: var(--radius); display: grid; place-items: center; flex: none; background: var(--grey); }
+    .badge img { width: 36px; height: 36px; display: block; }
+    .badge svg { width: 24px; height: 24px; stroke: var(--blue); }
 
     /* Step 2 */
-    .picked { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 9px 12px 9px 9px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--field); }
-    .picked:hover { border-color: var(--ic); }
-    .picked small { display: block; color: var(--muted); font-size: 12px; line-height: 1.2; }
-    .picked b { display: block; font-weight: 650; font-size: 15.5px; line-height: 1.25; }
+    .picked { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 8px 12px 8px 8px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--white); }
+    .picked:hover { border-color: var(--blue); }
+    .picked .badge { width: 44px; height: 44px; }
+    .picked .badge img { width: 32px; height: 32px; }
+    .picked small { display: block; color: var(--slate); font-weight: 500; font-size: 12px; line-height: 1.2; }
+    .picked b { display: block; font-weight: 700; font-size: 15.5px; line-height: 1.25; }
     .picked .txt { flex: 1; min-width: 0; }
-    .picked em { font-style: normal; font-size: 13.5px; font-weight: 600; color: var(--accent); }
+    .picked em { font-style: normal; font-size: 14px; font-weight: 600; color: var(--blue); }
 
     .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip { min-height: 38px; padding: 7px 13px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--field); font-size: 14.5px; line-height: 1.2; transition: border-color .15s ease, background-color .15s ease; }
-    .chip:hover { border-color: var(--accent); }
-    .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-deep); font-weight: 600; }
-    .chip--urgent { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; }
-    .chip--urgent svg { width: 18px; height: 18px; stroke: currentColor; }
-    .chip--urgent[aria-pressed="true"] { border-color: var(--warm); background: var(--warm-soft); color: var(--warm); }
+    .chip { min-height: 40px; padding: 8px 13px; border-radius: var(--radius); border: 1.5px solid var(--line); background: var(--white); font-size: 14.5px; font-weight: 500; line-height: 1.2; text-align: left; transition: border-color .15s ease, background-color .15s ease; }
+    .chip:hover { border-color: var(--blue); }
+    .chip[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-soft); color: var(--blue); font-weight: 600; }
+    .chip--urgent { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; min-height: 44px; }
+    .chip--urgent svg { width: 20px; height: 20px; stroke: var(--slate); flex: none; }
+    .chip--urgent:hover { border-color: var(--red); }
+    .chip--urgent[aria-pressed="true"] { border-color: var(--red); background: var(--red-soft); color: var(--ink); }
+    .chip--urgent[aria-pressed="true"] svg { stroke: var(--red); }
 
     .group { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
     .pair { display: grid; grid-template-columns: 1fr; gap: 14px; }
     .label { font-size: 14px; font-weight: 600; }
-    .label span { font-weight: 400; color: var(--muted); }
+    .label span { font-weight: 400; color: var(--slate); }
 
     /* 16px text keeps iOS Safari from zooming into a focused field. */
-    input[type="text"], input[type="tel"], textarea { width: 100%; background: var(--field); border: 1.5px solid var(--line); border-radius: 14px; padding: 13px 14px; transition: border-color .15s ease, background-color .15s ease; }
-    textarea { min-height: 72px; resize: vertical; display: block; }
-    input::placeholder, textarea::placeholder { color: var(--muted); opacity: .75; }
-    input:focus, textarea:focus { outline: none; border-color: var(--accent); background: var(--card); }
-    [aria-invalid="true"] { border-color: var(--danger) !important; }
+    input[type="text"], input[type="tel"], textarea { width: 100%; background: var(--white); border: 1.5px solid var(--field-line); border-radius: var(--radius); padding: 13px 14px; font-size: 16px; transition: border-color .15s ease, box-shadow .15s ease; }
+    textarea { min-height: 76px; resize: vertical; display: block; }
+    input::placeholder, textarea::placeholder { color: var(--slate); opacity: 1; }
+    input:focus, textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0, 82, 204, .2); }
+    [aria-invalid="true"] { border-color: var(--red) !important; }
+    input[type="checkbox"][aria-invalid="true"] { outline: 2px solid var(--red); outline-offset: 2px; }
 
     .phone { display: flex; align-items: stretch; }
-    .phone span { display: grid; place-items: center; padding: 0 13px; border: 1.5px solid var(--line); border-right: 0; border-radius: 14px 0 0 14px; background: var(--field); color: var(--muted); font-weight: 600; }
-    .phone input { border-radius: 0 14px 14px 0; }
+    .phone span { display: grid; place-items: center; padding: 0 13px; border: 1.5px solid var(--field-line); border-right: 0; border-radius: var(--radius) 0 0 var(--radius); background: var(--grey); color: var(--ink); font-weight: 600; }
+    .phone input { border-radius: 0 var(--radius) var(--radius) 0; }
 
     /* Photos */
     .photos { display: flex; flex-wrap: wrap; gap: 10px; }
-    .add { position: relative; display: flex; align-items: center; gap: 12px; flex: 1 1 220px; min-height: 72px; padding: 12px 14px; border-radius: 16px; border: 1.5px dashed var(--muted); background: transparent; cursor: pointer; transition: border-color .15s ease, background-color .15s ease; }
-    .add:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .add { position: relative; display: flex; align-items: center; gap: 12px; flex: 1 1 220px; min-height: 72px; padding: 12px 14px; border-radius: 10px; border: 1.5px dashed var(--blue); background: var(--grey); cursor: pointer; transition: background-color .15s ease; }
+    .add:hover { background: var(--blue-soft); }
     .add input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-    .add .badge { background: var(--accent-soft); }
-    .add .badge svg { stroke: var(--accent); }
-    .add b { display: block; font-weight: 650; font-size: 15px; line-height: 1.25; }
-    .add small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.3; }
-    .add--more { flex: 0 0 66px; width: 66px; min-height: 66px; justify-content: center; padding: 0; }
-    .thumb { position: relative; width: 66px; height: 66px; flex: none; border-radius: 14px; overflow: hidden; background: var(--field); border: 1px solid var(--line); }
+    .add .badge { background: var(--white); }
+    .add b { display: block; font-weight: 700; font-size: 15px; line-height: 1.25; }
+    .add small { display: block; color: var(--slate); font-weight: 500; font-size: 12.5px; line-height: 1.3; }
+    .add--more { flex: 0 0 68px; width: 68px; min-height: 68px; justify-content: center; padding: 0; }
+    .thumb { position: relative; width: 68px; height: 68px; flex: none; border-radius: var(--radius); overflow: hidden; background: var(--grey); border: 1px solid var(--line); }
     .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .thumb button { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(20, 26, 23, .72); color: #fff; display: grid; place-items: center; padding: 0; }
+    .thumb button { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(28, 37, 51, .78); color: #fff; display: grid; place-items: center; padding: 0; }
     .thumb button svg { width: 14px; height: 14px; stroke: #fff; }
-    .note { color: var(--muted); font-size: 13px; margin: 0; }
+    .note { color: var(--slate); font-size: 13px; margin: 0; }
 
-    .consent { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--muted); }
-    .consent input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--accent); flex: none; }
-    .consent a { color: var(--accent); }
+    .consent { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--slate); }
+    .consent input { width: 22px; height: 22px; margin: 0; accent-color: var(--blue); flex: none; }
+    .consent a { color: var(--blue); font-weight: 600; }
 
-    .err { color: var(--danger); font-size: 14px; font-weight: 600; margin: 0; }
-    .banner { background: var(--warm-soft); border-radius: 14px; padding: 12px 14px; font-size: 14.5px; margin: 0; }
+    .err { margin: 0; padding: 11px 14px; border-left: 4px solid var(--red); border-radius: var(--radius); background: var(--red-soft); color: var(--ink); font-size: 14.5px; font-weight: 600; }
+    .err[hidden] { display: none; }
+    .banner { margin: 0; padding: 12px 14px; border-left: 4px solid var(--red); border-radius: var(--radius); background: var(--grey); font-size: 15px; }
 
-    .btn { appearance: none; border: 0; border-radius: 16px; min-height: 56px; padding: 14px 20px; font-weight: 650; font-size: 16.5px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+    /* Buttons: SemiBold 600 (brand book, section 7). Red is the call to action. */
+    .btn { appearance: none; -webkit-appearance: none; border: 0; border-radius: var(--radius); min-height: 56px; padding: 14px 20px; font-weight: 600; font-size: 17px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
     .btn[disabled] { opacity: .6; cursor: progress; }
-    .primary { width: 100%; background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 24px rgba(31, 107, 84, .28); transition: transform .15s ease, filter .15s ease; }
-    .primary:hover:not([disabled]) { filter: brightness(1.06); transform: translateY(-1px); }
-    .ghost { background: transparent; color: var(--accent); border: 1.5px solid var(--line); }
+    .primary { width: 100%; background: var(--red); color: var(--white); box-shadow: 0 10px 22px rgba(227, 6, 19, .22); transition: background-color .15s ease, transform .15s ease; }
+    .primary:hover:not([disabled]) { background: var(--red-hover); transform: translateY(-1px); }
+    .ghost { background: var(--white); color: var(--blue); border: 1.5px solid var(--blue); }
+    .ghost:hover { background: var(--blue-soft); }
 
     .done { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 8px 0 4px; }
-    .done .ok { width: 72px; height: 72px; border-radius: 50%; background: var(--accent-soft); display: grid; place-items: center; }
-    .done .ok svg { width: 36px; height: 36px; stroke: var(--accent); }
-    .done .num { display: inline-block; padding: 6px 14px; border-radius: 999px; background: var(--field); border: 1px solid var(--line); font-weight: 700; }
-    .done p { margin: 0; color: var(--muted); max-width: 34ch; }
+    .done .ok { width: 72px; height: 72px; border-radius: 50%; background: var(--blue); display: grid; place-items: center; }
+    .done .ok svg { width: 36px; height: 36px; stroke: var(--white); }
+    .done .num { display: inline-block; padding: 7px 16px; border-radius: var(--radius); background: var(--grey); font-weight: 700; letter-spacing: .02em; }
+    .done p { margin: 0; color: var(--slate); max-width: 34ch; }
 
-    footer { text-align: center; color: var(--muted); font-size: 13px; padding: 0 12px; }
+    /* Contacts: navy plate with white icons (brand book, section 10). Two
+       stripes, blue then red as in the sign, rise from the bottom edge at the
+       roof's 30 degrees and leave through the right edge, clear of the text. */
+    .info { position: relative; overflow: hidden; background: var(--navy); color: var(--white); border-radius: 12px; padding: 22px 18px; }
+    .info > * { position: relative; z-index: 1; }
+    .info::before, .info::after { content: ""; position: absolute; bottom: 0; height: 100%; transform: skewX(-30deg); transform-origin: bottom; }
+    .info::before { right: 88px; width: 22px; background: var(--blue); }
+    .info::after { right: 64px; width: 8px; background: var(--red); }
+    .info__title { margin: 0; font-weight: 800; font-size: 20px; line-height: 1.2; text-wrap: balance; }
+    .info__lead { margin: 8px 0 0; font-size: 15px; }
+    .contacts { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 12px; }
+    .contacts li { display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 15px; line-height: 1.3; }
+    .contacts img { width: 28px; height: 28px; flex: none; }
+    .contacts a { color: var(--white); font-weight: 700; font-size: 17px; text-decoration: none; white-space: nowrap; min-height: 44px; display: inline-flex; align-items: center; border-radius: var(--radius); }
+    .contacts a:focus-visible { outline-color: var(--white); }
 
-    @media (min-width: 520px) {
-      body { padding-top: 36px; }
-      .card { padding: 26px 26px 26px; }
-      h1 { font-size: 30px; }
-      .pair { grid-template-columns: 1fr 1fr; }
+    @media (prefers-color-scheme: dark) {
+      .info { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
     }
 
-    @media (max-width: 340px) {
+    @media (min-width: 520px) {
+      .wrap { margin-top: 28px; }
+      .card { padding: 28px; }
+      h1 { font-size: 30px; }
+      .pair { grid-template-columns: 1fr 1fr; }
+      .info { padding: 26px; }
+      .info::before { right: 100px; width: 26px; }
+      .info::after { right: 72px; width: 10px; }
+    }
+
+    @media (min-width: 960px) {
+      .top__in { padding-top: 14px; padding-bottom: 14px; }
+      .logo { width: 149px; height: 44px; }
+      .call { font-size: 17px; flex-direction: column; align-items: flex-end; gap: 0; line-height: 1.25; }
+      .call img { display: none; }
+      .call small { display: block; font-size: 13px; font-weight: 500; }
+      .wrap { max-width: 1040px; margin-top: 40px; grid-template-columns: minmax(0, 1fr) 560px; grid-template-areas: "info card"; gap: 32px; align-items: start; }
+      .card { grid-area: card; }
+      .info { grid-area: info; position: sticky; top: 24px; padding: 40px 36px; min-height: 420px; }
+      .info::before { right: 130px; width: 34px; }
+      .info::after { right: 96px; width: 12px; }
+      .info__title { font-size: 34px; }
+      .info__lead { font-size: 17px; margin-top: 14px; }
+      .contacts { margin-top: 32px; gap: 16px; }
+    }
+
+    @media (max-width: 359px) {
+      .top__in { padding-left: 12px; padding-right: 12px; gap: 8px; }
+      .logo { width: 108px; height: 32px; }
+      .call { font-size: 14px; gap: 6px; }
+      .call img { width: 18px; height: 18px; }
+      .wrap { padding: 0 8px; }
+      .card { padding: 18px 14px 20px; }
       .grid { grid-template-columns: 1fr; }
       .tile { min-height: 0; flex-direction: row; align-items: center; }
+      .info::before { right: 72px; width: 18px; }
+      .info::after { right: 52px; width: 7px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -191,22 +258,31 @@
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M12 17c-1.6 0-2.5-1.1-2.5-2.4 0-1.6 1.6-2.4 2.5-4.1.9 1.7 2.5 2.5 2.5 4.1 0 1.3-.9 2.4-2.5 2.4z"/></svg>
-      </div>
-      <div>
-        <div class="brand">Свиб-Дом Сервис</div>
-        <div class="tag">Честный сервис для вашего дома · Калининград и область</div>
-      </div>
-    </header>
+  <header class="top">
+    <div class="top__in">
+      <img class="logo" src="svib/SVIB_logo_horizontal_noslogan_white.svg?v=1" width="122" height="36" alt="СВИБ Дом Сервис">
+      <a class="call" href="tel:+79114856632">
+        <img src="svib/icons/SVIB_icon_contact-phone_white.svg?v=1" width="22" height="22" alt="">
+        <span>+7 911 485-66-32</span>
+        <small>Звонки с 10:00 до 18:00</small>
+      </a>
+    </div>
+  </header>
 
+  <div class="wrap">
     <main class="card" id="card" aria-live="polite">
       <p class="hint">Загружаем форму…</p>
     </main>
 
-    <footer>Мастер перезвонит, уточнит детали и назовёт цену до начала работ.</footer>
+    <aside class="info" aria-label="Контакты">
+      <p class="info__title">Надёжный мастер&nbsp;— для вашего дома.</p>
+      <p class="info__lead">Мастер перезвонит, уточнит детали и назовёт цену до начала работ.</p>
+      <ul class="contacts">
+        <li><img src="svib/icons/SVIB_icon_contact-phone_white.svg?v=1" width="28" height="28" alt=""><a href="tel:+79114856632">+7 911 485-66-32</a></li>
+        <li><img src="svib/icons/SVIB_icon_contact-address_white.svg?v=1" width="28" height="28" alt=""><span>Калининград и Гурьевск</span></li>
+        <li><img src="svib/icons/SVIB_icon_contact-hours_white.svg?v=1" width="28" height="28" alt=""><span>Звонки с 10:00 до 18:00</span></li>
+      </ul>
+    </aside>
   </div>
 
   <script>
@@ -230,12 +306,6 @@
       var MAX_PHOTO_SIDE = 1600;
 
       var ICON = {
-        boiler: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="15" rx="2"/><path d="M9 21v-3M15 21v-3"/><path d="M12 14c-1.4 0-2.2-.9-2.2-2 0-1.4 1.4-2 2.2-3.5.8 1.5 2.2 2.1 2.2 3.5 0 1.1-.8 2-2.2 2z"/></svg>',
-        heater: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="17" rx="6"/><path d="M10 22v-2.5M14 22v-2.5M12 8v5"/></svg>',
-        pipe: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h9a3 3 0 0 1 3 3v3"/><path d="M3 11h7a1 1 0 0 1 1 1v1"/><path d="M13 13h4v2h-4z"/><path d="M15 18.5c0 1-.7 1.7-1.5 1.7S12 19.5 12 18.5c0-.9 1.5-2.5 1.5-2.5s1.5 1.6 1.5 2.5z"/></svg>',
-        bolt: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 5 13.5h6L10 22l8-11.5h-6z"/></svg>',
-        wash: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2"/><circle cx="12" cy="13" r="4.5"/><path d="M7 6h2"/></svg>',
-        tool: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3z"/><path d="M14.5 6.5 17 4l3 3-2.5 2.5"/></svg>',
         camera: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2.5h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>',
         plus: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
         close: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
@@ -243,26 +313,31 @@
         check: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
       };
 
+      // Service icons from the brand book (svib/icons); bump ?v= with a new file.
+      function serviceIcon(c) {
+        return '<img src="svib/icons/SVIB_icon_' + c.icon + '_color.svg?v=1" width="36" height="36" alt="">';
+      }
+
       // model: the master needs the brand and model (spare parts), so the
       // step asks for it; ask/issues word the question for the service.
       var CATS = [
-        { id: 'boiler', name: 'Газовый котёл', hint: 'Не греет, ошибка, обслуживание', icon: 'boiler', color: '#d9622b',
+        { id: 'boiler', name: 'Газовый котёл', hint: 'Не греет, ошибка, обслуживание', icon: 'heating',
           issues: ['Не греет отопление', 'Нет горячей воды', 'Ошибка на дисплее', 'Не включается', 'Течёт или капает', 'Шумит, хлопает', 'Падает давление', 'Плановое обслуживание'],
           model: 'Марка и модель котла', modelHint: 'Например: Baxi Eco Four 24', details: 'Например: ошибка E10, давление 0,5 бар' },
-        { id: 'heater', name: 'Бойлер, колонка', hint: 'Нет горячей воды, течёт', icon: 'heater', color: '#0f8a8a',
+        { id: 'heater', name: 'Бойлер, колонка', hint: 'Нет горячей воды, течёт', icon: 'water-heater',
           issues: ['Не греет воду', 'Течёт', 'Не зажигается колонка', 'Выбивает автомат', 'Чистка от накипи', 'Установка или замена'],
           model: 'Марка и модель', modelHint: 'Например: Ariston ABS 80', details: 'Например: греет час и отключается' },
-        { id: 'plumb', name: 'Сантехника', hint: 'Протечка, засор, смеситель', icon: 'pipe', color: '#2f6fd0',
+        { id: 'plumb', name: 'Сантехника', hint: 'Протечка, засор, смеситель', icon: 'plumbing',
           issues: ['Протечка', 'Засор', 'Кран или смеситель', 'Унитаз', 'Радиатор отопления', 'Установка или замена'],
           details: 'Например: течёт под раковиной на кухне' },
-        { id: 'electric', name: 'Электрика', hint: 'Розетки, автоматы, свет', icon: 'bolt', color: '#c98a00',
+        { id: 'electric', name: 'Электрика', hint: 'Розетки, автоматы, свет', icon: 'electrics',
           issues: ['Нет света', 'Выбивает автомат', 'Розетка или выключатель', 'Подключить прибор', 'Люстра или светильник'],
           details: 'Например: выбивает автомат, когда включаю чайник' },
-        { id: 'appliance', name: 'Бытовая техника', hint: 'Стиральная, холодильник, плита', icon: 'wash', color: '#7a55c7',
+        { id: 'appliance', name: 'Бытовая техника', hint: 'Стиральная, холодильник, плита', icon: 'appliances',
           ask: 'Какая техника?',
           issues: ['Стиральная машина', 'Посудомоечная машина', 'Холодильник', 'Плита, варочная панель', 'Духовой шкаф', 'Микроволновка', 'Другая техника'],
           model: 'Марка и модель техники', modelHint: 'Например: Bosch WAN 24260', details: 'Например: не сливает воду, ошибка E18' },
-        { id: 'other', name: 'Другое по дому', hint: 'Мелкий ремонт, сборка, замки', icon: 'tool', color: '#2f7a5f',
+        { id: 'other', name: 'Другое по дому', hint: 'Мелкий ремонт, сборка, замки', icon: 'home-repair',
           ask: 'Что нужно сделать?',
           issues: ['Мелкий ремонт', 'Повесить или собрать', 'Двери, замки', 'Окна', 'Нужна консультация'],
           details: 'Например: повесить телевизор на стену' }
@@ -408,15 +483,15 @@
           h = stepsMarkup() +
             '<h1>С чем помочь?</h1><p class="hint">Выберите услугу — останется оставить телефон.</p>' +
             '<div class="grid">' + CATS.map(function(c) {
-              return '<button type="button" class="tile" style="--ic:' + c.color + '" data-cat="' + c.id + '" aria-pressed="' + (S.cat === c.id) + '">' +
-                '<span class="badge">' + ICON[c.icon] + '</span>' +
+              return '<button type="button" class="tile" data-cat="' + c.id + '" aria-pressed="' + (S.cat === c.id) + '">' +
+                '<span class="badge">' + serviceIcon(c) + '</span>' +
                 '<span><b>' + esc(c.name) + '</b><small>' + esc(c.hint) + '</small></span></button>';
             }).join('') + '</div>';
         } else if (S.step === 2) {
           var c = cat();
           h = stepsMarkup() +
-            '<button type="button" class="picked" style="--ic:' + c.color + '" data-act="back">' +
-            '<span class="badge">' + ICON[c.icon] + '</span><span class="txt"><small>Услуга</small><b>' + esc(c.name) + '</b></span><em>Изменить</em></button>' +
+            '<button type="button" class="picked" data-act="back">' +
+            '<span class="badge">' + serviceIcon(c) + '</span><span class="txt"><small>Услуга</small><b>' + esc(c.name) + '</b></span><em>Изменить</em></button>' +
             '<h1>' + esc(c.ask || 'Что случилось?') + '</h1>' +
             chips(c.issues, S.issues) +
             '<div class="group"><label class="label" for="details">Опишите проблему <span>— своими словами</span></label>' +

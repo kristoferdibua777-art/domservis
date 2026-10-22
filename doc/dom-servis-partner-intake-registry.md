@@ -50,6 +50,14 @@ Every request source also exposes `client_form_url`
   address and the visit time become "Уточнить у клиента".
 - For a source used only through this link, leave `allowed_domains` empty: the page reports our domain as its origin,
   so the source card offers the link only when no partner domains are set.
+- The page follows the СВИБ Дом Сервис brand book v1.0: Montserrat, blue header with the white logo, brand service
+  icons, contacts on a navy plate. Its files live in `public/assets/form/svib/`: the logo, favicons, icons and
+  Montserrat 400–800 as WOFF2 cut to Latin and Cyrillic (SIL OFL, `fonts/OFL.txt`), all served from our domain.
+  The water heater icon is drawn for this page by the brand book icon rules; the book itself has none.
+- nginx caches everything under `/assets/` for years except the `dom-servis-*.html` pages, so a changed file in
+  `svib/` needs a new `?v=` in the page that references it.
+- The `v` parameter of the generated link only follows the release and the source's last change; the page itself is
+  never cached, so a link printed or placed in a social profile can leave `v` out and stay the same across releases.
 
 ## Runtime flow
 
