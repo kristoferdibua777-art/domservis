@@ -353,7 +353,7 @@ RSpec.describe 'Form', type: :request do
         expect(ticket.preferences.dig('dom_servis_intake', 'source')).to eq('form')
       end
 
-      it 'tags the job from the words of the request, without the contact lines' do
+      it 'tags the job from the words of the request, without the contact lines', :aggregate_failures do
         description = "Заявка клиента через форму по ссылке.\nЧто: Газовый котёл: Не греет отопление\nМарка и модель: Baxi Eco Four\nАдрес: Калининград, ул. Нева 5\nИмя: Ирина\nТелефон: +79001234567"
         params = {
           fingerprint:                  fingerprint,
