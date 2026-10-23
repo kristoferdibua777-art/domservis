@@ -9,7 +9,8 @@ class DomServis::Dispatch::TagsController < DomServis::Dispatch::BaseController
 
   def payload
     {
-      tags: DomServis::DispatchTagCatalog.entries,
+      tags:   DomServis::DispatchTagCatalog.entries,
+      groups: DomServis::DispatchTagCatalog.groups,
     }
   end
 end

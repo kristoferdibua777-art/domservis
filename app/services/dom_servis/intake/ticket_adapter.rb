@@ -2,6 +2,7 @@
 
 class DomServis::Intake::TicketAdapter
   DEFAULT_CHANNEL_KEY = 'zammad_form'.freeze
+  CONTACT_LINE = %r{\A[ \t]*(?:Имя|Телефон|Адрес|E-?mail|Почта)(?:[ \t]+клиента)?[ \t]*:}i
 
   def initialize(ticket:, request_source:, source: 'form', channel_key: nil, source_reference: nil, request_source_origin: nil)
     @ticket = ticket
@@ -29,22 +30,41 @@ class DomServis::Intake::TicketAdapter
   private
 
   def dispatch_attributes
+    service_type = ticket_value(:dom_servis_service_type).presence || ticket.title
+    address = required_ticket_value(:dom_servis_address)
+    description = ticket_value(:dom_servis_description).presence || ticket_body
+
     {
       source:            source,
       request_source_id: request_source.id,
       organization_id:   request_source.organization_id,
-      service_type:      ticket_value(:dom_servis_service_type).presence || ticket.title,
-      address:           required_ticket_value(:dom_servis_address),
+      service_type:      service_type,
+      address:           address,
       client_name:       ticket_value(:dom_servis_client_name).presence || ticket.customer&.fullname || ticket.customer&.login || ticket.customer&.email,
       client_phone:      ticket_value(:dom_servis_client_phone).presence || ticket.customer&.phone,
       visit_day:         ticket_value(:dom_servis_visit_day).presence,
       visit_date:        ticket_value(:dom_servis_visit_date).presence,
       visit_time:        ticket_value(:dom_servis_visit_time).presence,
       priority:          ticket_value(:dom_servis_dispatch_priority).presence || 'medium',
-      description:       ticket_value(:dom_servis_description).presence || ticket_body,
+      description:       description,
       comment:           ticket_value(:dom_servis_comment).presence,
-      work_tags:         normalize_work_tags(ticket_value(:dom_servis_work_tags)),
+      work_tags:         work_tags(service_type, description, address),
     }.compact
+  end
+
+  # The tags a form sent, then the dictionary tags read from the request.
+  def work_tags(service_type, description, address)
+    inferred = DomServis::WorkTagCatalog.infer(text: [service_type, request_words(description)].compact_blank.join("\n"), address:)
+
+    (normalize_work_tags(ticket_value(:dom_servis_work_tags)) + inferred).uniq.first(25)
+  end
+
+  # The forms put the client's name, phone and address into the description;
+  # they are not words about the work ("ул. Нева" is not a Neva boiler).
+  def request_words(description)
+    description.to_s.lines.reject { |line| line.match?(CONTACT_LINE) }.flat_map do |line|
+      line.split(%r{(?<=\.)[ \t]+}).reject { |sentence| sentence.match?(CONTACT_LINE) }
+    end.join(' ')
   end
 
   def raw_payload

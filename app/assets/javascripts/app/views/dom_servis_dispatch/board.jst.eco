@@ -104,6 +104,9 @@
                   <% if _.some(@tagFilters, (item) -> item.active): %>
                     <button class="btn btn--text js-clear-tag-filters">Сбросить</button>
                   <% end %>
+                  <% if @tagFiltersCollapsible: %>
+                    <button class="btn btn--text js-toggle-all-tag-filters"><%= if @tagFiltersExpanded then 'Свернуть' else "Ещё #{@tagFiltersHidden}" %></button>
+                  <% end %>
                 </div>
               </div>
             <% end %>
@@ -260,6 +263,9 @@
         <% end %>
         <% if _.some(@tagFilters, (item) -> item.active): %>
           <button class="btn btn--text js-clear-tag-filters">Сбросить</button>
+        <% end %>
+        <% if @tagFiltersCollapsible: %>
+          <button class="btn btn--text js-toggle-all-tag-filters"><%= if @tagFiltersExpanded then 'Свернуть' else "Ещё #{@tagFiltersHidden}" %></button>
         <% end %>
       </div>
       </div>
@@ -490,12 +496,17 @@
                       <% else if field.type is 'tag_selector': %>
                         <div class="dom-servis-dispatch-tag-selector">
                           <input class="js-edit-field" data-field="<%= field.key %>" type="hidden" value="<%= field.value %>">
-                          <% if field.options.length > 0: %>
-                            <div class="dom-servis-dispatch-tag-selector__chips">
-                              <% for option in field.options: %>
-                                <button class="dom-servis-dispatch-tag-selector__chip js-tag-toggle-chip js-edit-tag-toggle<%= ' is-active' if option.selected %>" data-tag="<%= option.id %>"><%= option.label %></button>
-                              <% end %>
-                            </div>
+                          <% if field.tagGroups.length > 0: %>
+                            <% for group in field.tagGroups: %>
+                              <details class="dom-servis-dispatch-tag-selector__group js-tag-group"<%= ' open' if group.open %>>
+                                <summary class="dom-servis-dispatch-tag-selector__group-title"><%= group.label %> <span class="dom-servis-dispatch-tag-selector__group-count js-tag-group-count"><%= group.selectedCount if group.selectedCount %></span></summary>
+                                <div class="dom-servis-dispatch-tag-selector__chips">
+                                  <% for option in group.options: %>
+                                    <button class="dom-servis-dispatch-tag-selector__chip js-tag-toggle-chip js-edit-tag-toggle<%= ' is-active' if option.selected %>" data-tag="<%= option.id %>"><%= option.label %></button>
+                                  <% end %>
+                                </div>
+                              </details>
+                            <% end %>
                           <% else: %>
                             <div class="dom-servis-dispatch-tag-selector__empty">Теги пока не созданы. Новые имена добавляются через Manage &gt; Tags.</div>
                           <% end %>
@@ -819,12 +830,17 @@
           <label>Теги работ</label>
           <div class="dom-servis-dispatch-tag-selector">
             <input class="js-create-work-tags js-create-draft-field" type="hidden" value="<%= @createDraft.work_tags %>">
-            <% if @createTagOptions.length > 0: %>
-              <div class="dom-servis-dispatch-tag-selector__chips">
-                <% for option in @createTagOptions: %>
-                  <button class="dom-servis-dispatch-tag-selector__chip js-tag-toggle-chip js-create-tag-toggle<%= ' is-active' if option.selected %>" data-tag="<%= option.id %>"><%= option.label %></button>
-                <% end %>
-              </div>
+            <% if @createTagGroups.length > 0: %>
+              <% for group in @createTagGroups: %>
+                <details class="dom-servis-dispatch-tag-selector__group js-tag-group"<%= ' open' if group.open %>>
+                  <summary class="dom-servis-dispatch-tag-selector__group-title"><%= group.label %> <span class="dom-servis-dispatch-tag-selector__group-count js-tag-group-count"><%= group.selectedCount if group.selectedCount %></span></summary>
+                  <div class="dom-servis-dispatch-tag-selector__chips">
+                    <% for option in group.options: %>
+                      <button class="dom-servis-dispatch-tag-selector__chip js-tag-toggle-chip js-create-tag-toggle<%= ' is-active' if option.selected %>" data-tag="<%= option.id %>"><%= option.label %></button>
+                    <% end %>
+                  </div>
+                </details>
+              <% end %>
             <% else: %>
               <div class="dom-servis-dispatch-tag-selector__empty">Теги пока не созданы. Новые имена добавляются через Manage &gt; Tags.</div>
             <% end %>

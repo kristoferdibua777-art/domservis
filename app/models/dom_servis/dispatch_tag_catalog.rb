@@ -1,11 +1,13 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
+# The tags a dispatch job can carry: the work tag dictionary in its order
+# (DomServis::WorkTagCatalog), then the other Zammad tags by name.
 class DomServis::DispatchTagCatalog
   class << self
     def entries(selected_names: [])
       selected_names = normalize_names(selected_names)
 
-      names = (Tag::Item.reorder(name: :asc).pluck(:name) + selected_names).uniq
+      names = (DomServis::WorkTagCatalog.names + Tag::Item.reorder(name: :asc).pluck(:name) + selected_names).uniq
       dispatch_counts = dispatch_usage_counts
       ticket_counts   = ticket_usage_counts
 
@@ -13,6 +15,7 @@ class DomServis::DispatchTagCatalog
         {
           id:             name,
           name:           name,
+          group:          DomServis::WorkTagCatalog.group_key(name),
           dispatch_count: dispatch_counts.fetch(name, 0),
           ticket_count:   ticket_counts.fetch(name, 0),
           selected:       selected_names.include?(name),
@@ -20,8 +23,14 @@ class DomServis::DispatchTagCatalog
       end
     end
 
+    def groups
+      DomServis::WorkTagCatalog.groups.map { |group| group.slice(:key, :label) } + [DomServis::WorkTagCatalog::OTHER_GROUP]
+    end
+
+    # Dictionary tags are always valid: Zammad creates a missing one with its
+    # first use on the backing ticket.
     def missing_names(names)
-      normalize_names(names).reject { |name| Tag::Item.exists?(name: name) }
+      normalize_names(names).reject { |name| DomServis::WorkTagCatalog.include?(name) || Tag::Item.exists?(name: name) }
     end
 
     def normalize_names(value)

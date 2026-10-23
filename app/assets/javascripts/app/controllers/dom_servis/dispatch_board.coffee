@@ -6,6 +6,7 @@ class App.DomServisDispatchBoard extends App.Controller
     'click .js-day-filter': 'setDayFilter'
     'click .js-tag-filter-toggle': 'toggleTagFilter'
     'click .js-clear-tag-filters': 'clearTagFilters'
+    'click .js-toggle-all-tag-filters': 'toggleAllTagFilters'
     'click .js-week-shift': 'shiftWeek'
     'click .js-week-reset': 'resetWeek'
     'change .js-week-picker': 'pickWeek'
@@ -65,7 +66,9 @@ class App.DomServisDispatchBoard extends App.Controller
     @effectivePolicy = null
     @policyRegistry = {}
     @availableTags = []
+    @tagGroups = []
     @activeTagFilters = []
+    @showAllTagFilters = false
     @jobs = []
     @loading = true
     @errorMessage = null
@@ -127,6 +130,7 @@ class App.DomServisDispatchBoard extends App.Controller
     defaultVisitDay = @defaultVisitDay()
     detailJob = @currentDetailJob()
     detailEditing = @detailEditing()
+    tagFilters = @tagFilterView()
 
     @html App.view('dom_servis_dispatch/board')(
       loading: @loading
@@ -160,7 +164,10 @@ class App.DomServisDispatchBoard extends App.Controller
       statusFilters: @buildScopedStatusFilters()
       weekControls: @buildWeekControls()
       dayFilters: @buildDayFilters()
-      tagFilters: @buildTagFilters()
+      tagFilters: tagFilters.items
+      tagFiltersHidden: tagFilters.hidden
+      tagFiltersCollapsible: tagFilters.collapsible
+      tagFiltersExpanded: @showAllTagFilters
       createOpen: @createOpen
       editOpen: @editOpen
       calendarAvailable: @calendarAvailable()
@@ -184,6 +191,7 @@ class App.DomServisDispatchBoard extends App.Controller
       privateOrganizationId: @privateOrganizationId()
       jobCards: @buildJobCards()
       createTagOptions: @availableTagOptions(@createDraft.work_tags)
+      createTagGroups: @availableTagGroups(@createDraft.work_tags)
       defaultVisitDay: defaultVisitDay
       defaultVisitDate: @nextDateForDay(defaultVisitDay)
       todayLabel: @weekdayLabel(defaultVisitDay)
@@ -366,9 +374,11 @@ class App.DomServisDispatchBoard extends App.Controller
       url: "#{@apiPath}/dom_servis/dispatch/tags"
       success: (data) =>
         @availableTags = data?.tags || []
+        @tagGroups = data?.groups || []
         @render() if !@loading
       error: =>
         @availableTags = []
+        @tagGroups = []
         @render() if !@loading
     )
 
@@ -479,6 +489,11 @@ class App.DomServisDispatchBoard extends App.Controller
   clearTagFilters: (e) =>
     @preventDefaultAndStopPropagation(e)
     @activeTagFilters = []
+    @render()
+
+  toggleAllTagFilters: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    @showAllTagFilters = !@showAllTagFilters
     @render()
 
   shiftWeek: (e) =>
@@ -748,7 +763,7 @@ class App.DomServisDispatchBoard extends App.Controller
   # A client message pasted into the new job form is read on the server (by
   # rules and, when an admin enabled it, by GigaChat) and fills the form; the
   # dispatcher checks the fields and creates the job.
-  INTAKE_FIELDS: ['client_phone', 'client_name', 'address', 'service_type', 'priority', 'visit_date', 'visit_day', 'visit_time', 'description', 'comment']
+  INTAKE_FIELDS: ['client_phone', 'client_name', 'address', 'service_type', 'priority', 'visit_date', 'visit_day', 'visit_time', 'description', 'comment', 'work_tags']
   INTAKE_MARKS:
     ok: '✓'
     info: 'i'
@@ -892,6 +907,7 @@ class App.DomServisDispatchBoard extends App.Controller
     applied = 0
     for field in @INTAKE_FIELDS
       value = draft[field]
+      value = value.join(', ') if _.isArray(value)
       continue if !value? || "#{value}" is ''
       continue if !@intakeFieldReplaceable(field)
       @createDraft[field] = "#{value}"
@@ -2044,6 +2060,7 @@ class App.DomServisDispatchBoard extends App.Controller
       value: @fieldInputValue(job, fieldKey)
       displayValue: @fieldDisplayValue(job, fieldKey, unsupported)
       options: if fieldKey is 'work_tags' then @availableTagOptions(@fieldInputValue(job, fieldKey)) else @fieldOptions(fieldKey)
+      tagGroups: if fieldKey is 'work_tags' then @availableTagGroups(@fieldInputValue(job, fieldKey)) else []
       hint: @fieldHint(fieldKey, unsupported)
     }
 
@@ -2213,7 +2230,7 @@ class App.DomServisDispatchBoard extends App.Controller
     return 'Поле уже есть в матрице доступа, но его хранение или отдельный editor будут подключены следующим шагом.' if unsupported
     return 'Список исполнителей строится по активным пользователям Дом-Сервис.' if fieldKey is 'assignee_id'
     return 'Используется как заказчик / источник заказа: управляющая компания, партнёр или Частный заказ.' if fieldKey is 'organization_id'
-    return 'Диспетчер выбирает только существующие теги из общего словаря Zammad. Новые имена создаются через Manage > Tags.' if fieldKey is 'work_tags'
+    return 'Теги справочника работ и другие теги Zammad. Новые имена создаются через Manage > Tags.' if fieldKey is 'work_tags'
     return "#{@visitTimeFormatHint} Текст из входящей заявки сохраняется, пока поле не изменено." if fieldKey is 'visit_time'
     null
 
@@ -3009,6 +3026,47 @@ class App.DomServisDispatchBoard extends App.Controller
       .sortBy((item) -> if item.selected then 0 else 1)
       .value()
 
+  # Tag options in the groups of the work tag dictionary (direction, kind of
+  # work, fault, ...); tags outside it are listed under the last group. The
+  # main groups and the groups with chosen tags start open.
+  TAG_GROUPS_OPEN: ['direction', 'work']
+
+  availableTagGroups: (selectedValue = []) ->
+    options = @availableTagOptions(selectedValue)
+    groupOf = (option) =>
+      _.find(@availableTags, (tag) -> tag.name is option.id)?.group || 'other'
+    groups = if @tagGroups.length then @tagGroups else [{ key: 'other', label: 'Теги' }]
+
+    _.compact(_.map(groups, (group) =>
+      groupOptions = _.sortBy(_.filter(options, (option) -> groupOf(option) is group.key), (option) => @tagCatalogIndex(option.id))
+      return null if !groupOptions.length
+      selectedCount = _.filter(groupOptions, (option) -> option.selected).length
+      {
+        key: group.key
+        label: group.label
+        options: groupOptions
+        selectedCount: selectedCount
+        open: selectedCount > 0 || _.contains(@TAG_GROUPS_OPEN, group.key)
+      }
+    ))
+
+  # The dictionary order of the server list; other tags keep their name order.
+  tagCatalogIndex: (tagName) ->
+    index = _.findIndex(@availableTags, (tag) -> tag.name is tagName)
+    if index < 0 then @availableTags.length else index
+
+  # The board filter shows the most used tags of the shown jobs; the rest
+  # behind "Ещё", chosen ones always.
+  TAG_FILTER_LIMIT: 12
+
+  tagFilterView: ->
+    items = @buildTagFilters()
+    collapsible = items.length > @TAG_FILTER_LIMIT
+    return { items: items, hidden: 0, collapsible: collapsible } if @showAllTagFilters || !collapsible
+
+    visible = _.filter(items, (item, index) => item.active || index < @TAG_FILTER_LIMIT)
+    { items: visible, hidden: items.length - visible.length, collapsible: collapsible }
+
   tagBadgeItems: (tagValue, limit = 4) ->
     _.map @normalizeTags(tagValue).slice(0, limit), (tagName) =>
       {
@@ -3021,6 +3079,11 @@ class App.DomServisDispatchBoard extends App.Controller
       chip = $(element)
       tagName = chip.data('tag')?.toString()?.trim()
       chip.toggleClass('is-active', _.contains(selectedTags, tagName))
+
+    container.find('.js-tag-group').each (index, element) ->
+      group = $(element)
+      count = group.find('.js-tag-toggle-chip.is-active').length
+      group.find('.js-tag-group-count').text(if count then count else '')
 
   # Ticket.number is the job number people see; job_code (or its fallback)
   # only stands in until the backing ticket exists.

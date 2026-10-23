@@ -90,10 +90,17 @@ class DomServis::Intake::TextDraft
       visit_time:   ai_visit_time(suggestion[:visit_time], rules) || rules[:visit_time],
       description:  suggestion[:description] || rules[:description],
     }
+    draft[:work_tags] = work_tags(draft)
     # The description leaves out the contacts and greetings; the job keeps
     # the whole message in case something was cut out by mistake.
     draft[:comment] = "Исходный текст:\n#{text}" if draft[:description] != text
     draft
+  end
+
+  # Dictionary tags from the kind of work and the client's words, without
+  # the contacts (see DomServis::WorkTagCatalog.infer).
+  def work_tags(draft)
+    DomServis::WorkTagCatalog.infer(text: [draft[:service_type], draft[:description]].compact.join("\n"), address: draft[:address]).presence
   end
 
   # The digits of a phone from GigaChat have to be in the text.
