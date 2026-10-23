@@ -14,6 +14,7 @@ Zammad::Application.routes.draw do
         # form and the shares of masters and partners (Dispatch Admin).
         resource :price_list, only: %i[show update], controller: :price_lists
         resource :finance_rates, only: %i[show update], controller: :finance_rates
+        resource :report_export, only: %i[show], controller: :report_exports
 
         # GigaChat settings of the pasted text reading (Dispatch Admin).
         resource :ai_settings, only: %i[show update], controller: :ai_settings do

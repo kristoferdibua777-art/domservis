@@ -1496,6 +1496,12 @@ summary.dom-servis-dispatch-drawer__history-row {
   padding: 22px 24px;
 }
 
+.dom-servis-dispatch-admin__export-fields {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
 .dom-servis-dispatch-admin__table-wrap {
   margin-bottom: 16px;
   overflow-x: auto;

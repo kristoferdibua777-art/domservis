@@ -24,6 +24,8 @@ class DomServisDispatch extends App.ControllerSubContent
     'input .js-rate-field': 'changeRateField'
     'change .js-rate-field': 'changeRateField'
     'click .js-rates-save': 'saveRates'
+    'change .js-report-export-field': 'changeReportExportField'
+    'click .js-report-export-download': 'downloadReportExport'
 
   constructor: ->
     super
@@ -70,6 +72,7 @@ class DomServisDispatch extends App.ControllerSubContent
       priceLoaded: false
       ratesLoaded: false
       busy: false
+    @reportExport = @defaultReportExport()
 
     @render()
     @loadPolicy()
@@ -94,6 +97,7 @@ class DomServisDispatch extends App.ControllerSubContent
       history:  @historyView()
       ai:       @aiSettingsView()
       finance:  @financeView()
+      reportExport: @reportExport
     )
 
   loadPolicy: ->
@@ -367,6 +371,51 @@ class DomServisDispatch extends App.ControllerSubContent
       error: (xhr) =>
         @finance.busy = false
         @notify(type: 'error', msg: @financeError(xhr, 'Не удалось сохранить проценты.'), timeout: 8000)
+        @render()
+    )
+
+  # The table of jobs with their master reports for a period, by default the
+  # current month by the day the jobs were created.
+  defaultReportExport: ->
+    pad = (number) -> ("0#{number}").slice(-2)
+    today = new Date()
+    format = (date) -> "#{date.getFullYear()}-#{pad(date.getMonth() + 1)}-#{pad(date.getDate())}"
+    {
+      from: format(new Date(today.getFullYear(), today.getMonth(), 1))
+      to: format(today)
+      date_field: 'created'
+      master_id: ''
+      busy: false
+    }
+
+  changeReportExportField: (e) =>
+    field = $(e.currentTarget)
+    @reportExport[field.data('field')] = field.val()
+
+  downloadReportExport: (e) =>
+    @preventDefault(e)
+    return if @reportExport.busy
+
+    params = $.param(_.pick(@reportExport, 'from', 'to', 'date_field', 'master_id'))
+    @reportExport.busy = true
+    @render()
+
+    App.Ajax.request(
+      id:          'dom_servis_dispatch_report_export'
+      type:        'GET'
+      url:         "#{@apiPath}/dom_servis/dispatch/report_export?#{params}"
+      processData: true
+      dataType:    'binary'
+      contentType: 'application/octet-stream'
+      xhrFields:
+        responseType: 'blob'
+      success: (data, status, xhr) =>
+        App.Utils.downloadFileFromBlob(data, xhr, { fallbackFilename: 'dom-servis-reports.xlsx' })
+        @reportExport.busy = false
+        @render()
+      error: (xhr) =>
+        @reportExport.busy = false
+        @notify(type: 'error', msg: @financeError(xhr, 'Не удалось выгрузить таблицу.'), timeout: 8000)
         @render()
     )
 
