@@ -62,8 +62,8 @@ class DomServis::Intake::TicketAdapter
   # The forms put the client's name, phone and address into the description;
   # they are not words about the work ("ул. Нева" is not a Neva boiler).
   def request_words(description)
-    description.to_s.lines.reject { |line| line.match?(CONTACT_LINE) }.flat_map do |line|
-      line.split(%r{(?<=\.)[ \t]+}).reject { |sentence| sentence.match?(CONTACT_LINE) }
+    description.to_s.lines.grep_v(CONTACT_LINE).flat_map do |line|
+      line.split(%r{(?<=\.)[ \t]+}).grep_v(CONTACT_LINE)
     end.join(' ')
   end
 
