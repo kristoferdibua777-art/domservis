@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xml:lang="ru" width="48" height="48" viewBox="0 0 48 48">
+<title>СВИБ Дом Сервис — иконка «Окна и двери» (для светлого фона)</title>
+<desc>Сетка 48 × 48, рабочее поле 40 × 40, линия 3, скруглённые окончания и углы.</desc>
+<g id="icon-windows-doors" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><g id="icon-windows-doors-base" stroke="#0052CC"><rect x="9" y="5" width="30" height="35" rx="2"/><path d="M24 5V40M9 22.5H39M6 43.5H42"/></g><g id="icon-windows-doors-accent" stroke="#E30613"><path d="M29.5 27V33"/></g></g>
+</svg>

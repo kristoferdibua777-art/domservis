@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xml:lang="ru" width="48" height="48" viewBox="0 0 48 48">
+<title>СВИБ Дом Сервис — иконка «Сборка мебели» (для светлого фона)</title>
+<desc>Сетка 48 × 48, рабочее поле 40 × 40, линия 3, скруглённые окончания и углы.</desc>
+<g id="icon-furniture-assembly" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><g id="icon-furniture-assembly-base" stroke="#0052CC"><rect x="9" y="6.5" width="30" height="31.5" rx="3"/><path d="M9 17H39M9 27.5H39M13.5 38V42.5M34.5 38V42.5"/></g><g id="icon-furniture-assembly-accent" stroke="#E30613"><path d="M20.5 11.75H27.5M20.5 22.25H27.5M20.5 32.75H27.5"/></g></g>
+</svg>
