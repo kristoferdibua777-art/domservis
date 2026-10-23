@@ -105,6 +105,7 @@ RSpec.describe Models do
 
         expect(references).to eq({
                                    'DomServis::DispatchJob'   => { 'organization_id'=>0 },
+                                   'DomServis::PartnerRate'   => { 'organization_id'=>0 },
                                    'DomServis::RequestSource' => { 'organization_id'=>0 },
                                    'Ticket'                   => { 'organization_id'=>0 },
                                    'User'                     => { 'organization_id'=>1 },

@@ -10,6 +10,11 @@ Zammad::Application.routes.draw do
         end
         resources :tags, only: %i[index], controller: :tags
 
+        # Master reports (decision 2026-10-24): the price list for the report
+        # form and the shares of masters and partners (Dispatch Admin).
+        resource :price_list, only: %i[show update], controller: :price_lists
+        resource :finance_rates, only: %i[show update], controller: :finance_rates
+
         # GigaChat settings of the pasted text reading (Dispatch Admin).
         resource :ai_settings, only: %i[show update], controller: :ai_settings do
           post :check
@@ -35,6 +40,8 @@ Zammad::Application.routes.draw do
             post :move_day
             post :change_priority
             post :resync_ticket
+            get :report
+            put :report, action: :save_report
           end
 
           resources :events, only: %i[index]

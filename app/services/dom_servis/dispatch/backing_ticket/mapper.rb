@@ -83,6 +83,9 @@ class DomServis::Dispatch::BackingTicket::Mapper
       body_parts << "Current dispatch description:\n#{dispatch_job.description}"
     end
 
+    report_text = normalized_changes.dig('report_saved', 'text')
+    body_parts << report_text if report_text.present?
+
     {
       body:     body_parts.join("\n\n"),
       internal: true,
@@ -152,6 +155,8 @@ class DomServis::Dispatch::BackingTicket::Mapper
       ["- Work tags: #{Array(meta['to'] || meta[:to]).join(', ')}."]
     when 'assigned'
       ["- Assigned to #{user_name(meta['to'] || meta[:to])}."]
+    when 'report_saved'
+      ['- Master report saved.']
     when 'assignee_changed'
       ["- Assignee: #{user_name(meta['from'] || meta[:from])} -> #{user_name(meta['to'] || meta[:to])}."]
     end
