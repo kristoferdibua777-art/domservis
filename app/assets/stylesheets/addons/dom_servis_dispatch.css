@@ -2140,7 +2140,8 @@ summary.dom-servis-dispatch-drawer__history-row {
   text-transform: uppercase;
 }
 
-.dom-servis-dispatch-tag-selector__group:not([open]) .dom-servis-dispatch-tag-selector__group-title {
+.dom-servis-dispatch-tag-selector__group:not([open])
+  .dom-servis-dispatch-tag-selector__group-title {
   margin-bottom: 0;
 }
 
