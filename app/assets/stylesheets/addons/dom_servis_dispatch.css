@@ -1528,6 +1528,15 @@ summary.dom-servis-dispatch-drawer__history-row {
   white-space: nowrap;
 }
 
+.dom-servis-dispatch-admin__check {
+  align-items: center;
+  display: flex;
+  font-weight: normal;
+  gap: 6px;
+  margin: 0 0 4px;
+  white-space: nowrap;
+}
+
 .dom-servis-dispatch-admin__table .form-control {
   min-width: 80px;
 }
@@ -2122,6 +2131,12 @@ summary.dom-servis-dispatch-drawer__history-row {
   border: 0;
   box-shadow: none;
   cursor: pointer;
+}
+
+.dom-servis-dispatch-card__tag--fit {
+  background: rgba(93, 210, 179, 0.16);
+  border-color: rgba(93, 210, 179, 0.5);
+  color: #9ff0d8;
 }
 
 .dom-servis-dispatch-card__tag.is-active {
