@@ -36,19 +36,22 @@ class DomServis::Dispatch::PriceListsController < DomServis::Dispatch::BaseContr
 
   def save_item!(row, index)
     item = row[:id].present? ? DomServis::PriceItem.find(row[:id]) : DomServis::PriceItem.new
-    item.assign_attributes(
+    item.update!(item_attributes(row, index))
+    item
+  rescue ActiveRecord::RecordInvalid => e
+    raise Exceptions::UnprocessableEntity, "Строка #{index + 1} прайса (#{row[:name].presence || 'без названия'}): #{e.record.errors.full_messages.join(', ')}."
+  end
+
+  def item_attributes(row, index)
+    {
       name:      row[:name].to_s.strip,
       kind:      row[:kind].presence || 'work',
       direction: row[:direction].presence,
       unit:      row[:unit].to_s.strip.presence || 'шт',
-      price:     row[:price].to_s.delete("  ").tr(',', '.').presence || 0,
+      price:     row[:price].to_s.delete(" \u00A0").tr(',', '.').presence || 0,
       active:    row.key?(:active) ? ActiveModel::Type::Boolean.new.cast(row[:active]) : true,
       position:  index,
-    )
-    item.save!
-    item
-  rescue ActiveRecord::RecordInvalid => e
-    raise Exceptions::UnprocessableEntity, "Строка #{index + 1} прайса (#{row[:name].presence || 'без названия'}): #{e.record.errors.full_messages.join(', ')}."
+    }
   end
 
   def price_list_params

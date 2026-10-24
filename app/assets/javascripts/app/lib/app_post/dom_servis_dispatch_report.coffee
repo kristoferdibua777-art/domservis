@@ -18,7 +18,7 @@ class App.DomServisDispatchReport
   @number: (value) ->
     return value if _.isNumber(value) && !_.isNaN(value)
 
-    text = "#{value ? ''}".replace(/[\s ]/g, '').replace(',', '.')
+    text = "#{value ? ''}".replace(/[\s\u00A0]/g, '').replace(',', '.')
     parsed = parseFloat(text)
     if _.isNaN(parsed) then 0 else parsed
 
