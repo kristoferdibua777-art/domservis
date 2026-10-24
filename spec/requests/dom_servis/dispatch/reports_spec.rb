@@ -157,7 +157,7 @@ RSpec.describe 'DomServis master reports', type: :request do
     it 'does not change the report of a closed job', :aggregate_failures do
       add_photo
       put report_url, params: report_params.merge(finish: true), as: :json
-      job.update!(status: 'closed')
+      job.reload.update!(status: 'closed')
 
       put report_url, params: report_params.merge(work_summary: 'Другое'), as: :json
 
