@@ -170,6 +170,7 @@ YandexGPT получает поля ответа JSON-схемой (если с�
 | POST | /api/v1/dom_servis/dispatch/admin_policy/reset | Сброс политики |
 | GET | /api/v1/dom_servis/dispatch/price_list | Прайс для отчёта: items, kinds, directions; не администратору — только активные строки |
 | PUT | /api/v1/dom_servis/dispatch/price_list | Администратор: заменить прайс (строка с id меняется, без id — добавляется, отсутствующая удаляется) |
+| GET | /api/v1/dom_servis/dispatch/report_export | Администратор: .xlsx за период — from, to (ГГГГ-ММ-ДД, не больше 366 дней), date_field created/completed, master_id |
 | GET/PUT | /api/v1/dom_servis/dispatch/finance_rates | Администратор: masters (user_id, work_percent) и partners (organization_id, percent, base works/total) |
 | GET | /api/v1/dom_servis/dispatch/tags | Теги справочника работ по порядку, затем остальные теги Zammad: tags (name, group, dispatch_count, ticket_count) и groups (key, label) |
 | GET/PUT | /api/v1/dom_servis/dispatch/ai_settings | Администратор: ИИ для разбора текста — enabled, provider (gigachat — GigaChat API Сбера; yandex — YandexGPT в Yandex AI Studio, API-ключ сервисного аккаунта и folder_id; chat_completions — Cloud.ru Foundation Models или другой API как у OpenAI), scope, model, base_url, folder_id, auth_key_set; новый auth_key или clear_auth_key в PUT, сам ключ не возвращается |
