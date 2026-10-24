@@ -127,15 +127,21 @@ class DomServis::Dispatch::ReportsWorkbook
 
   def jobs
     @jobs ||= begin
-      zone   = ActiveSupport::TimeZone[timezone] || Time.zone
       column = DATE_FIELDS[date_field]
       scope  = DomServis::DispatchJob
-        .where(column => zone.local(from.year, from.month, from.day)..zone.local(to.year, to.month, to.day).end_of_day)
+        .where(column => period)
         .includes(:ticket, :assignee, :organization, :request_source, report: :items)
         .reorder(column => :asc, id: :asc)
       scope = scope.where(assignee_id: master_id) if master_id
       scope.to_a
     end
+  end
+
+  # The whole days of the period in the time zone of the system.
+  def period
+    zone = ActiveSupport::TimeZone[timezone] || Time.zone
+
+    zone.local(from.year, from.month, from.day)..zone.local(to.year, to.month, to.day).end_of_day
   end
 
   def filename
@@ -159,61 +165,32 @@ class DomServis::Dispatch::ReportsWorkbook
   end
 
   def job_row(job)
-    report = job.report
-    items  = report&.live_items || []
-
-    [
-      job.ticket&.number || job.job_code,
-      time_text(job.created_at),
-      SOURCE_LABELS.fetch(job.source.to_s, job.source.to_s),
-      job.request_source&.display_name,
-      job.organization&.name,
-      job.client_name,
-      job.client_phone,
-      job.address,
-      directions(job).join(', '),
-      Array(job.work_tags).join(', '),
-      job.service_type,
-      job.description,
-      PRIORITY_LABELS.fetch(job.priority.to_s, job.priority.to_s),
-      job.visit_date,
-      job.visit_time,
-      job.assignee&.fullname,
-      STATUS_LABELS.fetch(job.status.to_s, job.status.to_s),
-      time_text(job.taken_at),
-      time_text(job.completed_at),
-      time_text(job.closed_at),
-      report_state(report),
-      time_text(report&.submitted_at),
-      items.map { |item| "#{item.name} × #{number_text(item.quantity)} = #{number_text(item.line_amount)}" }.join('; ').presence,
-      report&.work_summary,
-      report&.recommendations,
-      *report_sums(report),
-      items.any?(&:price_changed_from_list?) ? 'да' : nil,
-    ]
+    [*job_intake_cells(job), *job_work_cells(job), *report_text_cells(job.report), *report_sums(job.report), price_changed_cell(job.report)]
   end
 
   def item_rows
     jobs.flat_map do |job|
-      Array(job.report&.live_items).map do |item|
-        [
-          job.ticket&.number || job.job_code,
-          time_text(job.completed_at),
-          job.report.master&.fullname,
-          job.organization&.name,
-          directions(job).join(', '),
-          item.part? ? 'Запчасть' : 'Работа',
-          item.name,
-          item.quantity,
-          item.unit,
-          item.list_price,
-          item.price,
-          item.line_amount,
-          item.price_changed_from_list? ? 'да' : nil,
-          item.bought_by_master ? 'да' : nil,
-        ]
-      end
+      Array(job.report&.live_items).map { |item| item_row(job, item) }
     end
+  end
+
+  def item_row(job, item)
+    [
+      job_number(job),
+      time_text(job.completed_at),
+      job.report.master&.fullname,
+      job.organization&.name,
+      directions(job).join(', '),
+      item.part? ? 'Запчасть' : 'Работа',
+      item.name,
+      item.quantity,
+      item.unit,
+      item.list_price,
+      item.price,
+      item.line_amount,
+      yes(item.price_changed_from_list?),
+      yes(item.bought_by_master),
+    ]
   end
 
   def master_rows
@@ -256,6 +233,62 @@ class DomServis::Dispatch::ReportsWorkbook
   end
 
   private
+
+  # Number, intake, client and kind of work of a job.
+  def job_intake_cells(job)
+    [
+      job_number(job),
+      time_text(job.created_at),
+      SOURCE_LABELS.fetch(job.source.to_s, job.source.to_s),
+      job.request_source&.display_name,
+      job.organization&.name,
+      job.client_name,
+      job.client_phone,
+      job.address,
+      directions(job).join(', '),
+      Array(job.work_tags).join(', '),
+      job.service_type,
+      job.description,
+    ]
+  end
+
+  # Priority, visit, master and lifecycle of a job.
+  def job_work_cells(job)
+    [
+      PRIORITY_LABELS.fetch(job.priority.to_s, job.priority.to_s),
+      job.visit_date,
+      job.visit_time,
+      job.assignee&.fullname,
+      STATUS_LABELS.fetch(job.status.to_s, job.status.to_s),
+      time_text(job.taken_at),
+      time_text(job.completed_at),
+      time_text(job.closed_at),
+    ]
+  end
+
+  def report_text_cells(report)
+    items = report&.live_items || []
+
+    [
+      report_state(report),
+      time_text(report&.submitted_at),
+      items.map { |item| "#{item.name} × #{number_text(item.quantity)} = #{number_text(item.line_amount)}" }.join('; ').presence,
+      report&.work_summary,
+      report&.recommendations,
+    ]
+  end
+
+  def price_changed_cell(report)
+    yes(Array(report&.live_items).any?(&:price_changed_from_list?))
+  end
+
+  def job_number(job)
+    job.ticket&.number || job.job_code
+  end
+
+  def yes(value)
+    value ? 'да' : nil
+  end
 
   def reported
     jobs.select { |job| job.report&.complete? }
