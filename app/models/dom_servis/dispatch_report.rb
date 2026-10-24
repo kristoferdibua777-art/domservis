@@ -41,7 +41,7 @@ class DomServis::DispatchReport < ApplicationModel
   belongs_to :submitted_by, class_name: 'User', optional: true
   belongs_to :updated_by, class_name: 'User', optional: true
 
-  has_many :items, -> { order(:position, :id) },
+  has_many :items, -> { reorder(:position, :id) },
            class_name: 'DomServis::DispatchReportItem',
            inverse_of: :dispatch_report,
            dependent:  :destroy,
@@ -132,15 +132,14 @@ class DomServis::DispatchReport < ApplicationModel
   # An internal note on the backing ticket: what was done and the sums the
   # client sees, without the shares.
   def ticket_note
-    lines = ["#{['Отчёт мастера', master&.fullname].compact_blank.join(' ')}:"]
-    live_items.each do |item|
-      lines << "- #{item.name}: #{format_number(item.quantity)} #{item.unit} × #{format_money(item.price)} = #{format_money(item.line_amount)}"
-    end
-    lines << "Итого: #{format_money(total)} (работы #{format_money(works_total)}, запчасти #{format_money(parts_total)})"
-    lines << "Оплата: #{payment_method_label || 'не указана'}, получено #{format_money(amount_paid)}"
-    lines << "Что сделано: #{work_summary}" if work_summary.present?
-    lines << "Рекомендации: #{recommendations}" if recommendations.present?
-    lines.join("\n")
+    [
+      "#{['Отчёт мастера', master&.fullname].compact_blank.join(' ')}:",
+      *live_items.map { |item| item_note(item) },
+      "Итого: #{format_money(total)} (работы #{format_money(works_total)}, запчасти #{format_money(parts_total)})",
+      "Оплата: #{payment_method_label || 'не указана'}, получено #{format_money(amount_paid)}",
+      ("Что сделано: #{work_summary}" if work_summary.present?),
+      ("Рекомендации: #{recommendations}" if recommendations.present?),
+    ].compact.join("\n")
   end
 
   private
@@ -164,20 +163,39 @@ class DomServis::DispatchReport < ApplicationModel
     }
   end
 
-  def calculate
-    rows = live_items
-    zero = BigDecimal('0')
+  def item_note(item)
+    "- #{item.name}: #{format_number(item.quantity)} #{item.unit} × #{format_money(item.price)} = #{format_money(item.line_amount)}"
+  end
 
-    self.works_total         = rows.select(&:work?).sum(zero, &:line_amount)
-    self.parts_total         = rows.select(&:part?).sum(zero, &:line_amount)
+  def calculate
+    calculate_totals
+    calculate_shares
+    calculate_settlement
+  end
+
+  def calculate_totals
+    rows = live_items
+
+    self.works_total         = amount_of(rows.select(&:work?))
+    self.parts_total         = amount_of(rows.select(&:part?))
     self.total               = works_total + parts_total
-    self.parts_reimbursement = rows.select { |item| item.part? && item.bought_by_master }.sum(zero, &:line_amount)
-    self.master_amount       = percent_of(works_total, master_percent)
-    self.master_payout       = master_amount + parts_reimbursement
-    self.partner_amount      = percent_of(partner_base == 'total' ? total : works_total, partner_percent)
-    self.company_amount      = total - partner_amount - master_payout
-    self.money_at_master     = MASTER_PAYMENT_METHODS.include?(payment_method) ? amount_paid.to_d : zero
-    self.master_settlement   = master_payout - money_at_master
+    self.parts_reimbursement = amount_of(rows.select { |item| item.part? && item.bought_by_master })
+  end
+
+  def calculate_shares
+    self.master_amount  = percent_of(works_total, master_percent)
+    self.master_payout  = master_amount + parts_reimbursement
+    self.partner_amount = percent_of(partner_base == 'total' ? total : works_total, partner_percent)
+    self.company_amount = total - partner_amount - master_payout
+  end
+
+  def calculate_settlement
+    self.money_at_master   = MASTER_PAYMENT_METHODS.include?(payment_method) ? amount_paid.to_d : BigDecimal('0')
+    self.master_settlement = master_payout - money_at_master
+  end
+
+  def amount_of(rows)
+    rows.sum(BigDecimal('0'), &:line_amount)
   end
 
   def percent_of(value, percent)

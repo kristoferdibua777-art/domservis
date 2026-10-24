@@ -56,7 +56,7 @@ class DomServis::Dispatch::FinanceRatesController < DomServis::Dispatch::BaseCon
   end
 
   def percent(value)
-    value.to_s.delete("  %").tr(',', '.').presence || 0
+    value.to_s.delete(" \u00A0%").tr(',', '.').presence || 0
   end
 
   def rates_params

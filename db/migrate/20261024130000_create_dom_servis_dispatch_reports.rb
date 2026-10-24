@@ -8,6 +8,16 @@
 # whole sum (admin settings).
 class CreateDomServisDispatchReports < ActiveRecord::Migration[7.2]
   def change
+    create_price_items
+    create_master_rates
+    create_partner_rates
+    create_reports
+    create_report_items
+  end
+
+  private
+
+  def create_price_items
     create_table :dom_servis_price_items, id: :integer do |t|
       t.string :name, limit: 250, null: false
       t.string :kind, limit: 20, null: false, default: 'work'
@@ -19,14 +29,18 @@ class CreateDomServisDispatchReports < ActiveRecord::Migration[7.2]
 
       t.timestamps limit: 3, null: false
     end
+  end
 
+  def create_master_rates
     create_table :dom_servis_master_rates, id: :integer do |t|
       t.references :user, null: false, foreign_key: { on_delete: :cascade }, type: :integer, index: { unique: true }
       t.decimal :work_percent, precision: 5, scale: 2, null: false, default: 0
 
       t.timestamps limit: 3, null: false
     end
+  end
 
+  def create_partner_rates
     create_table :dom_servis_partner_rates, id: :integer do |t|
       t.references :organization, null: false, foreign_key: { on_delete: :cascade }, type: :integer, index: { unique: true }
       t.decimal :percent, precision: 5, scale: 2, null: false, default: 0
@@ -34,7 +48,9 @@ class CreateDomServisDispatchReports < ActiveRecord::Migration[7.2]
 
       t.timestamps limit: 3, null: false
     end
+  end
 
+  def create_reports
     create_table :dom_servis_dispatch_reports, id: :integer do |t|
       t.references :dispatch_job, null: false, type: :integer, foreign_key: { to_table: :dom_servis_dispatch_jobs }, index: { unique: true }
       t.references :master, type: :integer, foreign_key: { to_table: :users, on_delete: :nullify }
@@ -61,7 +77,9 @@ class CreateDomServisDispatchReports < ActiveRecord::Migration[7.2]
 
       t.timestamps limit: 3, null: false
     end
+  end
 
+  def create_report_items
     create_table :dom_servis_dispatch_report_items, id: :integer do |t|
       t.references :dispatch_report, null: false, type: :integer, foreign_key: { to_table: :dom_servis_dispatch_reports }
       t.references :price_item, type: :integer, foreign_key: { to_table: :dom_servis_price_items, on_delete: :nullify }

@@ -89,7 +89,7 @@ class DomServis::Dispatch::ReportSaver
 
   # Accepts "1 500,50" as typed on a phone.
   def decimal(value, default)
-    text = value.to_s.delete("  ").tr(',', '.')
+    text = value.to_s.delete(" \u00A0").tr(',', '.')
     return BigDecimal(default.to_s) if text.blank?
 
     BigDecimal(text)
