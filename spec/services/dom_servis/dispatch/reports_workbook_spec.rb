@@ -75,7 +75,7 @@ RSpec.describe DomServis::Dispatch::ReportsWorkbook, current_user_id: 1 do
     create_job(status: 'pool', assignee: nil)
 
     expect(workbook.master_rows).to eq([['Ivan Master', 2, 6000, 1800, 7800, 3900, 2400, 1800, 4200, 3900, 300]])
-    expect(workbook.partner_rows).to eq([['ZIP Partner', 1, 3900, 300, 1500], ['Без организации', 1, 3900, 0, 1800]])
+    expect(workbook.partner_rows).to eq([['ZIP Partner', 1, 3900, 300, 1500], ['Частный заказ', 1, 3900, 0, 1800]])
     expect(workbook.direction_rows).to eq([['Газовый котёл', 3, 2, 7800, 3300]])
   end
 
