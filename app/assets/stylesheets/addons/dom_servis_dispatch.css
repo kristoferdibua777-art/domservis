@@ -1496,6 +1496,36 @@ summary.dom-servis-dispatch-drawer__history-row {
   padding: 22px 24px;
 }
 
+.dom-servis-dispatch-admin__table-wrap {
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+
+.dom-servis-dispatch-admin__table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.dom-servis-dispatch-admin__table th,
+.dom-servis-dispatch-admin__table td {
+  border-bottom: 1px solid rgba(84, 93, 116, 0.35);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.dom-servis-dispatch-admin__table th {
+  color: #9eabba;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dom-servis-dispatch-admin__table .form-control {
+  min-width: 80px;
+}
+
 .dom-servis-dispatch-admin__settings-card {
   background: rgba(27, 31, 40, 0.82);
   border: 1px solid rgba(79, 86, 104, 0.5);
@@ -2091,6 +2121,155 @@ summary.dom-servis-dispatch-drawer__history-row {
 .dom-servis-dispatch-card__tag.is-active {
   background: linear-gradient(135deg, #5dd2b3, #328ecf);
   color: #08131f;
+}
+
+/* Master report form and its summary in the job card. */
+.dom-servis-dispatch-report__section + .dom-servis-dispatch-report__section {
+  border-top: 1px solid rgba(84, 93, 116, 0.35);
+  margin-top: 18px;
+  padding-top: 18px;
+}
+
+.dom-servis-dispatch-report__title {
+  color: #f3f6fb;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.dom-servis-dispatch-report__item {
+  background: rgba(23, 27, 36, 0.68);
+  border: 1px solid rgba(84, 93, 116, 0.55);
+  border-radius: 14px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+}
+
+.dom-servis-dispatch-report__item--part {
+  border-color: rgba(77, 196, 255, 0.35);
+}
+
+.dom-servis-dispatch-report__item-head {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.dom-servis-dispatch-report__item-head .form-control {
+  flex: 1 1 auto;
+}
+
+.dom-servis-dispatch-report__kind {
+  color: #9eabba;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.dom-servis-dispatch-report__item-numbers {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 8px;
+}
+
+.dom-servis-dispatch-report__item-numbers label,
+.dom-servis-dispatch-report__line-amount {
+  color: #9eabba;
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  gap: 4px;
+  margin: 0;
+}
+
+.dom-servis-dispatch-report__line-amount strong {
+  color: #f5f7fa;
+  font-size: 15px;
+  padding-top: 8px;
+}
+
+.dom-servis-dispatch-report__hint {
+  color: #9eabba;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+.dom-servis-dispatch-report__check {
+  align-items: center;
+  color: #dbe4f0;
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+  margin: 8px 0 0;
+}
+
+.dom-servis-dispatch-report__add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dom-servis-dispatch-report__add select {
+  flex: 1 1 220px;
+}
+
+.dom-servis-dispatch-report__sum {
+  color: #c9cfd8;
+  display: flex;
+  font-size: 14px;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.dom-servis-dispatch-report__sum strong {
+  color: #f5f7fa;
+}
+
+.dom-servis-dispatch-report__sum--strong {
+  border-top: 1px dashed rgba(84, 93, 116, 0.55);
+  font-weight: 800;
+}
+
+.dom-servis-dispatch-report__missing {
+  background: rgba(255, 176, 32, 0.08);
+  border: 1px solid rgba(255, 176, 32, 0.4);
+  border-radius: 14px;
+  margin-top: 18px;
+  padding: 12px 14px;
+}
+
+.dom-servis-dispatch-report__missing.is-hidden {
+  display: none;
+}
+
+.dom-servis-dispatch-report__missing ul,
+.dom-servis-dispatch-report__lines {
+  color: #f0d8a8;
+  font-size: 13px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.dom-servis-dispatch-report__lines {
+  color: #dbe4f0;
+  margin-bottom: 8px;
+}
+
+.dom-servis-dispatch-report__line {
+  color: #c9cfd8;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 767px) {
+  .dom-servis-dispatch-report__item-numbers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .dom-servis-dispatch-tag-selector {

@@ -97,6 +97,134 @@
     <section class="dom-servis-dispatch-admin__section">
       <div class="dom-servis-dispatch-admin__section-head">
         <div>
+          <h2>Прайс для отчётов мастеров</h2>
+          <p>Мастер выбирает работы и запчасти из прайса, цена подставляется сама и её можно изменить в отчёте — изменённая цена видна в отчёте и в выгрузке. Направление ограничивает строку заявками с таким тегом; без направления строка общая.</p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__settings-card">
+        <% if !@finance.priceLoaded: %>
+          <p class="dom-servis-dispatch-admin__setting-hint">Загрузка прайса…</p>
+        <% else: %>
+          <% if @finance.items.length < 1: %>
+            <p class="dom-servis-dispatch-admin__setting-hint">Прайс пуст. Добавьте строки или типовые позиции и укажите цены.</p>
+          <% else: %>
+            <div class="dom-servis-dispatch-admin__table-wrap">
+              <table class="dom-servis-dispatch-admin__table">
+                <thead>
+                  <tr>
+                    <th>Наименование</th>
+                    <th>Тип</th>
+                    <th>Направление</th>
+                    <th>Ед.</th>
+                    <th>Цена, ₽</th>
+                    <th>Активна</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% for item in @finance.items: %>
+                    <tr>
+                      <td><input class="form-control js-price-field" data-index="<%= item.index %>" data-field="name" type="text" value="<%= item.name %>"></td>
+                      <td>
+                        <select class="form-control js-price-field" data-index="<%= item.index %>" data-field="kind">
+                          <% for kind in @finance.kinds: %>
+                            <option value="<%= kind.id %>"<%= ' selected' if item.kind is kind.id %>><%= kind.label %></option>
+                          <% end %>
+                        </select>
+                      </td>
+                      <td>
+                        <select class="form-control js-price-field" data-index="<%= item.index %>" data-field="direction">
+                          <option value="">Все направления</option>
+                          <% for direction in @finance.directions: %>
+                            <option value="<%= direction %>"<%= ' selected' if item.direction is direction %>><%= direction %></option>
+                          <% end %>
+                        </select>
+                      </td>
+                      <td><input class="form-control js-price-field" data-index="<%= item.index %>" data-field="unit" type="text" value="<%= item.unit %>"></td>
+                      <td><input class="form-control js-price-field" data-index="<%= item.index %>" data-field="price" type="text" inputmode="decimal" value="<%= item.price %>"></td>
+                      <td><input class="js-price-field" data-index="<%= item.index %>" data-field="active" type="checkbox"<%= ' checked' if item.active %>></td>
+                      <td><button class="btn btn--text js-price-remove" data-index="<%= item.index %>" aria-label="Убрать строку">✕</button></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
+
+          <div class="dom-servis-dispatch-admin__actions">
+            <button class="btn js-price-add">Добавить строку</button>
+            <button class="btn js-price-template">Добавить типовые позиции</button>
+            <button class="btn btn--primary js-price-save"<%= ' disabled' if @finance.busy %>>Сохранить прайс</button>
+          </div>
+        <% end %>
+      </div>
+    </section>
+
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
+          <h2>Проценты мастеров и партнёров</h2>
+          <p>Мастер получает свой процент от суммы работ, запчасти, которые он купил, возвращаются ему полностью. Партнёр (организация заявки) получает процент от работ или от всей суммы. Отчёты незакрытых заявок пересчитываются по текущим процентам, закрытые сохраняют свои.</p>
+        </div>
+      </div>
+
+      <div class="dom-servis-dispatch-admin__settings-card">
+        <% if !@finance.ratesLoaded: %>
+          <p class="dom-servis-dispatch-admin__setting-hint">Загрузка процентов…</p>
+        <% else: %>
+          <div class="dom-servis-dispatch-admin__table-wrap">
+            <table class="dom-servis-dispatch-admin__table">
+              <thead>
+                <tr><th>Мастер</th><th>Процент от работ</th></tr>
+              </thead>
+              <tbody>
+                <% for row in @finance.masters: %>
+                  <tr>
+                    <td><%= row.name %></td>
+                    <td><input class="form-control js-rate-field" data-type="master" data-index="<%= row.index %>" data-field="work_percent" type="text" inputmode="decimal" value="<%= row.work_percent %>"></td>
+                  </tr>
+                <% end %>
+                <% if @finance.masters.length < 1: %>
+                  <tr><td colspan="2">Мастеров нет — дайте сотрудникам роль Dom-Servis Master.</td></tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="dom-servis-dispatch-admin__table-wrap">
+            <table class="dom-servis-dispatch-admin__table">
+              <thead>
+                <tr><th>Партнёр (организация)</th><th>Процент</th><th>От чего</th></tr>
+              </thead>
+              <tbody>
+                <% for row in @finance.partners: %>
+                  <tr>
+                    <td><%= row.name %></td>
+                    <td><input class="form-control js-rate-field" data-type="partner" data-index="<%= row.index %>" data-field="percent" type="text" inputmode="decimal" value="<%= row.percent %>"></td>
+                    <td>
+                      <select class="form-control js-rate-field" data-type="partner" data-index="<%= row.index %>" data-field="base">
+                        <% for base in @finance.bases: %>
+                          <option value="<%= base.id %>"<%= ' selected' if row.base is base.id %>><%= base.label %></option>
+                        <% end %>
+                      </select>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="dom-servis-dispatch-admin__actions">
+            <button class="btn btn--primary js-rates-save"<%= ' disabled' if @finance.busy %>>Сохранить проценты</button>
+          </div>
+        <% end %>
+      </div>
+    </section>
+
+    <section class="dom-servis-dispatch-admin__section">
+      <div class="dom-servis-dispatch-admin__section-head">
+        <div>
           <h2>ИИ-разбор текста заявок (GigaChat или YandexGPT)</h2>
           <p>Диспетчер вставляет в форму новой заявки сообщение клиента — из WhatsApp, Telegram, Авито, СМС или почты, — и поля заполняются сами. Без ИИ текст разбирается по правилам; с ИИ разбор точнее. Телефон и адрес от ИИ подставляются, только если они есть в тексте. Заявку всегда создаёт человек.</p>
         </div>

@@ -42,6 +42,10 @@ class DomServis::DispatchJob < ApplicationModel
            class_name: 'DomServis::DispatchEvent',
            inverse_of: :dispatch_job,
            dependent:  :nullify
+  has_one :report,
+          class_name: 'DomServis::DispatchReport',
+          inverse_of: :dispatch_job,
+          dependent:  :destroy
 
   validates :status, inclusion: { in: STATUSES }
   validates :priority, inclusion: { in: PRIORITIES }

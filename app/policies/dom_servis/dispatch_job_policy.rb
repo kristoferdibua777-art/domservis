@@ -65,6 +65,12 @@ class DomServis::DispatchJobPolicy < ApplicationPolicy
     master_access? && record.assignee_id == user.id
   end
 
+  def save_report?
+    return true if dispatcher_access?
+
+    master_access? && record.assignee_id == user.id
+  end
+
   private
 
   def dispatcher_access?

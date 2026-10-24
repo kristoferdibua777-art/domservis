@@ -42,10 +42,12 @@
 | POST | /jobs/:id/take | Взять |
 | POST | /jobs/:id/assign | Назначить активного мастера |
 | POST | /jobs/:id/release | Вернуть в pool |
-| POST | /jobs/:id/status | Изменить статус |
+| POST | /jobs/:id/status | Изменить статус; done — только с полным отчётом мастера (422 со списком недостающего) |
 | POST | /jobs/:id/move_day | Изменить день |
 | POST | /jobs/:id/change_priority | Изменить приоритет |
 | POST | /jobs/:id/resync_ticket | Повторить синхронизацию backing ticket (диспетчер, администратор); 422, если снова не удалось |
+| GET | /jobs/:id/report | Отчёт мастера: report (null, если нет), status, can_edit, can_finish, evidence, rates, payment_methods |
+| PUT | /jobs/:id/report | Сохранить отчёт: items (price_item_id, kind work/part, name, quantity, unit, price, bought_by_master), work_summary, recommendations, payment_method, amount_paid; finish=true — сразу перевести в done (из taken — через in_progress) |
 | GET | /jobs/:job_id/events | История |
 | GET/POST | /jobs/:job_id/attachments | Список / добавление файла |
 | GET/DELETE | /jobs/:job_id/attachments/:id | Чтение / удаление файла |
@@ -166,6 +168,9 @@ YandexGPT получает поля ответа JSON-схемой (если с�
 | GET | /api/v1/dom_servis/dispatch/policy | Эффективные правила текущего пользователя; администратору ещё history_export_due |
 | GET/PUT/PATCH | /api/v1/dom_servis/dispatch/admin_policy | Чтение / сохранение административной политики |
 | POST | /api/v1/dom_servis/dispatch/admin_policy/reset | Сброс политики |
+| GET | /api/v1/dom_servis/dispatch/price_list | Прайс для отчёта: items, kinds, directions; не администратору — только активные строки |
+| PUT | /api/v1/dom_servis/dispatch/price_list | Администратор: заменить прайс (строка с id меняется, без id — добавляется, отсутствующая удаляется) |
+| GET/PUT | /api/v1/dom_servis/dispatch/finance_rates | Администратор: masters (user_id, work_percent) и partners (organization_id, percent, base works/total) |
 | GET | /api/v1/dom_servis/dispatch/tags | Теги справочника работ по порядку, затем остальные теги Zammad: tags (name, group, dispatch_count, ticket_count) и groups (key, label) |
 | GET/PUT | /api/v1/dom_servis/dispatch/ai_settings | Администратор: ИИ для разбора текста — enabled, provider (gigachat — GigaChat API Сбера; yandex — YandexGPT в Yandex AI Studio, API-ключ сервисного аккаунта и folder_id; chat_completions — Cloud.ru Foundation Models или другой API как у OpenAI), scope, model, base_url, folder_id, auth_key_set; новый auth_key или clear_auth_key в PUT, сам ключ не возвращается |
 | POST | /api/v1/dom_servis/dispatch/ai_settings/check | Администратор: список моделей и пробный разбор образца — { ok, models, model_available, sample } или { ok: false, error } |
