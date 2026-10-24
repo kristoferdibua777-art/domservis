@@ -6,5 +6,7 @@ class AddDirectionsAndAreasToDomServisMasterRates < ActiveRecord::Migration[7.2]
   def change
     add_column :dom_servis_master_rates, :directions, :jsonb, null: false, default: []
     add_column :dom_servis_master_rates, :areas, :jsonb, null: false, default: []
+
+    DomServis::MasterRate.reset_column_information
   end
 end

@@ -11,7 +11,7 @@ RSpec.describe DomServis::MasterRate do
 
   describe '#fits?' do
     it 'fits every job without directions and areas' do
-      expect(rate.fits?(['Электрика', 'Гурьевск'])).to be(true)
+      expect(rate.fits?(%w[Электрика Гурьевск])).to be(true)
     end
 
     it 'fits jobs of its directions in its areas', :aggregate_failures do
