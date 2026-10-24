@@ -165,13 +165,13 @@ YandexGPT получает поля ответа JSON-схемой (если с�
 
 | Метод | Путь | Назначение |
 | --- | --- | --- |
-| GET | /api/v1/dom_servis/dispatch/policy | Эффективные правила текущего пользователя; администратору ещё history_export_due |
+| GET | /api/v1/dom_servis/dispatch/policy | Эффективные правила текущего пользователя и master_profile (directions, areas); администратору ещё history_export_due |
 | GET/PUT/PATCH | /api/v1/dom_servis/dispatch/admin_policy | Чтение / сохранение административной политики |
 | POST | /api/v1/dom_servis/dispatch/admin_policy/reset | Сброс политики |
 | GET | /api/v1/dom_servis/dispatch/price_list | Прайс для отчёта: items, kinds, directions; не администратору — только активные строки |
 | PUT | /api/v1/dom_servis/dispatch/price_list | Администратор: заменить прайс (строка с id меняется, без id — добавляется, отсутствующая удаляется) |
 | GET | /api/v1/dom_servis/dispatch/report_export | Администратор: .xlsx за период — from, to (ГГГГ-ММ-ДД, не больше 366 дней), date_field created/completed, master_id |
-| GET/PUT | /api/v1/dom_servis/dispatch/finance_rates | Администратор: masters (user_id, work_percent) и partners (organization_id, percent, base works/total) |
+| GET/PUT | /api/v1/dom_servis/dispatch/finance_rates | Администратор: masters (user_id, work_percent, directions, areas) и partners (organization_id, percent, base works/total); в ответе ещё списки directions и areas |
 | GET | /api/v1/dom_servis/dispatch/tags | Теги справочника работ по порядку, затем остальные теги Zammad: tags (name, group, dispatch_count, ticket_count) и groups (key, label) |
 | GET/PUT | /api/v1/dom_servis/dispatch/ai_settings | Администратор: ИИ для разбора текста — enabled, provider (gigachat — GigaChat API Сбера; yandex — YandexGPT в Yandex AI Studio, API-ключ сервисного аккаунта и folder_id; chat_completions — Cloud.ru Foundation Models или другой API как у OpenAI), scope, model, base_url, folder_id, auth_key_set; новый auth_key или clear_auth_key в PUT, сам ключ не возвращается |
 | POST | /api/v1/dom_servis/dispatch/ai_settings/check | Администратор: список моделей и пробный разбор образца — { ok, models, model_available, sample } или { ok: false, error } |

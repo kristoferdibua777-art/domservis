@@ -383,6 +383,7 @@ class App.DomServisDispatchBoard extends App.Controller
           statuses: data.statuses || {}
           fields: data.fields || {}
           settings: data.settings || {}
+        @masterProfile = data.master_profile || null
         @render() if !@loading
         @remindHistoryExport() if data.history_export_due
       error: =>
@@ -2184,10 +2185,28 @@ class App.DomServisDispatchBoard extends App.Controller
         canCancel: dispatcherAccess && job.status in ['pool', 'taken', 'in_progress'] && @actionAllowed('cancel_job') && @statusAllowed('cancelled')
         canClose: dispatcherAccess && job.status is 'done' && @actionAllowed('close_job') && @statusAllowed('closed')
         canEdit: @canOpenEdit(job)
+        fitsMaster: masterAccess && job.status is 'pool' && @jobFitsMaster(job)
         adminAccess: adminAccess
         masterAccess: masterAccess
       card.primaryAction = @buildCardPrimaryAction(card)
       card
+
+  # A pool job fits the master when it is of one of his directions and in
+  # one of his areas (decision 2026-10-24); a master with neither set gets
+  # no marks, as every job is his.
+  jobFitsMaster: (job) ->
+    profile = @masterProfile
+    return false if !profile || (_.isEmpty(profile.directions) && _.isEmpty(profile.areas))
+
+    tags = @normalizeTags(job.work_tags)
+    covers = (own, groupTags) ->
+      wanted = _.filter(tags, (tag) -> _.contains(groupTags, tag))
+      _.isEmpty(own) || _.isEmpty(wanted) || _.intersection(own, wanted).length > 0
+
+    covers(profile.directions, @tagNamesOfGroup('direction')) && covers(profile.areas, @tagNamesOfGroup('area'))
+
+  tagNamesOfGroup: (groupKey) ->
+    _.pluck(_.filter(@availableTags, (tag) -> tag.group is groupKey), 'name')
 
   buildCardPrimaryAction: (card) ->
     return null if !card

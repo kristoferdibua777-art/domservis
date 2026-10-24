@@ -164,8 +164,8 @@
     <section class="dom-servis-dispatch-admin__section">
       <div class="dom-servis-dispatch-admin__section-head">
         <div>
-          <h2>Проценты мастеров и партнёров</h2>
-          <p>Мастер получает свой процент от суммы работ, запчасти, которые он купил, возвращаются ему полностью. Партнёр (организация заявки) получает процент от работ или от всей суммы. Отчёты незакрытых заявок пересчитываются по текущим процентам, закрытые сохраняют свои.</p>
+          <h2>Мастера и партнёры: проценты, направления, районы</h2>
+          <p>Мастер получает свой процент от суммы работ, запчасти, которые он купил, возвращаются ему полностью. Партнёр (организация заявки) получает процент от работ или от всей суммы. Отчёты незакрытых заявок пересчитываются по текущим процентам, закрытые сохраняют свои. О новой заявке и о возврате на стенд мастеру приходит уведомление, только если заявка подходит по направлению и району; без отметок — обо всех заявках. Если не подошёл никто, уведомление получают все мастера.</p>
         </div>
       </div>
 
@@ -176,17 +176,33 @@
           <div class="dom-servis-dispatch-admin__table-wrap">
             <table class="dom-servis-dispatch-admin__table">
               <thead>
-                <tr><th>Мастер</th><th>Процент от работ</th></tr>
+                <tr><th>Мастер</th><th>Процент от работ</th><th>Направления</th><th>Районы</th></tr>
               </thead>
               <tbody>
                 <% for row in @finance.masters: %>
                   <tr>
                     <td><%= row.name %></td>
                     <td><input class="form-control js-rate-field" data-type="master" data-index="<%= row.index %>" data-field="work_percent" type="text" inputmode="decimal" value="<%= row.work_percent %>"></td>
+                    <td>
+                      <% for direction in @finance.directions: %>
+                        <label class="dom-servis-dispatch-admin__check">
+                          <input class="js-rate-check" type="checkbox" data-index="<%= row.index %>" data-field="directions" data-value="<%= direction %>"<%= ' checked' if _.contains(row.directions || [], direction) %>>
+                          <span><%= direction %></span>
+                        </label>
+                      <% end %>
+                    </td>
+                    <td>
+                      <% for area in @finance.areas: %>
+                        <label class="dom-servis-dispatch-admin__check">
+                          <input class="js-rate-check" type="checkbox" data-index="<%= row.index %>" data-field="areas" data-value="<%= area %>"<%= ' checked' if _.contains(row.areas || [], area) %>>
+                          <span><%= area %></span>
+                        </label>
+                      <% end %>
+                    </td>
                   </tr>
                 <% end %>
                 <% if @finance.masters.length < 1: %>
-                  <tr><td colspan="2">Мастеров нет — дайте сотрудникам роль Dom-Servis Master.</td></tr>
+                  <tr><td colspan="4">Мастеров нет — дайте сотрудникам роль Dom-Servis Master.</td></tr>
                 <% end %>
               </tbody>
             </table>

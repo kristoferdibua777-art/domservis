@@ -187,8 +187,7 @@ class DomServis::DispatchJob < ApplicationModel
     return if status != 'pool' || saved_change_to_status.blank?
     return if saved_change_to_status[1] != 'pool'
 
-    recipients = DomServis::Notifications::Dispatcher
-      .recipients_for_permissions('dom_servis.master')
+    recipients = DomServis::Notifications::Dispatcher.masters_for_job(self)
 
     DomServis::Notifications::Dispatcher.new(
       job:        self,

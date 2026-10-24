@@ -402,6 +402,9 @@
             <% if job.moreTagsCount > 0: %>
               <span class="dom-servis-dispatch-card__tag">+<%= job.moreTagsCount %></span>
             <% end %>
+            <% if job.fitsMaster: %>
+              <span class="dom-servis-dispatch-card__tag dom-servis-dispatch-card__tag--fit">Ваше направление</span>
+            <% end %>
           </div>
 
           <% if job.summaryText: %>
