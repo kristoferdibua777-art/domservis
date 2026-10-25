@@ -30,6 +30,7 @@ class DomServis::Dispatch::HistoryWorkbook
     'attachment_removed'   => 'Удалено вложение',
     'updated'              => 'Изменены данные заявки',
     'ai_parsed'            => 'Заявка разобрана автоматически',
+    'report_saved'         => 'Сохранён отчёт мастера',
     'deleted'              => 'Заявка удалена',
   }.freeze
 

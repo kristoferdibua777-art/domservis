@@ -40,6 +40,7 @@ RSpec.describe Organization, type: :model do
       let!(:refs_known) do
         {
           'DomServis::DispatchJob'   => { 'organization_id'=> 0 },
+          'DomServis::PartnerRate'   => { 'organization_id'=> 0 },
           'DomServis::RequestSource' => { 'organization_id'=> 0 },
           'Ticket'                   => { 'organization_id'=> 1 },
           'User'                     => { 'organization_id'=> 1 },

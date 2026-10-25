@@ -642,6 +642,34 @@
             <% end %>
           </section>
 
+          <% if !@detailEditing && @detailReport: %>
+            <section class="dom-servis-dispatch-drawer__section">
+              <div class="dom-servis-dispatch-drawer__section-title">Отчёт мастера</div>
+
+              <% if @detailReport.loading: %>
+                <div class="dom-servis-dispatch-drawer__attachment-empty">Загрузка отчёта…</div>
+              <% else if !@detailReport.exists: %>
+                <div class="dom-servis-dispatch-drawer__attachment-empty">Отчёта пока нет. Без него заявку нельзя завершить.</div>
+              <% else: %>
+                <% if !@detailReport.complete: %>
+                  <div class="dom-servis-dispatch-report__hint">Черновик: <%= @detailReport.missing.join('; ') %></div>
+                <% end %>
+                <ul class="dom-servis-dispatch-report__lines">
+                  <% for line in @detailReport.items: %>
+                    <li><%= line %></li>
+                  <% end %>
+                </ul>
+                <% for line in @detailReport.lines: %>
+                  <div class="dom-servis-dispatch-report__line"><%= line %></div>
+                <% end %>
+              <% end %>
+
+              <% if @detailReport.canEdit: %>
+                <button class="btn btn--text js-open-report js-no-detail" data-id="<%= @detailJob.id %>"><%= @detailReport.buttonLabel %></button>
+              <% end %>
+            </section>
+          <% end %>
+
           <% if !@detailEditing: %>
             <section class="dom-servis-dispatch-drawer__section">
               <div class="dom-servis-dispatch-drawer__section-title">История</div>
@@ -696,7 +724,7 @@
                 <button class="btn btn--primary js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="in_progress">В работу</button>
               <% end %>
               <% if @detailJob.canFinish: %>
-                <button class="btn btn--success js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="done">Готово</button>
+                <button class="btn btn--success js-open-report js-no-detail" data-id="<%= @detailJob.id %>">Отчёт и готово</button>
               <% end %>
               <% if @detailJob.canClose: %>
                 <button class="btn btn--success js-set-status js-no-detail" data-id="<%= @detailJob.id %>" data-status="closed">Закрыть</button>
@@ -894,6 +922,169 @@
           <div class="dom-servis-dispatch-modal__footer-actions">
             <button class="btn js-close-create">Отмена</button>
             <button class="btn btn--success js-create-job">Опубликовать на стенд</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @reportOpen && @report: %>
+    <div class="dom-servis-dispatch-modal dom-servis-dispatch-report">
+      <div class="dom-servis-dispatch-modal__backdrop js-close-report"></div>
+      <div class="dom-servis-dispatch-modal__dialog">
+        <div class="dom-servis-dispatch-modal__header">
+          <div>
+            <h2>Отчёт по заявке № <%= @report.jobNumber %></h2>
+            <p><%= @report.title || 'Работы, запчасти, оплата и фото' %></p>
+          </div>
+          <button class="btn btn--text js-close-report">Закрыть</button>
+        </div>
+
+        <div class="dom-servis-dispatch-modal__body">
+          <% if @report.loading: %>
+            <div class="dom-servis-dispatch-drawer__attachment-empty">Загрузка отчёта…</div>
+          <% else: %>
+            <section class="dom-servis-dispatch-report__section">
+              <div class="dom-servis-dispatch-report__title">Работы и запчасти</div>
+              <% if @report.items.length < 1: %>
+                <div class="dom-servis-dispatch-drawer__attachment-empty">Добавьте работы и запчасти из прайса или свои.</div>
+              <% end %>
+              <% for item in @report.items: %>
+                <div class="dom-servis-dispatch-report__item<%= ' dom-servis-dispatch-report__item--part' if item.isPart %>">
+                  <div class="dom-servis-dispatch-report__item-head">
+                    <span class="dom-servis-dispatch-report__kind"><%= item.kindLabel %></span>
+                    <input class="form-control js-report-field" data-index="<%= item.index %>" data-field="name" type="text" placeholder="Название" value="<%= item.name %>"<%= ' disabled' if !@report.canEdit %>>
+                    <% if @report.canEdit: %>
+                      <button class="btn btn--text js-report-remove-item" data-index="<%= item.index %>" aria-label="Убрать строку">✕</button>
+                    <% end %>
+                  </div>
+                  <div class="dom-servis-dispatch-report__item-numbers">
+                    <label>
+                      <span>Кол-во</span>
+                      <input class="form-control js-report-field" data-index="<%= item.index %>" data-field="quantity" type="text" inputmode="decimal" value="<%= item.quantity %>"<%= ' disabled' if !@report.canEdit %>>
+                    </label>
+                    <label>
+                      <span>Ед.</span>
+                      <input class="form-control js-report-field" data-index="<%= item.index %>" data-field="unit" type="text" value="<%= item.unit %>"<%= ' disabled' if !@report.canEdit %>>
+                    </label>
+                    <label>
+                      <span>Цена, ₽</span>
+                      <input class="form-control js-report-field" data-index="<%= item.index %>" data-field="price" type="text" inputmode="decimal" value="<%= item.price %>"<%= ' disabled' if !@report.canEdit %>>
+                    </label>
+                    <div class="dom-servis-dispatch-report__line-amount">
+                      <span>Сумма</span>
+                      <strong class="js-report-line-amount" data-index="<%= item.index %>"><%= item.amountLabel %></strong>
+                    </div>
+                  </div>
+                  <% if item.listPriceLabel: %>
+                    <div class="dom-servis-dispatch-report__hint">По прайсу: <%= item.listPriceLabel %><%= ' · цена изменена' if item.priceChanged %></div>
+                  <% end %>
+                  <% if item.isPart: %>
+                    <label class="dom-servis-dispatch-report__check">
+                      <input class="js-report-field" data-index="<%= item.index %>" data-field="bought_by_master" type="checkbox"<%= ' checked' if item.bought_by_master %><%= ' disabled' if !@report.canEdit %>>
+                      <span>Куплено мастером — вернуть ему стоимость</span>
+                    </label>
+                  <% end %>
+                </div>
+              <% end %>
+
+              <% if @report.canEdit: %>
+                <div class="dom-servis-dispatch-report__add">
+                  <select class="form-control js-report-add-price">
+                    <option value="">Добавить из прайса…</option>
+                    <% for group in @report.priceGroups: %>
+                      <optgroup label="<%= group.label %>">
+                        <% for option in group.items: %>
+                          <option value="<%= option.id %>"><%= option.label %></option>
+                        <% end %>
+                      </optgroup>
+                    <% end %>
+                  </select>
+                  <button class="btn js-report-add-custom" data-kind="work">+ Своя работа</button>
+                  <button class="btn js-report-add-custom" data-kind="part">+ Запчасть</button>
+                </div>
+              <% end %>
+            </section>
+
+            <section class="dom-servis-dispatch-report__section">
+              <div class="dom-servis-dispatch-report__title">Оплата клиента</div>
+              <div class="dom-servis-dispatch-modal__columns">
+                <div class="form-group">
+                  <label>Как заплатил</label>
+                  <select class="form-control js-report-field" data-field="payment_method"<%= ' disabled' if !@report.canEdit %>>
+                    <option value="">Выберите…</option>
+                    <% for method in @report.paymentMethods: %>
+                      <option value="<%= method.id %>"<%= ' selected' if @report.draft.payment_method is method.id %>><%= method.label %></option>
+                    <% end %>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Получено, ₽</label>
+                  <input class="form-control js-report-field" data-field="amount_paid" type="text" inputmode="decimal" value="<%= @report.draft.amount_paid %>"<%= ' disabled' if !@report.canEdit %>>
+                </div>
+              </div>
+            </section>
+
+            <section class="dom-servis-dispatch-report__section dom-servis-dispatch-report__calculator">
+              <div class="dom-servis-dispatch-report__title">Калькулятор</div>
+              <% for entry in @report.sums: %>
+                <div class="dom-servis-dispatch-report__sum<%= ' dom-servis-dispatch-report__sum--strong' if entry.strong %>">
+                  <span class="js-report-sum-label" data-sum="<%= entry.key %>"><%= entry.label %></span>
+                  <strong class="js-report-sum" data-sum="<%= entry.key %>"><%= entry.value %></strong>
+                </div>
+              <% end %>
+            </section>
+
+            <section class="dom-servis-dispatch-report__section">
+              <div class="form-group">
+                <label>Что сделано</label>
+                <textarea class="form-control js-report-field" data-field="work_summary" rows="3" placeholder="Коротко: что было и что сделали"<%= ' disabled' if !@report.canEdit %>><%= @report.draft.work_summary %></textarea>
+              </div>
+              <div class="form-group">
+                <label>Рекомендации клиенту</label>
+                <textarea class="form-control js-report-field" data-field="recommendations" rows="2" placeholder="Например: ТО через год, заменить кран. Если нет — «нет»"<%= ' disabled' if !@report.canEdit %>><%= @report.draft.recommendations %></textarea>
+              </div>
+            </section>
+
+            <section class="dom-servis-dispatch-report__section">
+              <div class="dom-servis-dispatch-report__title">Фото или акт</div>
+              <div class="dom-servis-dispatch-report__hint">
+                <%= if @report.evidenceCount > 0 then "Приложено файлов: #{@report.evidenceCount}" else 'Нужно хотя бы одно фото результата или акт выполненных работ.' %>
+              </div>
+              <% if @report.canEdit: %>
+                <div class="dom-servis-dispatch-report__add">
+                  <select class="form-control js-report-evidence-kind">
+                    <% for kind in @report.evidenceKinds: %>
+                      <option value="<%= kind.id %>"><%= kind.label %></option>
+                    <% end %>
+                  </select>
+                  <input class="js-report-evidence-input" type="file" accept="image/*,application/pdf" multiple style="display:none">
+                  <button class="btn js-report-evidence-trigger"<%= ' disabled' if @report.uploading %>><%= if @report.uploading then 'Загрузка…' else 'Добавить файлы' %></button>
+                </div>
+              <% end %>
+            </section>
+
+            <div class="dom-servis-dispatch-report__missing js-report-missing-box<%= ' is-hidden' if @report.missing.length < 1 %>">
+              <div class="dom-servis-dispatch-report__title">Чтобы завершить заявку</div>
+              <ul class="js-report-missing">
+                <% for text in @report.missing: %>
+                  <li><%= text %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="dom-servis-dispatch-modal__footer">
+          <div class="dom-servis-dispatch-modal__hint">Суммы считает сервер при сохранении; до закрытия заявки доли идут по текущим процентам.</div>
+          <div class="dom-servis-dispatch-modal__footer-actions">
+            <button class="btn js-close-report">Отмена</button>
+            <% if !@report.loading && @report.canEdit: %>
+              <button class="btn js-report-save" data-finish="false"<%= ' disabled' if @report.saving %>>Сохранить</button>
+              <% if @report.canFinish: %>
+                <button class="btn btn--success js-report-save" data-finish="true"<%= ' disabled' if @report.saving %>>Сдать отчёт и завершить</button>
+              <% end %>
+            <% end %>
           </div>
         </div>
       </div>

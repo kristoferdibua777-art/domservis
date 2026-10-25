@@ -20,6 +20,7 @@ class DomServis::DispatchEvent < ApplicationModel
     attachment_added
     attachment_removed
     ai_parsed
+    report_saved
     updated
     deleted
   ].freeze

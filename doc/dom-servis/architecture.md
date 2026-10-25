@@ -81,6 +81,8 @@ done | closed | cancelled ──reopen──▶ pool
 ```
 
 - done — мастер закончил работу на объекте; closed — диспетчер закрыл заявку после проверки.
+- В done заявка переходит только с полным отчётом мастера ([DispatchReport](../../app/models/dom_servis/dispatch_report.rb)):
+  проверка стоит в общей проверке перехода, поэтому действует и для /status, и для generic update, и для отчёта с finish.
 - pool — мастера нет; taken, in_progress, done — мастер обязателен.
 - Вход в taken — только через take/assign; transferred_to_partner — конечный статус.
 - /status и generic update используют одну проверку перехода и действий политики.

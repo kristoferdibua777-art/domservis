@@ -42,6 +42,16 @@ class App.DomServisDispatchBoard extends App.Controller
     'click .js-take-job': 'takeJob'
     'click .js-release-job': 'releaseJob'
     'click .js-set-status': 'setStatus'
+    'click .js-open-report': 'openReport'
+    'click .js-close-report': 'closeReport'
+    'change .js-report-add-price': 'addReportPriceItem'
+    'click .js-report-add-custom': 'addReportCustomItem'
+    'click .js-report-remove-item': 'removeReportItem'
+    'input .js-report-field': 'changeReportField'
+    'change .js-report-field': 'changeReportField'
+    'click .js-report-save': 'saveReport'
+    'click .js-report-evidence-trigger': 'triggerReportEvidenceUpload'
+    'change .js-report-evidence-input': 'uploadReportEvidence'
     'click .js-resync-ticket': 'resyncTicket'
     'click .js-trigger-attachment-upload': 'triggerAttachmentUpload'
     'change .js-upload-attachment-input': 'uploadAttachments'
@@ -85,6 +95,13 @@ class App.DomServisDispatchBoard extends App.Controller
     @attachmentLoading = {}
     @attachmentUploading = {}
     @eventCollections = {}
+    @priceList = []
+    @reportResponses = {}
+    @reportOpen = false
+    @reportJobId = null
+    @reportDraft = null
+    @reportSaving = false
+    @reportUploading = false
     @createDraft = {}
     @createAttachmentFiles = []
     @createAttachmentUploading = false
@@ -105,6 +122,7 @@ class App.DomServisDispatchBoard extends App.Controller
     @syncPushState()
     @loadEffectivePolicy()
     @loadTags()
+    @loadPriceList()
     @loadOrganizations()
     @loadJobs()
 
@@ -186,6 +204,9 @@ class App.DomServisDispatchBoard extends App.Controller
       detailAttachmentLoading: @attachmentLoading["#{detailJob?.id}"] is true
       detailAttachmentUploading: @attachmentUploading["#{detailJob?.id}"] is true
       detailHistory: @buildHistoryEntries(detailJob)
+      detailReport: @buildDetailReportView(detailJob)
+      reportOpen: @reportOpen
+      report: @buildReportView()
       detailHistoryLoading: detailJob? && !@eventCollections["#{detailJob.id}"]?
       organizationOptions: @organizationOptions()
       privateOrganizationId: @privateOrganizationId()
@@ -294,6 +315,7 @@ class App.DomServisDispatchBoard extends App.Controller
         @loading = false
         @render()
         @loadEvents(@detailJobId) if @detailOpen && @detailJobId
+        @loadReport(@detailJobId) if @detailOpen && @detailJobId && !@reportOpen
         @loadCalendarJobs() if @viewMode is 'calendar'
         @flushPendingRealtimeRefresh()
       error: (xhr) =>
@@ -309,23 +331,27 @@ class App.DomServisDispatchBoard extends App.Controller
       @scheduleRealtimeRefresh()
     )
 
+  # An open form keeps its fields: board refreshes wait until it is closed.
+  formOpen: ->
+    @createOpen || @editOpen || @reportOpen
+
   scheduleRealtimeRefresh: =>
     @pendingRealtimeRefresh = true
-    return if @createOpen || @editOpen
+    return if @formOpen()
     return if @loading
 
     @realtimeRefreshDelayId = @delay(@performRealtimeRefresh, 1200, 'dom_servis_dispatch_jobs_realtime_refresh')
 
   performRealtimeRefresh: =>
     @realtimeRefreshDelayId = null
-    return if @createOpen || @editOpen
+    return if @formOpen()
 
     @pendingRealtimeRefresh = false
     @loadJobs(manualRefresh: true)
 
   flushPendingRealtimeRefresh: =>
     return if !@pendingRealtimeRefresh
-    return if @createOpen || @editOpen
+    return if @formOpen()
     return if @loading
 
     @scheduleRealtimeRefresh()
@@ -552,6 +578,7 @@ class App.DomServisDispatchBoard extends App.Controller
     @detailAssignAssigneeId = if job.assignee_id? then "#{job.assignee_id}" else ''
     @loadAttachments(job.id)
     @loadEvents(job.id)
+    @loadReport(job.id)
     @loadCalendarJobs(job.visit_date) if job.visit_date
     @render()
 
@@ -581,6 +608,7 @@ class App.DomServisDispatchBoard extends App.Controller
     @detailAssignAssigneeId = if job.assignee_id? then "#{job.assignee_id}" else ''
     @loadAttachments(job.id)
     @loadEvents(job.id)
+    @loadReport(job.id)
     @render()
 
   closeEdit: (e) =>
@@ -1137,6 +1165,335 @@ class App.DomServisDispatchBoard extends App.Controller
         @loadJobs(manualRefresh: true)
     )
 
+  # Master report (decision 2026-10-24): a job is finished only with a report
+  # of the works and parts with prices, the payment, what was done,
+  # recommendations and a photo or an act. The form shows the calculator of
+  # App.DomServisDispatchReport; the server saves its own sums.
+  loadPriceList: =>
+    @ajax(
+      id: 'dom_servis_dispatch_price_list'
+      type: 'GET'
+      url: "#{@apiPath}/dom_servis/dispatch/price_list"
+      success: (data) =>
+        @priceList = data?.items || []
+        @render() if @reportOpen
+      error: =>
+        @priceList = []
+    )
+
+  # The report of a job with what the current user may do with it, read again
+  # on every open of the card.
+  loadReport: (jobId, callback) =>
+    return if !jobId
+
+    key = "#{jobId}"
+    @ajax(
+      id: "dom_servis_dispatch_report_#{jobId}"
+      type: 'GET'
+      url: "#{@apiPath}/dom_servis/dispatch/jobs/#{jobId}/report"
+      success: (data) =>
+        @reportResponses[key] = data || {}
+        callback?(data)
+        detailShown = @detailOpen && "#{@detailJobId}" is key && !@editOpen
+        reportShown = @reportOpen && "#{@reportJobId}" is key
+        @render() if detailShown || reportShown
+      error: =>
+        @reportResponses[key] = { report: null }
+        callback?(null)
+        @render() if @reportOpen && "#{@reportJobId}" is key
+    )
+
+  openReport: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    job = @findJob($(e.currentTarget).data('id'))
+    return if !job
+
+    @reportOpen = true
+    @reportJobId = job.id
+    @reportDraft = null
+    @reportSaving = false
+    @loadAttachments(job.id)
+    @loadPriceList() if !@priceList.length
+    @loadReport(job.id, (data) =>
+      return if !@reportOpen || "#{@reportJobId}" isnt "#{job.id}"
+      @reportDraft = @reportDraftFrom(data?.report)
+    )
+    @render()
+
+  closeReport: (e) =>
+    @preventDefaultAndStopPropagation(e) if e
+    @reportOpen = false
+    @reportJobId = null
+    @reportDraft = null
+    @reportSaving = false
+    @render()
+    @flushPendingRealtimeRefresh()
+
+  reportDraftFrom: (report) ->
+    {
+      items: _.map(report?.items || [], (item) -> _.pick(item, 'price_item_id', 'kind', 'name', 'quantity', 'unit', 'list_price', 'price', 'bought_by_master'))
+      work_summary: report?.work_summary || ''
+      recommendations: report?.recommendations || ''
+      payment_method: report?.payment_method || ''
+      amount_paid: if report?.amount_paid then "#{report.amount_paid}" else ''
+    }
+
+  addReportPriceItem: (e) =>
+    select = $(e.currentTarget)
+    id = "#{select.val() || ''}"
+    return if !id || !@reportDraft
+
+    priceItem = _.find(@priceList, (item) -> "#{item.id}" is id)
+    select.val('')
+    return if !priceItem
+
+    @reportDraft.items.push(App.DomServisDispatchReport.itemFromPrice(priceItem))
+    @render()
+
+  addReportCustomItem: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    return if !@reportDraft
+
+    kind = if $(e.currentTarget).data('kind') is 'part' then 'part' else 'work'
+    @reportDraft.items.push(App.DomServisDispatchReport.emptyItem(kind))
+    index = @reportDraft.items.length - 1
+    @render()
+    @$(".js-report-field[data-index='#{index}'][data-field='name']").trigger('focus')
+
+  removeReportItem: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    return if !@reportDraft
+
+    index = parseInt($(e.currentTarget).data('index'), 10)
+    return if _.isNaN(index)
+
+    @reportDraft.items.splice(index, 1)
+    @render()
+
+  # Typing changes the draft and the sums in place: a full render would take
+  # the focus out of the field.
+  changeReportField: (e) =>
+    return if !@reportDraft
+
+    field = $(e.currentTarget)
+    key = field.data('field')
+    return if !key
+
+    value = if field.is(':checkbox') then field.prop('checked') else field.val()
+    index = field.data('index')
+
+    if index? && "#{index}" isnt ''
+      item = @reportDraft.items[parseInt(index, 10)]
+      return if !item
+
+      item[key] = value
+      @$(".js-report-line-amount[data-index='#{index}']").text(App.DomServisDispatchReport.money(App.DomServisDispatchReport.lineAmount(item)))
+    else
+      @reportDraft[key] = value
+
+    @refreshReportSummary()
+
+  refreshReportSummary: ->
+    view = @buildReportView()
+    return if !view || view.loading
+
+    for entry in view.sums
+      @$(".js-report-sum[data-sum='#{entry.key}']").text(entry.value)
+      @$(".js-report-sum-label[data-sum='#{entry.key}']").text(entry.label)
+
+    list = @$('.js-report-missing').empty()
+    list.append($('<li>').text(text)) for text in view.missing
+    list.closest('.js-report-missing-box').toggleClass('is-hidden', view.missing.length < 1)
+
+  saveReport: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    return if !@reportDraft || @reportSaving
+
+    finish = "#{$(e.currentTarget).data('finish')}" is 'true'
+    jobId = @reportJobId
+    @reportSaving = true
+    @render()
+
+    @ajax(
+      id: "dom_servis_dispatch_report_save_#{jobId}"
+      type: 'PUT'
+      url: "#{@apiPath}/dom_servis/dispatch/jobs/#{jobId}/report"
+      data: JSON.stringify(@reportPayload(finish))
+      processData: true
+      success: (data) =>
+        @reportSaving = false
+        @reportResponses["#{jobId}"] = data || {}
+        if finish
+          @reportOpen = false
+          @reportJobId = null
+          @reportDraft = null
+          @notify(type: 'success', msg: 'Отчёт сдан, заявка завершена.', timeout: 4000)
+        else
+          @reportDraft = @reportDraftFrom(data?.report)
+          @notify(type: 'success', msg: (if data?.report?.complete then 'Отчёт сохранён.' else 'Черновик отчёта сохранён.'), timeout: 3000)
+        @loadEvents(jobId)
+        @loadJobs(manualRefresh: true)
+      error: (xhr) =>
+        @reportSaving = false
+        @notify(type: 'error', msg: @extractError(xhr, 'Не удалось сохранить отчёт.'), timeout: 8000)
+        @render()
+    )
+
+  reportPayload: (finish) ->
+    draft = @reportDraft
+    {
+      items: _.map(draft.items, (item) ->
+        {
+          price_item_id: item.price_item_id || null
+          kind: item.kind
+          name: "#{item.name || ''}".trim()
+          quantity: "#{item.quantity ? ''}"
+          unit: "#{item.unit || ''}".trim()
+          price: "#{item.price ? ''}"
+          bought_by_master: !!item.bought_by_master
+        }
+      )
+      work_summary: draft.work_summary
+      recommendations: draft.recommendations
+      payment_method: draft.payment_method
+      amount_paid: "#{draft.amount_paid ? ''}"
+      finish: finish
+    }
+
+  triggerReportEvidenceUpload: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    @$('.js-report-evidence-input').trigger('click')
+
+  uploadReportEvidence: (e) =>
+    input = $(e.currentTarget)
+    files = input.prop('files')
+    jobId = @reportJobId
+    return if !jobId || !files || files.length < 1
+
+    kind = @$('.js-report-evidence-kind').val() || 'diagnostic_photo'
+    @reportUploading = true
+    @render()
+
+    @uploadAttachmentBatch(jobId, files, kind)
+      .done =>
+        @notify(type: 'success', msg: 'Файлы добавлены к заявке.', timeout: 3000)
+      .fail (xhr) =>
+        @notify(type: 'error', msg: @extractError(xhr, 'Не удалось загрузить файл.'), timeout: 5000)
+      .always =>
+        @reportUploading = false
+        @loadAttachments(jobId, true)
+
+  reportSumEntries: (calc, rates) ->
+    money = (value) -> App.DomServisDispatchReport.money(value)
+    sums = [
+      { key: 'works_total', label: 'Работы', value: money(calc.works_total) }
+      { key: 'parts_total', label: 'Запчасти', value: money(calc.parts_total) }
+      { key: 'total', label: 'Итого клиенту', value: money(calc.total), strong: true }
+    ]
+
+    if rates?.master_percent?
+      settlementLabel = if calc.master_settlement < 0 then 'Мастер сдаёт в кассу' else 'К выплате мастеру'
+      sums.push({ key: 'master_amount', label: "Доля мастера (#{calc.master_percent}% от работ)", value: money(calc.master_amount) })
+      sums.push({ key: 'parts_reimbursement', label: 'Возврат за запчасти мастеру', value: money(calc.parts_reimbursement) })
+      sums.push({ key: 'master_payout', label: 'Мастеру всего', value: money(calc.master_payout), strong: true })
+      sums.push({ key: 'money_at_master', label: 'Деньги клиента у мастера', value: money(calc.money_at_master) })
+      sums.push({ key: 'master_settlement', label: settlementLabel, value: money(Math.abs(calc.master_settlement)), strong: true })
+
+    if rates?.partner_percent?
+      base = if rates.partner_base is 'total' then 'от всей суммы' else 'от работ'
+      sums.push({ key: 'partner_amount', label: "Партнёру (#{calc.partner_percent}% #{base})", value: money(calc.partner_amount) })
+      sums.push({ key: 'company_amount', label: 'Компании', value: money(calc.company_amount), strong: true })
+
+    sums
+
+  buildReportView: ->
+    return null if !@reportOpen
+
+    job = @findJob(@reportJobId)
+    response = @reportResponses["#{@reportJobId}"]
+    return { loading: true, jobNumber: (if job then @jobNumber(job) else '') } if !@reportDraft || !response || !job
+
+    report = App.DomServisDispatchReport
+    rates = response.rates || {}
+    evidenceCount = report.evidenceCount(@attachmentCollections["#{job.id}"])
+
+    {
+      loading: false
+      jobId: job.id
+      jobNumber: @jobNumber(job)
+      title: job.service_type || 'Без названия'
+      status: job.status
+      draft: @reportDraft
+      items: _.map(@reportDraft.items, (item, index) ->
+        listPrice = if item.list_price? then report.number(item.list_price) else null
+        _.extend({}, item,
+          index: index
+          isPart: item.kind is 'part'
+          kindLabel: if item.kind is 'part' then 'Запчасть' else 'Работа'
+          amountLabel: report.money(report.lineAmount(item))
+          listPriceLabel: if listPrice? then report.money(listPrice) else null
+          priceChanged: listPrice? && report.number(item.price) isnt listPrice
+        )
+      )
+      priceGroups: _.map(report.priceGroups(@priceList, @normalizeTags(job.work_tags)), (group) ->
+        {
+          label: group.label
+          items: _.map(group.items, (item) -> { id: item.id, label: "#{item.name} · #{report.money(item.price)} / #{item.unit}" })
+        }
+      )
+      paymentMethods: response.payment_methods || []
+      sums: @reportSumEntries(report.calculate(@reportDraft, rates), rates)
+      missing: report.missing(@reportDraft, evidenceCount > 0)
+      evidenceCount: evidenceCount
+      evidenceKinds: [
+        { id: 'diagnostic_photo', label: 'Фото результата' }
+        { id: 'completion_act', label: 'Акт выполненных работ' }
+      ]
+      canEdit: response.can_edit == true
+      canFinish: response.can_finish == true
+      saving: @reportSaving
+      uploading: @reportUploading
+    }
+
+  # The report in the job card, read only.
+  buildDetailReportView: (job) ->
+    return null if !job || job.status is 'pool'
+
+    response = @reportResponses["#{job.id}"]
+    return { loading: true } if !response
+
+    report = response.report
+    money = (value) -> App.DomServisDispatchReport.money(value)
+    view =
+      loading: false
+      exists: !!report
+      complete: report?.complete == true
+      missing: report?.missing || []
+      canEdit: response.can_edit == true
+      buttonLabel: if report then 'Открыть отчёт' else 'Заполнить отчёт'
+      items: []
+      lines: []
+
+    return view if !report
+
+    view.items = _.map(report.items || [], (item) ->
+      line = "#{item.name}: #{item.quantity} #{item.unit} × #{money(item.price)} = #{money(item.amount)}"
+      line += " (по прайсу #{money(item.list_price)})" if item.price_changed
+      line += ' · куплено мастером' if item.bought_by_master
+      line
+    )
+    view.lines = _.compact([
+      "Итого клиенту: #{money(report.total)} (работы #{money(report.works_total)}, запчасти #{money(report.parts_total)})"
+      "Оплата: #{report.payment_method_label || 'не указана'}, получено #{money(report.amount_paid)}"
+      if report.master_amount? then "Мастеру: #{money(report.master_payout)} (доля #{report.master_percent}% — #{money(report.master_amount)}, запчасти #{money(report.parts_reimbursement)})" else null
+      if report.master_settlement? then (if report.master_settlement < 0 then "Мастер сдаёт в кассу: #{money(-report.master_settlement)}" else "К выплате мастеру: #{money(report.master_settlement)}") else null
+      if report.partner_amount? then "Партнёру: #{money(report.partner_amount)} (#{report.partner_percent}%), компании: #{money(report.company_amount)}" else null
+      if report.work_summary then "Что сделано: #{report.work_summary}" else null
+      if report.recommendations then "Рекомендации: #{report.recommendations}" else null
+      if report.master_name then "Мастер: #{report.master_name}" else null
+    ])
+    view
+
   # The backing ticket did not take the last change (the server records the
   # failure and retries once by itself); a dispatcher can retry right away.
   ticketSyncErrorLabel: (job) ->
@@ -1441,7 +1798,7 @@ class App.DomServisDispatchBoard extends App.Controller
       processData: true
       success: (data) =>
         @calendarJobs[date] = data || []
-        return if @createOpen || @editOpen
+        return if @formOpen()
 
         calendarDay = @viewMode is 'calendar' && @calendarAvailable() && @currentCalendarDate() is date
         cardDay = @detailOpen && "#{@currentDetailJob()?.visit_date || ''}" is date
@@ -1842,7 +2199,7 @@ class App.DomServisDispatchBoard extends App.Controller
       return { label: 'В работу', buttonClass: 'btn--primary', handlerClass: 'js-set-status', status: 'in_progress' }
 
     if card.canFinish
-      return { label: 'Готово', buttonClass: 'btn--success', handlerClass: 'js-set-status', status: 'done' }
+      return { label: 'Отчёт и готово', buttonClass: 'btn--success', handlerClass: 'js-open-report' }
 
     if card.canClose
       return { label: 'Закрыть', buttonClass: 'btn--success', handlerClass: 'js-set-status', status: 'closed' }
@@ -2396,6 +2753,7 @@ class App.DomServisDispatchBoard extends App.Controller
         else
           'Изменены данные заявки'
       when 'ai_parsed' then 'Заявка разобрана автоматически'
+      when 'report_saved' then (if meta.complete then 'Сдан отчёт мастера' else 'Сохранён черновик отчёта')
       else eventType
 
   historyLines: (eventType, meta) ->

@@ -2,6 +2,6 @@
 
 class Controllers::DomServis::Dispatch::JobsControllerPolicy < Controllers::ApplicationControllerPolicy
   default_permit! ['dom_servis.admin']
-  permit! %i[index show take release update_status], to: ['dom_servis.admin', 'dom_servis.dispatcher', 'dom_servis.master']
+  permit! %i[index show take release update_status report save_report], to: ['dom_servis.admin', 'dom_servis.dispatcher', 'dom_servis.master']
   permit! %i[create update destroy parse_input assign move_day change_priority resync_ticket], to: ['dom_servis.admin', 'dom_servis.dispatcher']
 end

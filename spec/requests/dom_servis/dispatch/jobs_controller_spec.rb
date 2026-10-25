@@ -98,6 +98,23 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
     post "/api/v1/dom_servis/dispatch/jobs/#{dispatch_job.id}/status", params: { status: status }, as: :json
   end
 
+  # A report the job can be finished with: a work with its price, the
+  # payment, the texts and a photo among the job attachments.
+  def create_complete_report(dispatch_job)
+    Store.create!(
+      object:        'DomServis::DispatchJob',
+      o_id:          dispatch_job.id,
+      data:          'photo',
+      filename:      'photo.jpg',
+      preferences:   { 'Content-Type' => 'image/jpeg', 'dom_servis_kind' => 'diagnostic_photo' },
+      created_by_id: 1,
+    )
+    report = dispatch_job.build_report(master: dispatch_job.assignee, work_summary: 'Заменил термопару', recommendations: 'ТО через год', payment_method: 'cash', amount_paid: 1500)
+    report.items.build(kind: 'work', name: 'Замена термопары', quantity: 1, unit: 'шт', price: 1500)
+    report.save!
+    report
+  end
+
   describe 'POST /api/v1/dom_servis/dispatch/jobs', authenticated_as: :dispatcher_user do
     let(:create_params) do
       {
@@ -587,13 +604,24 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
     end
 
     context 'when logged in as a master', authenticated_as: -> { master_user } do
-      it 'finishes the own job once it is in progress', :aggregate_failures do
+      it 'finishes the own job once it is in progress and reported', :aggregate_failures do
         own_job = create_dispatch_job(status: 'in_progress', assignee: master_user)
+        create_complete_report(own_job)
 
         post_status(own_job, 'done')
 
         expect(response).to have_http_status(:ok)
         expect(own_job.reload).to have_attributes(status: 'done', completed_at: be_present)
+      end
+
+      it 'does not finish the own job without a complete report', :aggregate_failures do
+        own_job = create_dispatch_job(status: 'in_progress', assignee: master_user)
+
+        post_status(own_job, 'done')
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(json_response['error']).to include('без отчёта мастера')
+        expect(own_job.reload.status).to eq('in_progress')
       end
 
       it 'does not finish a job that was never started', :aggregate_failures do

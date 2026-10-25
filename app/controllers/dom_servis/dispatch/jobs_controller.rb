@@ -267,6 +267,40 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     model_item_render(job)
   end
 
+  # The master report of a job (see DomServis::DispatchReport) with what the
+  # current user may see and do with it.
+  def report
+    job = dispatch_job_scope.find(params[:id])
+    authorize job, :show?
+
+    render json: report_response(job), status: :ok
+  end
+
+  # Saves the master report. With finish the job moves to done in the same
+  # step, through in_progress when it was only taken.
+  def save_report
+    job = dispatch_job_scope.find(params[:id])
+    authorize job, :save_report?
+    ensure_report_editable!(job)
+
+    finish = ActiveModel::Type::Boolean.new.cast(params[:finish]) || false
+    status_changes = {}
+
+    job.with_lock do
+      require_complete = finish || %w[done closed].include?(job.status)
+      report = DomServis::Dispatch::ReportSaver.new(job:, user: current_user, params: report_params).save!(require_complete:)
+      create_event!(job, 'report_saved', total: report.total.to_f, items: report.live_items.size, complete: report.complete?)
+      status_changes = finish_job!(job) if finish
+    end
+
+    job.reload
+    changes = status_changes
+    changes = changes.merge('report_saved' => { 'text' => job.report.ticket_note }) if job.report.complete?
+    sync_backing_ticket!(job, changes:)
+
+    render json: report_response(job), status: :ok
+  end
+
   private
 
   def job_create_params
@@ -299,6 +333,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
 
     ensure_status_allowed!(status)
     ensure_action_allowed!(action_key)
+    ensure_report_complete!(job) if status == 'done'
 
     DomServis::DispatchWorkflow.transition_attributes(status)
   end
@@ -519,6 +554,99 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
 
   def week_start_for(date)
     date.beginning_of_week(:monday)
+  end
+
+  # A job is done only with a complete master report (decision 2026-10-24).
+  def ensure_report_complete!(job)
+    report = DomServis::DispatchReport.find_by(dispatch_job_id: job.id)
+    return if report&.complete?
+
+    missing = report ? report.missing : ['заполните отчёт: работы и запчасти с ценами, оплату, что сделано, рекомендации, фото или акт']
+    raise Exceptions::UnprocessableEntity, "Заявку нельзя завершить без отчёта мастера: #{missing.join('; ')}."
+  end
+
+  def report_params
+    params.permit(
+      :work_summary, :recommendations, :payment_method, :amount_paid,
+      items: %i[price_item_id kind name quantity unit price bought_by_master]
+    ).to_h.with_indifferent_access
+  end
+
+  def ensure_report_editable!(job)
+    raise Exceptions::UnprocessableEntity, 'Отчёт пишется по заявке, у которой есть мастер.' if job.status == 'pool'
+    return if report_editable?(job)
+
+    raise Exceptions::Forbidden, 'Отчёт закрытой заявки меняет только администратор.'
+  end
+
+  def report_editable?(job)
+    return false if job.status == 'pool'
+    return current_user.permissions?('dom_servis.admin') if %w[taken in_progress done].exclude?(job.status)
+
+    dispatcher_access? || job.assignee_id == current_user.id
+  end
+
+  def report_finishable?(job)
+    return false if %w[taken in_progress].exclude?(job.status)
+    return false if !dispatcher_access? && job.assignee_id != current_user.id
+
+    DomServis::DispatchPolicy.action_allowed?(current_user, 'set_status_done') && DomServis::DispatchPolicy.status_allowed?(current_user, 'done')
+  end
+
+  # Moves the job to done after its report was saved, through in_progress
+  # when it was only taken. Returns the status change for the ticket note.
+  def finish_job!(job)
+    from = job.status
+    (job.status == 'taken' ? %w[in_progress done] : %w[done]).each { |status| change_status!(job, status) }
+    return {} if from == job.status
+
+    { 'status_changed' => { from:, to: job.status } }
+  end
+
+  def change_status!(job, status)
+    updates = status_transition_updates!(job, status)
+    return if updates.blank?
+
+    previous = job.status
+    job.update!(updates.merge(updated_by_id: current_user.id))
+    create_event!(job, 'status_changed', from: previous, to: status)
+    create_untracked_changes_event!(job, %w[status_changed])
+  end
+
+  # Admins see every sum, the master of the job his own share, dispatchers
+  # the sums of the client.
+  def report_view(job)
+    return :admin if current_user.permissions?('dom_servis.admin')
+    return :master if job.assignee_id == current_user.id
+
+    :base
+  end
+
+  def report_response(job)
+    view = report_view(job)
+
+    {
+      report:          job.report&.payload(view:),
+      status:          job.status,
+      can_edit:        report_editable?(job),
+      can_finish:      report_finishable?(job),
+      evidence:        DomServis::DispatchReport.evidence_for?(job),
+      rates:           report_rates(job, view),
+      payment_methods: DomServis::DispatchReport::PAYMENT_METHODS.map { |id, label| { id:, label: } },
+    }
+  end
+
+  def report_rates(job, view)
+    case view
+    when :admin
+      { master_percent: DomServis::MasterRate.percent_for(job.assignee_id).to_f }.merge(
+        DomServis::PartnerRate.terms_for(job.organization_id).then { |terms| { partner_percent: terms[:percent].to_f, partner_base: terms[:base] } }
+      )
+    when :master
+      { master_percent: DomServis::MasterRate.percent_for(current_user.id).to_f }
+    else
+      {}
+    end
   end
 
   def sync_backing_ticket!(job, changes: {}, strict: false, ensure_created: false)
