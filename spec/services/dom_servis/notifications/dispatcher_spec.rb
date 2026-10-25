@@ -61,5 +61,40 @@ RSpec.describe DomServis::Notifications::Dispatcher, current_user_id: 1 do
       expect(recipients).to include(master_user, admin_user)
       expect(recipients).not_to include(dispatcher_user)
     end
+
+    context 'when masters have directions and areas' do
+      let!(:plumber)     { dispatch_user('Dom-Servis Master') }
+      let!(:boiler_man)  { dispatch_user('Dom-Servis Master') }
+
+      before do
+        DomServis::MasterRate.create!(user: plumber, directions: ['Сантехника'])
+        DomServis::MasterRate.create!(user: boiler_man, directions: ['Газовый котёл'], areas: ['Гурьевск'])
+      end
+
+      def recipients_for(tags)
+        described_class.recipients_for_new_pool_job(DomServis::DispatchJob.new(request_source_id: 1, work_tags: tags))
+      end
+
+      it 'tells only the masters the job fits, and the staff', :aggregate_failures do
+        recipients = recipients_for(%w[Сантехника Засор])
+
+        expect(recipients).to include(plumber, master_user, dispatcher_user, admin_user)
+        expect(recipients).not_to include(boiler_man)
+      end
+
+      it 'checks the area as well' do
+        expect(recipients_for(['Газовый котёл', 'Калининград'])).not_to include(boiler_man)
+      end
+
+      it 'lets a job without a direction or an area reach everybody' do
+        expect(recipients_for(['Ремонт'])).to include(plumber, boiler_man, master_user)
+      end
+
+      it 'tells every master when no master fits' do
+        DomServis::MasterRate.create!(user: master_user, directions: ['Электрика'])
+
+        expect(described_class.masters_for_job(DomServis::DispatchJob.new(work_tags: ['Бытовая техника']))).to contain_exactly(plumber, boiler_man, master_user)
+      end
+    end
   end
 end

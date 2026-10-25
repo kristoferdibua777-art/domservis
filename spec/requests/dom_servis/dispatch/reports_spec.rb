@@ -245,6 +245,16 @@ RSpec.describe 'DomServis master reports', type: :request do
     end
   end
 
+  describe 'policy' do
+    it 'gives the master his directions and areas for the board', authenticated_as: -> { master_user } do
+      DomServis::MasterRate.find_by(user: master_user).update!(directions: ['Сантехника'], areas: ['Гурьевск'])
+
+      get '/api/v1/dom_servis/dispatch/policy', as: :json
+
+      expect(json_response['master_profile']).to eq('directions' => ['Сантехника'], 'areas' => ['Гурьевск'])
+    end
+  end
+
   describe 'finance rates' do
     it 'lists and saves the shares of masters and partners', :aggregate_failures, authenticated_as: :admin do
       put '/api/v1/dom_servis/dispatch/finance_rates', params: {
@@ -255,6 +265,23 @@ RSpec.describe 'DomServis master reports', type: :request do
       expect(response).to have_http_status(:ok)
       expect(json_response['masters'].find { |row| row['user_id'] == master_user.id }).to include('work_percent' => 45.5)
       expect(json_response['partners'].find { |row| row['organization_id'] == partner_org.id }).to include('percent' => 12.0, 'base' => 'total')
+    end
+
+    it 'saves the directions and areas of a master', :aggregate_failures, authenticated_as: :admin do
+      put '/api/v1/dom_servis/dispatch/finance_rates', params: {
+        masters: [{ user_id: master_user.id, work_percent: 40, directions: ['Газовый котёл', 'Сантехника'], areas: ['Гурьевск'] }],
+      }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response['masters'].find { |row| row['user_id'] == master_user.id }).to include('directions' => ['Газовый котёл', 'Сантехника'], 'areas' => ['Гурьевск'])
+      expect(json_response['directions']).to include('Электрика')
+      expect(json_response['areas']).to eq(['Гурьевск', 'Калининградская область', 'Калининград'])
+    end
+
+    it 'rejects a direction outside the dictionary', authenticated_as: :admin do
+      put '/api/v1/dom_servis/dispatch/finance_rates', params: { masters: [{ user_id: master_user.id, work_percent: 40, directions: ['Космос'] }] }, as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
     end
 
     it 'is only for the admin', authenticated_as: -> { dispatcher_user } do

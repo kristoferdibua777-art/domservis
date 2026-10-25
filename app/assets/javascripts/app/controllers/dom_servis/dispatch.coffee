@@ -23,6 +23,7 @@ class DomServisDispatch extends App.ControllerSubContent
     'click .js-price-save': 'savePriceList'
     'input .js-rate-field': 'changeRateField'
     'change .js-rate-field': 'changeRateField'
+    'change .js-rate-check': 'toggleRateCheck'
     'click .js-rates-save': 'saveRates'
     'change .js-report-export-field': 'changeReportExportField'
     'click .js-report-export-download': 'downloadReportExport'
@@ -66,6 +67,7 @@ class DomServisDispatch extends App.ControllerSubContent
       items: []
       kinds: []
       directions: []
+      areas: []
       masters: []
       partners: []
       bases: []
@@ -273,6 +275,8 @@ class DomServisDispatch extends App.ControllerSubContent
     @finance.masters = _.map(data?.masters || [], (row) -> _.extend({}, row, work_percent: "#{row.work_percent}"))
     @finance.partners = _.map(data?.partners || [], (row) -> _.extend({}, row, percent: "#{row.percent}"))
     @finance.bases = data?.bases || []
+    @finance.directions = data?.directions || @finance.directions || []
+    @finance.areas = data?.areas || []
     @finance.ratesLoaded = true
     @finance.ratesDirty = false
 
@@ -338,6 +342,20 @@ class DomServisDispatch extends App.ControllerSubContent
         @render()
     )
 
+  # A master's direction or area: a checkbox adds it to or removes it from
+  # the list.
+  toggleRateCheck: (e) =>
+    field = $(e.currentTarget)
+    row = @finance.masters[parseInt(field.data('index'), 10)]
+    return if !row
+
+    key = field.data('field')
+    value = "#{field.data('value')}"
+    list = _.without(row[key] || [], value)
+    list.push(value) if field.prop('checked')
+    row[key] = list
+    @finance.ratesDirty = true
+
   changeRateField: (e) =>
     field = $(e.currentTarget)
     list = if field.data('type') is 'partner' then @finance.partners else @finance.masters
@@ -359,7 +377,7 @@ class DomServisDispatch extends App.ControllerSubContent
       type: 'PUT'
       url:  "#{@apiPath}/dom_servis/dispatch/finance_rates"
       data: JSON.stringify(
-        masters: _.map(@finance.masters, (row) -> _.pick(row, 'user_id', 'work_percent'))
+        masters: _.map(@finance.masters, (row) -> _.pick(row, 'user_id', 'work_percent', 'directions', 'areas'))
         partners: _.map(@finance.partners, (row) -> _.pick(row, 'organization_id', 'percent', 'base'))
       )
       processData: true
