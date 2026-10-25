@@ -420,7 +420,8 @@ end
 AddDomServisBackingTicketFields.new.up if missing_fields
 
 DomServis::DispatchRoleCatalog.sync!
-puts 'Дом-Сервис: настройки, поля и роли подготовлены.'
+DomServis::WorkTagCatalog.sync!
+puts 'Дом-Сервис: настройки, поля, роли и теги работ подготовлены.'
 RUBY
 ```
 

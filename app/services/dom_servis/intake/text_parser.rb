@@ -285,6 +285,14 @@ class DomServis::Intake::TextParser
     @phones ||= text.scan(PHONE_PATTERN).filter_map { |candidate| normalize_found_phone(candidate) }.uniq
   end
 
+  # The parts of the kind of work, for the work tags (see
+  # DomServis::WorkTagCatalog.infer).
+  def work_profile
+    brand = brand_model
+
+    { category: service_category(brand), issues: found_issues, brand: brand }
+  end
+
   private
 
   def normalize_text(value)

@@ -353,6 +353,31 @@ RSpec.describe 'Form', type: :request do
         expect(ticket.preferences.dig('dom_servis_intake', 'source')).to eq('form')
       end
 
+      it 'tags the job from the words of the request, without the contact lines', :aggregate_failures do
+        description = "Заявка клиента через форму по ссылке.\nЧто: Газовый котёл: Не греет отопление\nМарка и модель: Baxi Eco Four\nАдрес: Калининград, ул. Нева 5\nИмя: Ирина\nТелефон: +79001234567"
+        params = {
+          fingerprint:                  fingerprint,
+          token:                        token,
+          name:                         'Ирина',
+          email:                        'discard@zammad.com',
+          title:                        'Газовый котёл: Не греет отопление · Baxi Eco Four',
+          body:                         description,
+          dom_servis_service_type:      'Газовый котёл: Не греет отопление · Baxi Eco Four',
+          dom_servis_address:           'Калининград, ул. Нева 5',
+          dom_servis_client_name:       'Ирина',
+          dom_servis_client_phone:      '+79001234567',
+          dom_servis_visit_date:        '2026-03-23',
+          dom_servis_dispatch_priority: 'medium',
+          dom_servis_description:       description,
+        }
+
+        post '/api/v1/form_submit', params: params, as: :json
+
+        expect(response).to have_http_status(:ok)
+        job = DomServis::DispatchJob.find_by(ticket_id: json_response['ticket']['id'])
+        expect(job.work_tags).to eq(['Газовый котёл', 'Не греет', 'Baxi', 'Калининград'])
+      end
+
       it 'infers weekday from visit_date when the partner form does not send visit_day' do
         params = {
           fingerprint:                  fingerprint,

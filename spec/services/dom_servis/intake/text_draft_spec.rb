@@ -49,6 +49,10 @@ RSpec.describe DomServis::Intake::TextDraft do
       expect(result[:client]).to be_nil
     end
 
+    it 'adds the work tags of the kind of work' do
+      expect(draft[:draft][:work_tags]).to eq(['Газовый котёл', 'Не греет', 'Baxi'])
+    end
+
     it 'reports what is missing', :aggregate_failures do
       result = draft('Здравствуйте, сколько стоит обслуживание котла?')
 

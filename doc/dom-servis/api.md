@@ -75,7 +75,8 @@
 ```
 
 Дату и контакты заменить в тесте; произвольные новые work_tags backend не принимает.
-Названия тегов должны существовать в общем словаре Zammad.
+Тег должен быть в справочнике тегов работ (DomServis::WorkTagCatalog) или в общем словаре Zammad.
+Тег справочника, которого ещё нет в Zammad, создаётся при первом использовании в тикете.
 
 Поля ручного расписания используют единый backend-контракт: visit_date — реальная дата строго
 в формате YYYY-MM-DD, visit_time — необязательное время HH:MM или окно HH:MM-HH:MM, а visit_day
@@ -165,7 +166,7 @@ YandexGPT получает поля ответа JSON-схемой (если с�
 | GET | /api/v1/dom_servis/dispatch/policy | Эффективные правила текущего пользователя; администратору ещё history_export_due |
 | GET/PUT/PATCH | /api/v1/dom_servis/dispatch/admin_policy | Чтение / сохранение административной политики |
 | POST | /api/v1/dom_servis/dispatch/admin_policy/reset | Сброс политики |
-| GET | /api/v1/dom_servis/dispatch/tags | Общий словарь и использование тегов |
+| GET | /api/v1/dom_servis/dispatch/tags | Теги справочника работ по порядку, затем остальные теги Zammad: tags (name, group, dispatch_count, ticket_count) и groups (key, label) |
 | GET/PUT | /api/v1/dom_servis/dispatch/ai_settings | Администратор: ИИ для разбора текста — enabled, provider (gigachat — GigaChat API Сбера; yandex — YandexGPT в Yandex AI Studio, API-ключ сервисного аккаунта и folder_id; chat_completions — Cloud.ru Foundation Models или другой API как у OpenAI), scope, model, base_url, folder_id, auth_key_set; новый auth_key или clear_auth_key в PUT, сам ключ не возвращается |
 | POST | /api/v1/dom_servis/dispatch/ai_settings/check | Администратор: список моделей и пробный разбор образца — { ok, models, model_available, sample } или { ok: false, error } |
 | GET | /api/v1/dom_servis/dispatch/history_exports | Администратор: число событий истории, пора ли выгружать (due), последняя выгрузка |
