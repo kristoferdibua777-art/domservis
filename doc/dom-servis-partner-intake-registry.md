@@ -48,6 +48,10 @@ Every request source also exposes `client_form_url`
 - Unlike the embed, it fills `service_type`, `address`, `description` and `comment` with the customer's answers;
   the model is appended to the service type, "Срочно — нужен мастер сегодня" sets priority `high`, an empty
   address and the visit time become "Уточнить у клиента".
+- A link may preselect the service: `&service=<id>` (`boiler`, `heater`, `plumb`, `electric`, `appliance`, `other`,
+  the `CATS` ids in the page) opens step 2 with that service, and `&issue=<option>` also ticks one of its quick
+  options, written exactly as the page shows it. Unknown values are ignored. The company site's service cards use
+  these links.
 - For a source used only through this link, leave `allowed_domains` empty: the page reports our domain as its origin,
   so the source card offers the link only when no partner domains are set.
 - The page follows the СВИБ Дом Сервис brand book v1.0: Montserrat, blue header with the white logo, brand service

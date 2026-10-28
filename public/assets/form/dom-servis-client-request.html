@@ -367,6 +367,19 @@
         if (!cat()) { S.step = 1; S.cat = null; }
       } catch (e) { /* draft is a convenience only */ }
 
+      // The service cards of the company site link here with ?service=<CATS id>
+      // and optionally &issue=<one of its issues>, so the customer lands on
+      // step 2 with them chosen. Another service in the draft is replaced the
+      // same way a tile click replaces it; name and phone typed earlier stay.
+      (function applyServiceLink() {
+        var linked = CATS.find(function(c) { return c.id === params.get('service'); });
+        if (!linked) return;
+        if (S.cat !== linked.id) { S.cat = linked.id; S.issues = []; S.model = ''; }
+        var issue = params.get('issue');
+        if (issue && linked.issues.indexOf(issue) !== -1 && S.issues.indexOf(issue) === -1) S.issues.push(issue);
+        S.step = 2;
+      })();
+
       var card = document.getElementById('card');
 
       function save() {
