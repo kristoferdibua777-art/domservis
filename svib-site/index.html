@@ -48,6 +48,7 @@
       crossorigin
     />
     <link rel="stylesheet" href="assets/css/site.css" />
+    <script src="assets/js/open-status.js" defer></script>
 
     <script type="application/ld+json">
       {
@@ -87,7 +88,7 @@
         </a>
         <a
           class="btn btn--red header__cta"
-          href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f"
+          href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1"
           >Оставить заявку</a
         >
       </div>
@@ -105,7 +106,7 @@
             <div class="hero__actions">
               <a
                 class="btn btn--red btn--lg"
-                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1"
                 >Оставить заявку</a
               >
               <a class="btn btn--outline btn--lg" href="tel:+79114856632">
@@ -113,6 +114,7 @@
                 +7 (911) 485-66-32
               </a>
             </div>
+            <p class="open-status" data-open-status hidden></p>
             <p class="hero__note">
               Мастер перезвонит, уточнит детали и назовёт цену до начала работ.
             </p>
@@ -132,63 +134,312 @@
         </div>
       </section>
 
-      <section class="section section--grey" id="services" aria-labelledby="services-title">
+      <section class="section" id="services" aria-labelledby="services-title">
         <div class="container">
           <h2 class="section__title" id="services-title">Услуги</h2>
           <p class="section__lead">
             Приедем с инструментом и всем, что нужно для работы. Если задача требует запчасти,
             мастер скажет об этом до начала работ.
           </p>
-          <ul class="services" role="list">
-            <li class="service">
-              <img src="assets/icons/color/heating.svg" alt="" width="48" height="48" />
-              <h3 class="service__title">Газовые котлы и отопление</h3>
-              <p>Диагностика, обслуживание и ремонт котлов и систем отопления</p>
-            </li>
-            <li class="service">
-              <img src="assets/icons/color/plumbing.svg" alt="" width="48" height="48" />
-              <h3 class="service__title">Сантехника</h3>
-              <p>Смесители, протечки, установка и замена сантехники</p>
-            </li>
-            <li class="service">
-              <img src="assets/icons/color/electrics.svg" alt="" width="48" height="48" />
-              <h3 class="service__title">Электрика</h3>
-              <p>Розетки, выключатели, светильники, проводка</p>
-            </li>
-            <li class="service">
-              <img src="assets/icons/color/appliances.svg" alt="" width="48" height="48" />
-              <h3 class="service__title">Бытовая техника</h3>
-              <p>Подключение и ремонт стиральных и посудомоечных машин</p>
-            </li>
-            <li class="service">
-              <img src="assets/icons/color/windows-doors.svg" alt="" width="48" height="48" />
-              <h3 class="service__title">Окна и двери</h3>
-              <p>Регулировка, фурнитура, уплотнители, утепление</p>
-            </li>
-            <li class="service">
-              <img src="assets/icons/color/furniture-assembly.svg" alt="" width="48" height="48" />
-              <h3 class="service__title">Сборка мебели</h3>
-              <p>Сборка, разборка, навес полок и шкафов</p>
-            </li>
-            <li class="service">
-              <img src="assets/icons/color/home-repair.svg" alt="" width="48" height="48" />
-              <h3 class="service__title">Решение бытовых проблем</h3>
-              <p>Мелкий ремонт и задачи по дому</p>
-            </li>
-            <li class="service service--ask">
-              <h3 class="service__title">Не нашли свою задачу?</h3>
-              <p>Опишите её в заявке и приложите фото — подскажем, кто из мастеров справится.</p>
+          <ul class="tiles" role="list">
+            <li>
               <a
-                class="service__link"
-                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f"
-                >Описать задачу</a
+                class="tile"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1&amp;service=boiler"
               >
+                <span class="tile__plate"
+                  ><svg
+                    class="tile__icon"
+                    viewBox="0 0 48 48"
+                    width="48"
+                    height="48"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <g
+                      id="icon-heating"
+                      fill="none"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <g id="icon-heating-base" stroke="#0052CC">
+                        <rect x="11" y="5" width="26" height="31" rx="4" />
+                        <path d="M17 11.5H24M18 36V42.5M30 36V42.5" />
+                      </g>
+                      <g id="icon-heating-base-fill" fill="#0052CC" stroke="none">
+                        <circle cx="31" cy="11.5" r="2" />
+                      </g>
+                      <g id="icon-heating-accent" stroke="#E30613">
+                        <path
+                          d="M18 27C18 24.2 19.4 22.2 20.8 20.2C21.2 21.8 22 22.8 23.1 23.3C23.1 20.5 24.1 18.3 26.1 16.5C27.2 20 30 22.6 30 27A6 6 0 0 1 18 27Z"
+                        />
+                      </g>
+                    </g></svg
+                ></span>
+                <span class="tile__title">Газовые котлы и отопление</span>
+                <span class="visually-hidden">— оставить заявку</span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="tile"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1&amp;service=heater"
+              >
+                <span class="tile__plate"
+                  ><svg
+                    class="tile__icon"
+                    viewBox="0 0 48 48"
+                    width="48"
+                    height="48"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <g
+                      id="icon-water-heater"
+                      fill="none"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <g id="icon-water-heater-base" stroke="#0052CC">
+                        <rect x="12" y="4.5" width="24" height="32" rx="10" />
+                        <path d="M19 36.5V43.5M29 36.5V43.5" />
+                      </g>
+                      <g id="icon-water-heater-accent" stroke="#E30613">
+                        <path
+                          d="M24 13.5C24 13.5 29 19.6 29 23.2A5 5 0 0 1 19 23.2C19 19.6 24 13.5 24 13.5Z"
+                        />
+                      </g>
+                    </g></svg
+                ></span>
+                <span class="tile__title">Бойлеры и колонки</span>
+                <span class="visually-hidden">— оставить заявку</span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="tile"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1&amp;service=plumb"
+              >
+                <span class="tile__plate"
+                  ><svg
+                    class="tile__icon"
+                    viewBox="0 0 48 48"
+                    width="48"
+                    height="48"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <g
+                      id="icon-plumbing"
+                      fill="none"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <g id="icon-plumbing-base" stroke="#0052CC">
+                        <path
+                          d="M8 15.5H30A10 10 0 0 1 40 25.5V28.5H33V26.5A4 4 0 0 0 29 22.5H8Z"
+                        />
+                        <path
+                          d="M36.5 33.5C36.5 33.5 39.5 37.1 39.5 39.2A3 3 0 0 1 33.5 39.2C33.5 37.1 36.5 33.5 36.5 33.5Z"
+                        />
+                      </g>
+                      <g id="icon-plumbing-accent" stroke="#E30613">
+                        <path d="M14 8.5H26M20 8.5V15.5" />
+                      </g>
+                    </g></svg
+                ></span>
+                <span class="tile__title">Сантехника</span>
+                <span class="visually-hidden">— оставить заявку</span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="tile"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1&amp;service=electric"
+              >
+                <span class="tile__plate"
+                  ><svg
+                    class="tile__icon"
+                    viewBox="0 0 48 48"
+                    width="48"
+                    height="48"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <g
+                      id="icon-electrics"
+                      fill="none"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <g id="icon-electrics-base" stroke="#0052CC">
+                        <circle cx="24" cy="24" r="18" />
+                      </g>
+                      <g id="icon-electrics-accent" stroke="#E30613">
+                        <path d="M27 11.5L17.5 26H24.5L21 36.5L30.5 22H23.5Z" />
+                      </g>
+                    </g></svg
+                ></span>
+                <span class="tile__title">Электрика</span>
+                <span class="visually-hidden">— оставить заявку</span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="tile"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1&amp;service=appliance"
+              >
+                <span class="tile__plate"
+                  ><svg
+                    class="tile__icon"
+                    viewBox="0 0 48 48"
+                    width="48"
+                    height="48"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <g
+                      id="icon-appliances"
+                      fill="none"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <g id="icon-appliances-base" stroke="#0052CC">
+                        <rect x="10" y="4.5" width="28" height="39" rx="4" />
+                        <path d="M10 14H38M15.5 9.25H21.5" />
+                        <circle cx="24" cy="28.5" r="8.5" />
+                      </g>
+                      <g id="icon-appliances-accent-fill" fill="#E30613" stroke="none">
+                        <circle cx="31.5" cy="9.25" r="2.2" />
+                      </g>
+                    </g></svg
+                ></span>
+                <span class="tile__title">Бытовая техника</span>
+                <span class="visually-hidden">— оставить заявку</span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="tile"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1&amp;service=other"
+              >
+                <span class="tile__plate"
+                  ><svg
+                    class="tile__icon"
+                    viewBox="0 0 48 48"
+                    width="48"
+                    height="48"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <g
+                      id="icon-windows-doors"
+                      fill="none"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <g id="icon-windows-doors-base" stroke="#0052CC">
+                        <rect x="9" y="5" width="30" height="35" rx="2" />
+                        <path d="M24 5V40M9 22.5H39M6 43.5H42" />
+                      </g>
+                      <g id="icon-windows-doors-accent" stroke="#E30613">
+                        <path d="M29.5 27V33" />
+                      </g>
+                    </g></svg
+                ></span>
+                <span class="tile__title">Окна и двери</span>
+                <span class="visually-hidden">— оставить заявку</span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="tile"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1&amp;service=other&amp;issue=%D0%9F%D0%BE%D0%B2%D0%B5%D1%81%D0%B8%D1%82%D1%8C%20%D0%B8%D0%BB%D0%B8%20%D1%81%D0%BE%D0%B1%D1%80%D0%B0%D1%82%D1%8C"
+              >
+                <span class="tile__plate"
+                  ><svg
+                    class="tile__icon"
+                    viewBox="0 0 48 48"
+                    width="48"
+                    height="48"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <g
+                      id="icon-furniture-assembly"
+                      fill="none"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <g id="icon-furniture-assembly-base" stroke="#0052CC">
+                        <rect x="9" y="6.5" width="30" height="31.5" rx="3" />
+                        <path d="M9 17H39M9 27.5H39M13.5 38V42.5M34.5 38V42.5" />
+                      </g>
+                      <g id="icon-furniture-assembly-accent" stroke="#E30613">
+                        <path d="M20.5 11.75H27.5M20.5 22.25H27.5M20.5 32.75H27.5" />
+                      </g>
+                    </g></svg
+                ></span>
+                <span class="tile__title">Сборка мебели</span>
+                <span class="visually-hidden">— оставить заявку</span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="tile"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1&amp;service=other&amp;issue=%D0%9C%D0%B5%D0%BB%D0%BA%D0%B8%D0%B9%20%D1%80%D0%B5%D0%BC%D0%BE%D0%BD%D1%82"
+              >
+                <span class="tile__plate"
+                  ><svg
+                    class="tile__icon"
+                    viewBox="0 0 48 48"
+                    width="48"
+                    height="48"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <g
+                      id="icon-home-repair"
+                      fill="none"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <g id="icon-home-repair-base" stroke="#0052CC">
+                        <path d="M6.5 22.5L24 8L41.5 22.5M12 18V40.5H36V18" />
+                      </g>
+                      <g id="icon-home-repair-accent" stroke="#E30613">
+                        <path d="M18 29.5L22.5 34L31 25.5" />
+                      </g>
+                    </g></svg
+                ></span>
+                <span class="tile__title">Решение бытовых проблем</span>
+                <span class="visually-hidden">— оставить заявку</span>
+              </a>
             </li>
           </ul>
+          <div class="services-ask">
+            <p>
+              <strong>Не нашли свою задачу?</strong> Опишите её в заявке и приложите фото —
+              подскажем, кто из мастеров справится.
+            </p>
+            <a
+              class="btn btn--outline"
+              href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1&amp;service=other"
+              >Описать задачу</a
+            >
+          </div>
         </div>
       </section>
 
-      <section class="section" id="steps" aria-labelledby="steps-title">
+      <section class="section section--grey" id="steps" aria-labelledby="steps-title">
         <div class="container">
           <h2 class="section__title" id="steps-title">Как мы работаем</h2>
           <ol class="steps" role="list">
@@ -216,7 +467,7 @@
         </div>
       </section>
 
-      <section class="section section--grey" id="values" aria-labelledby="values-title">
+      <section class="section" id="values" aria-labelledby="values-title">
         <div class="container">
           <h2 class="section__title" id="values-title">На чём держится наша работа</h2>
           <ul class="values" role="list">
@@ -265,7 +516,7 @@
           <div class="cta__actions">
             <a
               class="btn btn--white btn--lg"
-              href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f"
+              href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1"
               >Оставить заявку</a
             >
             <a class="cta__phone" href="tel:+79114856632">+7 (911) 485-66-32</a>
@@ -306,6 +557,7 @@
                   Сб: 10:00–15:00<br />
                   Вс: выходной
                 </p>
+                <p class="open-status" data-open-status hidden></p>
               </div>
             </li>
           </ul>
@@ -327,7 +579,10 @@
           <a href="#steps">Как мы работаем</a>
           <a href="#contacts">Контакты</a>
         </nav>
-        <p class="footer__copy">© 2026 СВИБ Дом Сервис</p>
+        <p class="footer__copy">
+          © 2026 СВИБ Дом Сервис<br />
+          <a href="privacy.html">Политика конфиденциальности</a>
+        </p>
       </div>
     </footer>
 
@@ -335,7 +590,7 @@
       <a class="btn btn--outline" href="tel:+79114856632">Позвонить</a>
       <a
         class="btn btn--red"
-        href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f"
+        href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=cLIbUigOwibBPibLGWLBzDBP3Vl78wJ1"
         >Оставить заявку</a
       >
     </div>
