@@ -11,6 +11,7 @@ class App.DomServisDispatchBoard extends App.Controller
     'click .js-week-reset': 'resetWeek'
     'change .js-week-picker': 'pickWeek'
     'click .js-job-card': 'openDetailFromCard'
+    'click .js-copy-phone': 'copyPhone'
     'click .js-close-detail': 'closeDetail'
     'click .js-open-create': 'openCreate'
     'click .js-close-create': 'closeCreate'
@@ -2163,6 +2164,8 @@ class App.DomServisDispatchBoard extends App.Controller
         address: job.address || 'Адрес не указан'
         clientName: job.client_name || 'Клиент не указан'
         clientPhone: job.client_phone || ''
+        clientPhoneHref: @phoneHref(job.client_phone)
+        receivedLabel: @receivedLabel(job.created_at)
         visitDate: job.visit_date || ''
         visitTime: job.visit_time || ''
         visitDay: visitDay
@@ -2267,6 +2270,8 @@ class App.DomServisDispatchBoard extends App.Controller
       address: job.address || 'Адрес не указан'
       clientName: job.client_name || 'Клиент не указан'
       clientPhone: job.client_phone || ''
+      clientPhoneHref: @phoneHref(job.client_phone)
+      receivedLabel: @receivedLabel(job.created_at)
       organizationName: @resolveOrganizationName(job)
       status: job.status || 'pool'
       statusLabel: @statusLabel(job.status)
@@ -2320,7 +2325,7 @@ class App.DomServisDispatchBoard extends App.Controller
         label: 'Клиент'
         items: _.compact([
           @detailItem('Имя', job.client_name || 'Не указано')
-          @detailItem('Телефон', job.client_phone || 'Не указан')
+          @phoneDetailItem(job.client_phone)
           @detailItem('Заказчик', @resolveOrganizationName(job))
         ])
       }
@@ -2338,6 +2343,7 @@ class App.DomServisDispatchBoard extends App.Controller
         id: 'meta'
         label: 'Системное'
         items: _.compact([
+          @detailItem('Поступила', @formatHistoryTime(job.created_at))
           @detailItem('Источник', @sourceLabel(job.source || 'manual'))
           @detailItem('Партнёр', job.request_source_label || job.request_source_partner_key || 'Не задан')
           @detailItem('Тикет Zammad', @ticketLabel(job), false, @ticketHref(job))
@@ -2372,6 +2378,65 @@ class App.DomServisDispatchBoard extends App.Controller
       wide: wide
       href: href
     }
+
+  # The phone dials on a tap and has a button that copies it whole.
+  phoneDetailItem: (phone) ->
+    item = @detailItem('Телефон', phone || 'Не указан', false, @phoneHref(phone))
+    item.phone = !!item.href
+    item
+
+  # A tel: link for the first number of the field, which keeps the phone as
+  # typed ("8 (900) 123-45-67", "+7 900 ..."). Full numbers get the country
+  # code as in DomServis::Dispatch::ClientResolver.normalize_phone; a short
+  # local number stays as it is.
+  phoneHref: (phone) ->
+    match = String(phone || '').match(/\+?\d[\d \t().-]*\d/)
+    return null if !match
+
+    international = match[0].charAt(0) is '+'
+    digits = match[0].replace(/\D/g, '')
+    return null if digits.length < 5 || digits.length > 15
+
+    digits = "7#{digits}" if digits.length is 10 && !international
+    digits = "7#{digits.slice(1)}" if digits.length is 11 && digits.charAt(0) is '8' && !international
+    return "tel:#{digits}" if digits.length < 10 && !international
+
+    "tel:+#{digits}"
+
+  # When the job came in: "сегодня в 23:25", "вчера в 09:10", "27.10 в 14:00",
+  # with the year only for another year.
+  receivedLabel: (value, now = new Date()) ->
+    return '' if !value
+
+    date = new Date(value)
+    return '' if isNaN(date.getTime())
+
+    pad = (number) -> ("0#{number}").slice(-2)
+    sameDay = (left, right) ->
+      left.getFullYear() is right.getFullYear() && left.getMonth() is right.getMonth() && left.getDate() is right.getDate()
+    yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+
+    day =
+      if sameDay(date, now)
+        'сегодня'
+      else if sameDay(date, yesterday)
+        'вчера'
+      else if date.getFullYear() is now.getFullYear()
+        "#{pad(date.getDate())}.#{pad(date.getMonth() + 1)}"
+      else
+        "#{pad(date.getDate())}.#{pad(date.getMonth() + 1)}.#{date.getFullYear()}"
+
+    "#{day} в #{pad(date.getHours())}:#{pad(date.getMinutes())}"
+
+  # Copies the number as dialled (+79001234567), which pastes into a phone or
+  # a messenger without edits.
+  copyPhone: (e) =>
+    @preventDefaultAndStopPropagation(e)
+    phone = $(e.currentTarget).attr('data-phone')
+    return if !phone
+
+    clipboard.writeText(@phoneHref(phone)?.replace(/^tel:/, '') || phone)
+    @notify(type: 'success', msg: 'Номер скопирован.', timeout: 2000)
 
   buildEditGroups: (job) ->
     return [] if !job

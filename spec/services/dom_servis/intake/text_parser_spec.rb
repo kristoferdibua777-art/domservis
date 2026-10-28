@@ -101,6 +101,18 @@ RSpec.describe DomServis::Intake::TextParser do
     expect(parse('Доброе утро! Можно утром послезавтра?')).to include(visit_date: '2026-10-16', visit_time: '08:00-12:00')
   end
 
+  it 'reads the part of the day named by a noun', :aggregate_failures do
+    expect(parse('Пушкина 5 кв 7, 89001234567, Сергей, Юнкерс, ошибка 90, завтра вечер')).to include(visit_date: '2026-10-15', visit_time: '16:00-20:00')
+    expect(parse('Котёл не греет, можно на утро пятницы?')).to include(visit_date: '2026-10-16', visit_time: '08:00-12:00')
+    expect(parse('Течёт кран, приезжайте ближе к вечеру')).to include(visit_time: '16:00-20:00')
+    expect(parse('Можно вечерком, кран капает')).to include(visit_time: '16:00-20:00')
+  end
+
+  it 'does not take a greeting for the part of the day', :aggregate_failures do
+    expect(parse('Алло, добрый вечер, котёл не греет')).to include(visit_time: nil)
+    expect(parse('Здравствуйте, доброе утро. Течёт кран, приезжайте днём')).to include(visit_time: '12:00-16:00')
+  end
+
   it 'does not treat a burning lamp as an emergency' do
     expect(parse('На котле горит красная лампочка, не включается')).to include(priority: nil, service_type: 'Газовый котёл: Не включается')
   end
