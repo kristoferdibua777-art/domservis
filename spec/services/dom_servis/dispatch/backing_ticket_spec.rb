@@ -123,6 +123,58 @@ RSpec.describe 'Dom-Servis backing ticket bridge' do
     expect(fallback_job.reload.ticket_id).to eq(ticket.id)
   end
 
+  # The Dom-Servis roles grant no ticket groups, so a board admin or
+  # dispatcher may be no Zammad agent or an agent without groups.
+  context 'when the operator has no ticket groups' do
+    it 'files the backing ticket of a non-agent dispatcher under the assignee group', :aggregate_failures do
+      DomServis::DispatchRoleCatalog.sync!(actor_id: 1)
+      operator = create(:user, roles: [Role.find_by!(name: 'Dom-Servis Dispatcher')])
+      # Sorts before the group of the assignee.
+      create(:group, name: '000 Another Group')
+
+      ticket = DomServis::Dispatch::BackingTicket::Create
+        .new(dispatch_job:, operator:)
+        .execute
+
+      expect(ticket).to be_persisted
+      expect(ticket.group_id).to eq(group.id)
+      expect(ticket.created_by_id).to eq(operator.id)
+      expect(dispatch_job.reload.ticket_id).to eq(ticket.id)
+      expect(ticket.articles.last.body).to include('Created from Dom-Servis dispatch board.')
+    end
+
+    it 'files the backing ticket of an agent without groups under the first active group', :aggregate_failures do
+      first_group = create(:group, name: '000 First Group')
+      operator    = create(:agent)
+
+      pool_job = DomServis::DispatchJob.create!(
+        service_type: 'Boiler repair',
+        address:      'Pushkina 5',
+        client_name:  'Petr Sidorov',
+        client_phone: '+79003334455',
+        visit_day:    'thu',
+        visit_date:   '2026-03-26',
+        priority:     'medium',
+        organization: organization,
+        work_tags:    %w[boiler],
+        description:  'Needs a ticket although the operator has no groups.',
+        status:       'pool',
+        source:       'manual',
+        created_by:   operator,
+        updated_by:   operator,
+      )
+
+      ticket = DomServis::Dispatch::BackingTicket::Create
+        .new(dispatch_job: pool_job, operator:)
+        .execute
+
+      expect(ticket).to be_persisted
+      expect(ticket.group_id).to eq(first_group.id)
+      expect(ticket.created_by_id).to eq(operator.id)
+      expect(pool_job.reload.ticket_id).to eq(ticket.id)
+    end
+  end
+
   it 'syncs key dispatch changes into the existing backing ticket and appends an internal note' do
     ticket = DomServis::Dispatch::BackingTicket::Create
       .new(dispatch_job:, operator: dispatcher)
