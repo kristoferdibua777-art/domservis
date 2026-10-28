@@ -48,6 +48,7 @@
       crossorigin
     />
     <link rel="stylesheet" href="assets/css/site.css" />
+    <script src="assets/js/open-status.js" defer></script>
 
     <script type="application/ld+json">
       {
@@ -113,6 +114,7 @@
                 +7 (911) 485-66-32
               </a>
             </div>
+            <p class="open-status" data-open-status hidden></p>
             <p class="hero__note">
               Мастер перезвонит, уточнит детали и назовёт цену до начала работ.
             </p>
@@ -143,44 +145,250 @@
             <li class="service">
               <img src="assets/icons/color/heating.svg" alt="" width="48" height="48" />
               <h3 class="service__title">Газовые котлы и отопление</h3>
-              <p>Диагностика, обслуживание и ремонт котлов и систем отопления</p>
+              <p class="service__text">
+                Диагностика, обслуживание и ремонт котлов и систем отопления
+              </p>
+              <ul
+                class="service__issues"
+                role="list"
+                aria-label="Частые случаи: газовые котлы и отопление"
+              >
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=boiler&amp;issue=%D0%9D%D0%B5%20%D0%B3%D1%80%D0%B5%D0%B5%D1%82%20%D0%BE%D1%82%D0%BE%D0%BF%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5"
+                    >Не греет отопление</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=boiler&amp;issue=%D0%9E%D1%88%D0%B8%D0%B1%D0%BA%D0%B0%20%D0%BD%D0%B0%20%D0%B4%D0%B8%D1%81%D0%BF%D0%BB%D0%B5%D0%B5"
+                    >Ошибка на дисплее</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=boiler&amp;issue=%D0%9F%D0%BB%D0%B0%D0%BD%D0%BE%D0%B2%D0%BE%D0%B5%20%D0%BE%D0%B1%D1%81%D0%BB%D1%83%D0%B6%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5"
+                    >Плановое обслуживание</a
+                  >
+                </li>
+              </ul>
+              <a
+                class="service__cta"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=boiler"
+                >Оставить заявку<span class="visually-hidden">: газовые котлы и отопление</span></a
+              >
+            </li>
+            <li class="service">
+              <img src="assets/icons/color/water-heater.svg" alt="" width="48" height="48" />
+              <h3 class="service__title">Бойлеры и колонки</h3>
+              <p class="service__text">
+                Ремонт, чистка от накипи, установка и замена водонагревателей
+              </p>
+              <ul class="service__issues" role="list" aria-label="Частые случаи: бойлеры и колонки">
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=heater&amp;issue=%D0%9D%D0%B5%20%D0%B3%D1%80%D0%B5%D0%B5%D1%82%20%D0%B2%D0%BE%D0%B4%D1%83"
+                    >Не греет воду</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=heater&amp;issue=%D0%9D%D0%B5%20%D0%B7%D0%B0%D0%B6%D0%B8%D0%B3%D0%B0%D0%B5%D1%82%D1%81%D1%8F%20%D0%BA%D0%BE%D0%BB%D0%BE%D0%BD%D0%BA%D0%B0"
+                    >Не зажигается колонка</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=heater&amp;issue=%D0%A7%D0%B8%D1%81%D1%82%D0%BA%D0%B0%20%D0%BE%D1%82%20%D0%BD%D0%B0%D0%BA%D0%B8%D0%BF%D0%B8"
+                    >Чистка от накипи</a
+                  >
+                </li>
+              </ul>
+              <a
+                class="service__cta"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=heater"
+                >Оставить заявку<span class="visually-hidden">: бойлеры и колонки</span></a
+              >
             </li>
             <li class="service">
               <img src="assets/icons/color/plumbing.svg" alt="" width="48" height="48" />
               <h3 class="service__title">Сантехника</h3>
-              <p>Смесители, протечки, установка и замена сантехники</p>
+              <p class="service__text">Смесители, протечки, установка и замена сантехники</p>
+              <ul class="service__issues" role="list" aria-label="Частые случаи: сантехника">
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=plumb&amp;issue=%D0%9F%D1%80%D0%BE%D1%82%D0%B5%D1%87%D0%BA%D0%B0"
+                    >Протечка</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=plumb&amp;issue=%D0%97%D0%B0%D1%81%D0%BE%D1%80"
+                    >Засор</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=plumb&amp;issue=%D0%9A%D1%80%D0%B0%D0%BD%20%D0%B8%D0%BB%D0%B8%20%D1%81%D0%BC%D0%B5%D1%81%D0%B8%D1%82%D0%B5%D0%BB%D1%8C"
+                    >Кран или смеситель</a
+                  >
+                </li>
+              </ul>
+              <a
+                class="service__cta"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=plumb"
+                >Оставить заявку<span class="visually-hidden">: сантехника</span></a
+              >
             </li>
             <li class="service">
               <img src="assets/icons/color/electrics.svg" alt="" width="48" height="48" />
               <h3 class="service__title">Электрика</h3>
-              <p>Розетки, выключатели, светильники, проводка</p>
+              <p class="service__text">Розетки, выключатели, светильники, проводка</p>
+              <ul class="service__issues" role="list" aria-label="Частые случаи: электрика">
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=electric&amp;issue=%D0%9D%D0%B5%D1%82%20%D1%81%D0%B2%D0%B5%D1%82%D0%B0"
+                    >Нет света</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=electric&amp;issue=%D0%92%D1%8B%D0%B1%D0%B8%D0%B2%D0%B0%D0%B5%D1%82%20%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82"
+                    >Выбивает автомат</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=electric&amp;issue=%D0%A0%D0%BE%D0%B7%D0%B5%D1%82%D0%BA%D0%B0%20%D0%B8%D0%BB%D0%B8%20%D0%B2%D1%8B%D0%BA%D0%BB%D1%8E%D1%87%D0%B0%D1%82%D0%B5%D0%BB%D1%8C"
+                    >Розетка или выключатель</a
+                  >
+                </li>
+              </ul>
+              <a
+                class="service__cta"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=electric"
+                >Оставить заявку<span class="visually-hidden">: электрика</span></a
+              >
             </li>
             <li class="service">
               <img src="assets/icons/color/appliances.svg" alt="" width="48" height="48" />
               <h3 class="service__title">Бытовая техника</h3>
-              <p>Подключение и ремонт стиральных и посудомоечных машин</p>
+              <p class="service__text">
+                Подключение и ремонт стиральных и посудомоечных машин, холодильников и плит
+              </p>
+              <ul class="service__issues" role="list" aria-label="Частые случаи: бытовая техника">
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=appliance&amp;issue=%D0%A1%D1%82%D0%B8%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F%20%D0%BC%D0%B0%D1%88%D0%B8%D0%BD%D0%B0"
+                    >Стиральная машина</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=appliance&amp;issue=%D0%A5%D0%BE%D0%BB%D0%BE%D0%B4%D0%B8%D0%BB%D1%8C%D0%BD%D0%B8%D0%BA"
+                    >Холодильник</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=appliance&amp;issue=%D0%9F%D0%BE%D1%81%D1%83%D0%B4%D0%BE%D0%BC%D0%BE%D0%B5%D1%87%D0%BD%D0%B0%D1%8F%20%D0%BC%D0%B0%D1%88%D0%B8%D0%BD%D0%B0"
+                    >Посудомоечная машина</a
+                  >
+                </li>
+              </ul>
+              <a
+                class="service__cta"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=appliance"
+                >Оставить заявку<span class="visually-hidden">: бытовая техника</span></a
+              >
             </li>
             <li class="service">
               <img src="assets/icons/color/windows-doors.svg" alt="" width="48" height="48" />
               <h3 class="service__title">Окна и двери</h3>
-              <p>Регулировка, фурнитура, уплотнители, утепление</p>
+              <p class="service__text">Регулировка, фурнитура, уплотнители, утепление, замки</p>
+              <ul class="service__issues" role="list" aria-label="Частые случаи: окна и двери">
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=other&amp;issue=%D0%9E%D0%BA%D0%BD%D0%B0"
+                    >Окна</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=other&amp;issue=%D0%94%D0%B2%D0%B5%D1%80%D0%B8%2C%20%D0%B7%D0%B0%D0%BC%D0%BA%D0%B8"
+                    >Двери, замки</a
+                  >
+                </li>
+              </ul>
+              <a
+                class="service__cta"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=other"
+                >Оставить заявку<span class="visually-hidden">: окна и двери</span></a
+              >
             </li>
             <li class="service">
               <img src="assets/icons/color/furniture-assembly.svg" alt="" width="48" height="48" />
               <h3 class="service__title">Сборка мебели</h3>
-              <p>Сборка, разборка, навес полок и шкафов</p>
+              <p class="service__text">Сборка, разборка, навес полок, шкафов и телевизоров</p>
+              <a
+                class="service__cta"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=other&amp;issue=%D0%9F%D0%BE%D0%B2%D0%B5%D1%81%D0%B8%D1%82%D1%8C%20%D0%B8%D0%BB%D0%B8%20%D1%81%D0%BE%D0%B1%D1%80%D0%B0%D1%82%D1%8C"
+                >Оставить заявку<span class="visually-hidden">: сборка мебели</span></a
+              >
             </li>
             <li class="service">
               <img src="assets/icons/color/home-repair.svg" alt="" width="48" height="48" />
               <h3 class="service__title">Решение бытовых проблем</h3>
-              <p>Мелкий ремонт и задачи по дому</p>
+              <p class="service__text">Мелкий ремонт и задачи по дому</p>
+              <ul
+                class="service__issues"
+                role="list"
+                aria-label="Частые случаи: решение бытовых проблем"
+              >
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=other&amp;issue=%D0%9C%D0%B5%D0%BB%D0%BA%D0%B8%D0%B9%20%D1%80%D0%B5%D0%BC%D0%BE%D0%BD%D1%82"
+                    >Мелкий ремонт</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="chip"
+                    href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=other&amp;issue=%D0%9D%D1%83%D0%B6%D0%BD%D0%B0%20%D0%BA%D0%BE%D0%BD%D1%81%D1%83%D0%BB%D1%8C%D1%82%D0%B0%D1%86%D0%B8%D1%8F"
+                    >Нужна консультация</a
+                  >
+                </li>
+              </ul>
+              <a
+                class="service__cta"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=other&amp;issue=%D0%9C%D0%B5%D0%BB%D0%BA%D0%B8%D0%B9%20%D1%80%D0%B5%D0%BC%D0%BE%D0%BD%D1%82"
+                >Оставить заявку<span class="visually-hidden">: решение бытовых проблем</span></a
+              >
             </li>
             <li class="service service--ask">
               <h3 class="service__title">Не нашли свою задачу?</h3>
               <p>Опишите её в заявке и приложите фото — подскажем, кто из мастеров справится.</p>
               <a
                 class="service__link"
-                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f"
+                href="https://crm.svibservis.ru/assets/form/dom-servis-client-request.html?request_source_token=BEqcHj-vNnGsJ6RUKMRU_WuMSfjef6-f&amp;service=other"
                 >Описать задачу</a
               >
             </li>
@@ -306,6 +514,7 @@
                   Сб: 10:00–15:00<br />
                   Вс: выходной
                 </p>
+                <p class="open-status" data-open-status hidden></p>
               </div>
             </li>
           </ul>
@@ -327,7 +536,10 @@
           <a href="#steps">Как мы работаем</a>
           <a href="#contacts">Контакты</a>
         </nav>
-        <p class="footer__copy">© 2026 СВИБ Дом Сервис</p>
+        <p class="footer__copy">
+          © 2026 СВИБ Дом Сервис<br />
+          <a href="privacy.html">Политика конфиденциальности</a>
+        </p>
       </div>
     </footer>
 

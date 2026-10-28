@@ -59,6 +59,9 @@
   --svib-blue-hover: #0046ad;
   --svib-red-hover: #c10510;
 
+  /* Карточка под курсором: между белым и светло-серым */
+  --svib-surface-hover: #f6f8fb;
+
   /* Шрифт и сетка; Arial — замена по брендбуку, если Montserrat не загрузился */
   --font: 'Montserrat', 'Arial', sans-serif;
   --container: 1200px;
@@ -142,6 +145,16 @@ a {
 
 .skip-link:focus {
   transform: none;
+}
+
+/* Текст только для экранного диктора, например название услуги в «Оставить заявку» */
+.visually-hidden {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* ---------- Кнопки ---------- */
@@ -308,6 +321,45 @@ a {
   width: 100%;
 }
 
+/* «Сейчас открыто / закрыто» — заполняет assets/js/open-status.js; без скрипта строка скрыта */
+.open-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 46ch;
+  margin-top: 16px;
+  color: var(--svib-slate);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.open-status[hidden] {
+  display: none;
+}
+
+.open-status::before {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-top: 0.4em;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  content: '';
+}
+
+.open-status--open {
+  color: var(--svib-blue);
+}
+
+.open-status--open::before {
+  background: currentColor;
+}
+
+.contact .open-status {
+  margin-top: 8px;
+  font-size: 0.875rem;
+}
+
 .hero__note {
   max-width: 46ch;
   margin-top: 16px;
@@ -463,7 +515,12 @@ a {
   background: var(--svib-tech-grey);
 }
 
+/*
+ * Карточка услуги — ссылка на форму с этой услугой: «Оставить заявку» растянута на всю карточку,
+ * а частые случаи лежат поверх неё отдельными ссылками и открывают форму сразу с поломкой.
+ */
 .service {
+  position: relative;
   display: grid;
   grid-template-columns: 48px 1fr;
   column-gap: 16px;
@@ -471,6 +528,7 @@ a {
   align-content: start;
   padding: 20px;
   background: var(--svib-white);
+  transition: background-color 0.15s ease;
 }
 
 .service img {
@@ -481,11 +539,85 @@ a {
   font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.3;
+  transition: color 0.15s ease;
 }
 
 .service p {
   color: var(--svib-slate);
   font-size: 0.9375rem;
+}
+
+.service__issues,
+.service__cta {
+  grid-column: 2;
+}
+
+.service__issues {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--svib-tech-grey);
+  border-radius: 18px;
+  background: var(--svib-white);
+  color: var(--svib-blue);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.chip:hover {
+  border-color: var(--svib-blue);
+  background: var(--svib-light-grey);
+}
+
+.service__cta {
+  align-self: start;
+  margin-top: 12px;
+  color: var(--svib-blue);
+  font-weight: 700;
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+
+.service__cta::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+}
+
+.service__cta:focus-visible {
+  outline: none;
+}
+
+.service__cta:focus-visible::after {
+  outline: 3px solid var(--svib-blue);
+  outline-offset: -3px;
+}
+
+.service:has(.service__cta):hover {
+  background: var(--svib-surface-hover);
+}
+
+.service:has(.service__cta):hover .service__title {
+  color: var(--svib-blue);
+}
+
+.service:has(.service__cta):hover .service__cta {
+  text-decoration: underline;
 }
 
 .service--ask {
@@ -728,6 +860,64 @@ a.contact__value:hover {
   outline-color: var(--svib-white);
 }
 
+/* Страница политики конфиденциальности: текст для чтения, без нижней панели */
+.page-legal {
+  padding-bottom: 0;
+}
+
+.legal {
+  max-width: calc(72ch + 2 * var(--gutter));
+}
+
+.legal__title {
+  font-size: clamp(1.75rem, 1.3rem + 1.8vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.legal__lead {
+  margin-top: 16px;
+  color: var(--svib-slate);
+  font-size: 1.0625rem;
+}
+
+.legal h2 {
+  margin-top: 40px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.legal p,
+.legal ul {
+  margin-top: 12px;
+}
+
+.legal ul {
+  padding-left: 1.25em;
+}
+
+.legal li + li {
+  margin-top: 6px;
+}
+
+.legal a {
+  color: var(--svib-blue);
+}
+
+/* Заполнители реквизитов, которые владелец должен вписать до публикации */
+.legal mark {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: #fff1a8;
+}
+
+.legal__back {
+  margin-top: 48px;
+  font-weight: 700;
+}
+
 /* Нижняя панель на телефоне: позвонить или оставить заявку одним касанием */
 .mobile-bar {
   position: fixed;
@@ -768,6 +958,18 @@ body {
 
   .service img {
     margin-bottom: 8px;
+  }
+
+  /* Ссылка «Оставить заявку» всегда внизу карточки, на одной линии в ряду */
+  .service__cta {
+    align-self: flex-start;
+    margin-top: auto;
+    padding-top: 12px;
+  }
+
+  /* Девятая ячейка — «Не нашли свою задачу?» — на всю ширину двух колонок */
+  .service--ask {
+    grid-column: 1 / -1;
   }
 
   .values {
@@ -819,8 +1021,13 @@ body {
     aspect-ratio: 6 / 5;
   }
 
+  /* Восемь услуг и «Не нашли свою задачу?» — сетка 3 × 3 */
   .services {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .service--ask {
+    grid-column: auto;
   }
 
   .steps {

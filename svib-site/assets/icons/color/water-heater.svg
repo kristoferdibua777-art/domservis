@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xml:lang="ru" width="48" height="48" viewBox="0 0 48 48">
+<title>СВИБ Дом Сервис — иконка «Бойлеры и колонки» (для светлого фона)</title>
+<desc>Сетка 48 × 48, рабочее поле 40 × 40, линия 3, скруглённые окончания и углы. Дорисована для формы заявки по правилам раздела 13 брендбука 1.0; в брендбуке её нет.</desc>
+<g id="icon-water-heater" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><g id="icon-water-heater-base" stroke="#0052CC"><rect x="12" y="4.5" width="24" height="32" rx="10"/><path d="M19 36.5V43.5M29 36.5V43.5"/></g><g id="icon-water-heater-accent" stroke="#E30613"><path d="M24 13.5C24 13.5 29 19.6 29 23.2A5 5 0 0 1 19 23.2C19 19.6 24 13.5 24 13.5Z"/></g></g>
+</svg>
