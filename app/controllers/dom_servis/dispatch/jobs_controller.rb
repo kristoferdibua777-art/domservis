@@ -28,6 +28,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
   # visit_date (YYYY-MM-DD) narrows the list to one day, e.g. for the
   # dispatcher calendar, which must not depend on the board's newest page.
   def index
+    drop_full_response_for_masters!
     scope = dispatch_job_scope.ordered_recent
     scope = scope.where(visit_date: params[:visit_date].to_s) if params[:visit_date].present?
 
@@ -35,6 +36,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
   end
 
   def show
+    drop_full_response_for_masters!
     model_show_render(dispatch_job_scope, params)
   end
 
@@ -148,7 +150,7 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
     end
 
     if conflict
-      render json: conflict.attributes_with_association_ids, status: :conflict
+      render json: redact_client_contacts(conflict.attributes_with_association_ids, conflict), status: :conflict
       return
     end
 
@@ -472,6 +474,21 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
 
   def master_access?
     current_user.permissions?('dom_servis.master') && !dispatcher_access?
+  end
+
+  # Every job payload rendered by RendersModels (index, show, create, take,
+  # update...) passes through here, so the client's contacts are removed for
+  # masters who do not hold the job.
+  def mask_sensitive_values(object_payload, object)
+    redact_client_contacts(super, object)
+  end
+
+  # The "full" asset format bypasses mask_sensitive_values; the board does not
+  # use it, so masters simply get the regular format.
+  def drop_full_response_for_masters!
+    return if dispatch_staff_access?
+
+    params.delete(:full)
   end
 
   def dispatcher_access?
