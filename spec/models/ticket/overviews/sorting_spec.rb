@@ -17,6 +17,12 @@ RSpec.describe 'Ticket::Overviews > Sorting' do # rubocop:disable RSpec/Describe
 
   let(:user) { create(:agent, groups: [Group.first], preferences: { 'locale' => locale }) }
 
+  # Names and titles are a shared prefix plus distinct single words in mixed
+  # order: the database sorts with the locale collation, which (unlike the
+  # byte-wise casecmp/downcase the expectations use) may skip spaces and
+  # punctuation, so random Faker names made these examples flaky.
+  let(:words) { %w[kilo echo quebec alpha mike golf oscar india charlie xray bravo papa juliet uniform delta tango hotel lima] }
+
   let(:result) { Ticket::Overviews.tickets_for_overview(overview, user, order_by:, order_direction:).map(&:id) }
 
   before do
@@ -65,7 +71,7 @@ RSpec.describe 'Ticket::Overviews > Sorting' do # rubocop:disable RSpec/Describe
     let(:sorted_tickets) { tickets.sort_by { |ticket| ticket.group.name.downcase } }
 
     let(:tickets) do
-      groups = create_list(:group, 10).tap { |gs| gs.each { |g| g.update!(name: Faker::App.unique.name) } }
+      groups = create_list(:group, 10).tap { |gs| gs.each_with_index { |g, idx| g.update!(name: "Sorting #{words[idx]}") } }
       user.update!(group_ids: Group.pluck(:id))
 
       create_list(:ticket, 10).tap { |tickets| tickets.each_with_index { |t, idx| t.update!(group_id: groups[idx].id) } }
@@ -118,14 +124,16 @@ RSpec.describe 'Ticket::Overviews > Sorting' do # rubocop:disable RSpec/Describe
 
   context 'when grouping and sorting' do
     let(:overview)  { super().tap { it.update! group_by: 'customer_id', group_direction: 'ASC' } }
-    let(:customers) { create_list(:customer, 3) }
+    let(:customers) { %w[Charlie Alpha Bravo].map { |name| create(:customer, firstname: 'Customer', lastname: name) } }
     let(:order_by)  { 'title' }
     let(:locale)    { 'en-us' }
 
     let(:tickets) do
+      titles = words.dup
+
       customers.flat_map do |customer|
         Array.new(3) do
-          create(:ticket, customer:, group: Group.first, title: Faker::Lorem.sentence)
+          create(:ticket, customer:, group: Group.first, title: "Ticket #{titles.shift}")
         end
       end
     end
@@ -165,7 +173,13 @@ RSpec.describe 'Ticket::Overviews > Sorting' do # rubocop:disable RSpec/Describe
     context 'when grouping by organization_id' do
       let(:overview)        { super().tap { it.update! group_by: 'organization_id', group_direction: } }
       let(:group_direction) { 'ASC' }
-      let(:customers)       { create_list(:customer, 3) + create_list(:customer, 3, :with_org) }
+      let(:customers) do
+        names       = %w[Charlie Alpha Bravo]
+        without_org = names.map { |name| create(:customer, firstname: 'Customer', lastname: name) }
+        with_org    = names.map { |name| create(:customer, :with_org, firstname: 'Member', lastname: name).tap { it.organization.update!(name: "Sorting #{name}") } }
+
+        without_org + with_org
+      end
 
       def organization_compare(ticket_a, ticket_b)
         org_a = ticket_a.organization&.name
