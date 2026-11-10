@@ -135,7 +135,52 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
 
       created_job = DomServis::DispatchJob.find(json_response['id'])
       expect(created_job).to have_attributes(status: 'pool', assignee_id: nil)
+      expect(created_job.request_source).to be_nil
       expect(created_job.events.pluck(:event_type)).to include('created', 'published')
+    end
+
+    context 'when the dispatcher has a board partner' do
+      let(:partner_organization) { create(:organization, name: 'ZIPКОТЛЫ39') }
+      let(:form_organization) { create(:organization, name: 'SVIB Service') }
+      let!(:request_source) do
+        DomServis::RequestSource.create!(
+          name:           'ZIPКОТЛЫ39',
+          partner_key:    'zipkotly39',
+          organization:   form_organization,
+          transport_kind: 'zammad_form',
+          status:         'active',
+        )
+      end
+      let(:partner_configuration) { "zipkotly39:#{partner_organization.id}" }
+
+      before do
+        allow(ENV).to receive(:[]).and_call_original
+        allow(ENV).to receive(:[]).with("DOM_SERVIS_BOARD_PARTNER_#{dispatcher_user.id}").and_return(partner_configuration)
+      end
+
+      it 'uses the authenticated dispatcher to attribute the job', :aggregate_failures do
+        instagram = create(:organization, name: 'Instagram')
+
+        post '/api/v1/dom_servis/dispatch/jobs', params: create_params.merge(organization_id: instagram.id, source: 'form'), as: :json
+
+        expect(response).to have_http_status(:created)
+        expect(json_response).to include('request_source_label' => 'ZIPКОТЛЫ39', 'request_source_partner_key' => 'zipkotly39')
+        expect(DomServis::DispatchJob.find(json_response['id'])).to have_attributes(
+          created_by_id:     dispatcher_user.id,
+          organization_id:   partner_organization.id,
+          request_source_id: request_source.id,
+          source:            'manual',
+        )
+      end
+
+      context 'when the configured organization is missing' do
+        let(:partner_configuration) { 'zipkotly39:invalid-organization' }
+
+        it 'rejects the job instead of recording an incorrect partner', :aggregate_failures do
+          expect { post '/api/v1/dom_servis/dispatch/jobs', params: create_params, as: :json }.not_to change(DomServis::DispatchJob, :count)
+          expect(response).to have_http_status(:unprocessable_entity)
+        end
+      end
     end
 
     it 'rejects a master passed on create', :aggregate_failures do

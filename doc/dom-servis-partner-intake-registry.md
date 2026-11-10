@@ -82,6 +82,19 @@ Every request source also exposes `client_form_url`
 - The bridge promotes the ticket into a `DispatchJob`.
 - The job stores `request_source_id`, `organization_id`, and the intake metadata needed for reporting.
 
+## Manual jobs from the dispatch board
+
+To pin a dispatch account to a partner, set
+`DOM_SERVIS_BOARD_PARTNER_<user ID>=<partner key>:<organization ID>`
+in the environment of the Rails process serving the dispatch API. Use an
+active request source and an active organization. The organization ID here
+is for manual board jobs. Public forms continue to use the organization
+configured on their own request source.
+
+The form shows the configured organization, and the server applies the
+binding from the authenticated account when creating the job. Accounts
+without a binding can continue choosing the organization in the form.
+
 ## Legacy compatibility
 
 - The old `dom_servis_form_intake_enabled` and `dom_servis_form_organization_id` settings remain as a fallback during migration.

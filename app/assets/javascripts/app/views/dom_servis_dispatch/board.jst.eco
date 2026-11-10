@@ -850,11 +850,18 @@
 
         <div class="form-group">
           <label>Заказчик</label>
-          <select class="form-control js-create-organization-id js-create-draft-field" aria-label="Заказчик">
-            <% for organization in @organizationOptions: %>
-              <option value="<%= organization.id %>"<%= ' selected' if "#{@createDraft.organization_id}" is "#{organization.id}" %>><%= organization.label %></option>
-            <% end %>
-          </select>
+          <% if @boardPartner: %>
+            <input class="form-control" aria-label="Заказчик" value="<%= @boardPartner.name %>" readonly>
+          <% else: %>
+            <select class="form-control js-create-organization-id js-create-draft-field" aria-label="Заказчик">
+              <% unless @privateOrganizationId or @organizationOptions[0]?.id is '': %>
+                <option value="">Частный заказ</option>
+              <% end %>
+              <% for organization in @organizationOptions: %>
+                <option value="<%= organization.id %>"<%= ' selected' if "#{@createDraft.organization_id}" is "#{organization.id}" %>><%= organization.label %></option>
+              <% end %>
+            </select>
+          <% end %>
         </div>
 
         <div class="form-group">

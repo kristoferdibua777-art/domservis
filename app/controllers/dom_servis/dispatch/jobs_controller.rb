@@ -40,12 +40,19 @@ class DomServis::Dispatch::JobsController < DomServis::Dispatch::BaseController
 
   def create
     ensure_create_params_allowed!
-    ensure_dispatch_tags_exist!(job_create_params[:work_tags])
+    attributes = job_create_params
+    ensure_dispatch_tags_exist!(attributes[:work_tags])
 
-    job = DomServis::DispatchJob.new(job_create_params)
+    job = DomServis::DispatchJob.new(attributes)
     authorize job, :create?
     ensure_action_allowed!('create_job')
     ensure_action_allowed!('publish_to_pool')
+
+    partner = DomServis::Dispatch::BoardPartner.for(current_user)
+    if partner
+      job.assign_attributes(organization: partner.organization, request_source: partner.source, source: 'manual')
+    end
+
     ActiveRecord::Base.transaction do
       job.created_by = current_user
       job.updated_by = current_user

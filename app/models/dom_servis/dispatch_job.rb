@@ -106,7 +106,7 @@ class DomServis::DispatchJob < ApplicationModel
   def attributes_with_association_ids
     super.merge(
       ticket_number:                 ticket&.number,
-      request_source_label:          request_source&.display_name,
+      request_source_label:          source == 'manual' ? request_source&.name : request_source&.display_name,
       request_source_partner_key:    request_source&.partner_key,
       request_source_transport_kind: request_source&.transport_kind,
     ).compact
