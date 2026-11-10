@@ -141,7 +141,7 @@ RSpec.describe 'DomServis::Dispatch::JobsController', authenticated_as: :admin, 
 
     context 'when the dispatcher has a board partner' do
       let(:partner_organization) { create(:organization, name: 'ZIPКОТЛЫ39') }
-      let(:form_organization) { create(:organization, name: 'SVIB Service') }
+      let(:form_organization)    { create(:organization, name: 'SVIB Service') }
       let!(:request_source) do
         DomServis::RequestSource.create!(
           name:           'ZIPКОТЛЫ39',
