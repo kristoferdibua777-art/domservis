@@ -9,11 +9,10 @@ class DomServis::Dispatch::BoardPartner
 
     source_key, organization_id = configuration.split(':', 2)
     source = DomServis::RequestSource.find_by(partner_key: source_key, status: 'active')
-    organization = Organization.find_by(id: Integer(organization_id, 10, exception: false), active: true)
+    raise Exceptions::UnprocessableEntity, __('Dom-Servis intake requires a valid request source.') if source.blank?
 
-    if source.blank? || organization.blank?
-      raise Exceptions::UnprocessableEntity, __('The dispatch partner configuration is invalid. Contact your administrator.')
-    end
+    organization = Organization.find_by(id: Integer(organization_id, 10, exception: false), active: true)
+    raise Exceptions::UnprocessableEntity, __('Dom-Servis request source requires a partner organization.') if organization.blank?
 
     new(source:, organization:)
   end
