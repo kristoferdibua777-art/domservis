@@ -13,7 +13,8 @@ jobs:
   CI:
     runs-on: ubuntu-latest
     container:
-      image: zammad/zammad-ci:latest
+      # Keep the CI image on the Ruby version pinned by the application.
+      image: zammad/zammad-ci@sha256:9afa25c777a4a1c54a0960adca1a9d9821f6af991abe858ea70502f00bebd4ca
     services:
       postgresql:
         image: postgres:18

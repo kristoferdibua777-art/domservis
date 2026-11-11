@@ -13,6 +13,9 @@ class DomServis::Dispatch::PoliciesController < DomServis::Dispatch::BaseControl
     rate = DomServis::MasterRate.find_by(user_id: current_user.id)
     payload[:master_profile] = { directions: rate&.directions || [], areas: rate&.areas || [] }
 
+    partner = DomServis::Dispatch::BoardPartner.for(current_user)
+    payload[:board_partner] = { name: partner.organization.name } if partner
+
     render json: payload, status: :ok
   end
 end

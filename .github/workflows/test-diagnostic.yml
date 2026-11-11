@@ -15,7 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: zammad/zammad-ci:latest
+      # Keep the CI image on the Ruby version pinned by the application.
+      image: zammad/zammad-ci@sha256:9afa25c777a4a1c54a0960adca1a9d9821f6af991abe858ea70502f00bebd4ca
 
     defaults:
       run:
@@ -68,6 +69,14 @@ jobs:
       - name: Ensure diagnostic log directory
         if: always()
         run: mkdir -p diagnostic-logs
+
+      - name: Check dispatch board partner attribution
+        run: |
+          set -o pipefail
+          source /etc/profile.d/rvm.sh
+          source .gitlab/environment.env
+          bundle exec rspec spec/requests/dom_servis/dispatch/jobs_controller_spec.rb \
+            --example 'when the dispatcher has a board partner' 2>&1 | tee diagnostic-logs/board-partner-rspec.log
 
       - name: "Stage 1/6: assets:precompile"
         id: assets_precompile

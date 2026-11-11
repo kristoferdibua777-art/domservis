@@ -209,6 +209,7 @@ class App.DomServisDispatchBoard extends App.Controller
       report: @buildReportView()
       detailHistoryLoading: detailJob? && !@eventCollections["#{detailJob.id}"]?
       organizationOptions: @organizationOptions()
+      boardPartner: @boardPartner
       privateOrganizationId: @privateOrganizationId()
       jobCards: @buildJobCards()
       createTagOptions: @availableTagOptions(@createDraft.work_tags)
@@ -384,6 +385,7 @@ class App.DomServisDispatchBoard extends App.Controller
           fields: data.fields || {}
           settings: data.settings || {}
         @masterProfile = data.master_profile || null
+        @boardPartner = data.board_partner || null
         @render() if !@loading
         @remindHistoryExport() if data.history_export_due
       error: =>
@@ -391,6 +393,7 @@ class App.DomServisDispatchBoard extends App.Controller
         @policySettings = {}
         App.DomServisDispatchCalendar.configure(@policySettings)
         @effectivePolicy = null
+        @boardPartner = null
         @render() if !@loading
     )
 
@@ -772,6 +775,8 @@ class App.DomServisDispatchBoard extends App.Controller
     read = (selector) =>
       @$(selector).val()?.toString() || ''
 
+    organizationId = @$('.js-create-organization-id').val()?.toString().trim()
+
     @createDraft =
       service_type: read('.js-create-service-type').trim()
       address: read('.js-create-address').trim()
@@ -781,7 +786,7 @@ class App.DomServisDispatchBoard extends App.Controller
       visit_date: read('.js-create-visit-date').trim() || @createDraft.visit_date || @formatDateInput(@nextDateForDay(@defaultVisitDay()))
       visit_time: read('.js-create-visit-time').trim()
       priority: read('.js-create-priority').trim() || 'medium'
-      organization_id: read('.js-create-organization-id').trim() || @createDraft.organization_id || "#{@privateOrganizationId() || ''}"
+      organization_id: organizationId ? @createDraft.organization_id
       work_tags: read('.js-create-work-tags').trim()
       description: read('.js-create-description').trim()
       comment: read('.js-create-comment').trim()
