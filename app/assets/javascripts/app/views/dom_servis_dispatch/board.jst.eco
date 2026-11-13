@@ -362,10 +362,15 @@
             <div class="dom-servis-dispatch-card__title dom-servis-dispatch-card__title--secondary"><%= job.serviceType %></div>
             <div class="dom-servis-dispatch-card__meta dom-servis-dispatch-card__meta--mobile">
               <span><%= job.clientName %></span>
-              <% if job.clientPhone: %>
+              <% if job.clientPhoneHref: %>
+                <a class="dom-servis-dispatch-phone js-no-detail" href="<%= job.clientPhoneHref %>"><%= job.clientPhone %></a>
+              <% else if job.clientPhone: %>
                 <span><%= job.clientPhone %></span>
               <% end %>
             </div>
+            <% if job.receivedLabel: %>
+              <div class="dom-servis-dispatch-card__received">Поступила <%= job.receivedLabel %></div>
+            <% end %>
           <% else: %>
             <div class="dom-servis-dispatch-card__topline">
               <div class="dom-servis-dispatch-card__identity">
@@ -385,10 +390,16 @@
 
             <div class="dom-servis-dispatch-card__contact">
               <span><%= job.clientName %></span>
-              <% if job.clientPhone: %>
+              <% if job.clientPhoneHref: %>
+                <a class="dom-servis-dispatch-phone js-no-detail" href="<%= job.clientPhoneHref %>"><%= job.clientPhone %></a>
+              <% else if job.clientPhone: %>
                 <span><%= job.clientPhone %></span>
               <% end %>
             </div>
+
+            <% if job.receivedLabel: %>
+              <div class="dom-servis-dispatch-card__received">Поступила <%= job.receivedLabel %></div>
+            <% end %>
           <% end %>
 
           <div class="dom-servis-dispatch-card__badge-row">
@@ -441,7 +452,10 @@
               <div class="dom-servis-dispatch-drawer__schedule"><%= @detailJob.scheduleLabel %></div>
               <div class="dom-servis-dispatch-drawer__quick-meta">
                 <span><%= @detailJob.clientName %></span>
-                <% if @detailJob.clientPhone: %>
+                <% if @detailJob.clientPhoneHref: %>
+                  <a class="dom-servis-dispatch-phone" href="<%= @detailJob.clientPhoneHref %>"><%= @detailJob.clientPhone %></a>
+                  <button class="dom-servis-dispatch-phone-copy js-copy-phone" type="button" data-phone="<%= @detailJob.clientPhone %>">Копировать</button>
+                <% else if @detailJob.clientPhone: %>
                   <span><%= @detailJob.clientPhone %></span>
                 <% end %>
                 <span><%= @detailJob.assigneeName %></span>
@@ -449,6 +463,9 @@
             <% else: %>
               <h2><%= @detailJob.title %></h2>
               <div class="dom-servis-dispatch-drawer__schedule"><%= @detailJob.scheduleLabel %></div>
+            <% end %>
+            <% if @detailJob.receivedLabel: %>
+              <div class="dom-servis-dispatch-drawer__received">Поступила <%= @detailJob.receivedLabel %></div>
             <% end %>
             <div class="dom-servis-dispatch-drawer__status-row">
               <span class="dom-servis-dispatch-card__status dom-servis-dispatch-card__status--<%= @detailJob.statusClass %>"><%= @detailJob.statusLabel %></span>
@@ -574,7 +591,9 @@
                   <% for item in group.items: %>
                     <div class="dom-servis-dispatch-drawer__item<%= ' dom-servis-dispatch-drawer__item--wide' if item.wide %>">
                       <div class="dom-servis-dispatch-drawer__item-label"><%= item.label %></div>
-                      <% if item.href: %>
+                      <% if item.phone: %>
+                        <div class="dom-servis-dispatch-drawer__item-value"><a class="dom-servis-dispatch-phone" href="<%= item.href %>"><%= item.value %></a><button class="dom-servis-dispatch-phone-copy js-copy-phone" type="button" data-phone="<%= item.value %>">Копировать</button></div>
+                      <% else if item.href: %>
                         <div class="dom-servis-dispatch-drawer__item-value"><a href="<%= item.href %>"><%= item.value %></a></div>
                       <% else: %>
                         <div class="dom-servis-dispatch-drawer__item-value"><%= item.value %></div>

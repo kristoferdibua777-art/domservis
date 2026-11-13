@@ -950,6 +950,50 @@
   gap: 10px;
 }
 
+.dom-servis-dispatch-card__received,
+.dom-servis-dispatch-drawer__received {
+  color: #9da8bb;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.dom-servis-dispatch-drawer__received {
+  margin-top: 4px;
+}
+
+/* A tap dials the number; on a computer a click selects it whole. */
+.dom-servis-dispatch-phone {
+  color: #8bc0ff;
+  font-weight: 700;
+  text-decoration: none;
+  -webkit-user-select: all;
+  user-select: all;
+  white-space: nowrap;
+}
+
+.dom-servis-dispatch-phone:hover,
+.dom-servis-dispatch-phone:focus {
+  color: #b5d8ff;
+  text-decoration: underline;
+}
+
+.dom-servis-dispatch-phone-copy {
+  background: transparent;
+  border: 1px solid rgba(92, 101, 123, 0.75);
+  border-radius: 999px;
+  color: #c9cfd8;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  min-height: 28px;
+  padding: 4px 12px;
+}
+
+.dom-servis-dispatch-drawer__item-value .dom-servis-dispatch-phone-copy {
+  margin-left: 10px;
+}
+
 .dom-servis-dispatch-card__summary {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(83, 90, 106, 0.36);
@@ -996,6 +1040,7 @@
 }
 
 .dom-servis-dispatch-drawer__quick-meta {
+  align-items: center;
   color: #a9b6c9;
   display: flex;
   flex-wrap: wrap;

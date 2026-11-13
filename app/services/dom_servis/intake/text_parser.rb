@@ -198,8 +198,24 @@ class DomServis::Intake::TextParser
     [%r{(?<!\p{L})сегодня(?!\p{L})}i, 0],
   ].freeze
 
-  WEEKDAY_PATTERN = %r{(?<!\p{L})(?:в|во|на)[ \t]+(?<day>понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)(?!\p{L})}i
-  WEEKDAY_NUMBERS = { 'понедельник' => 1, 'вторник' => 2, 'среду' => 3, 'четверг' => 4, 'пятницу' => 5, 'субботу' => 6, 'воскресенье' => 0 }.freeze
+  # "в пятницу", and after a part of the day also "утро пятницы", "вечером четверга".
+  WEEKDAY_PATTERN = %r{(?<!\p{L})(?:(?:в|во|на)[ \t]+(?<day>понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)|(?:утр|вечер)\p{L}*[ \t]+(?<day_of>понедельника|вторника|среды|четверга|пятницы|субботы|воскресенья))(?!\p{L})}i
+  WEEKDAY_NUMBERS = {
+    'понедельник'  => 1,
+    'вторник'      => 2,
+    'среду'        => 3,
+    'четверг'      => 4,
+    'пятницу'      => 5,
+    'субботу'      => 6,
+    'воскресенье'  => 0,
+    'понедельника' => 1,
+    'вторника'     => 2,
+    'среды'        => 3,
+    'четверга'     => 4,
+    'пятницы'      => 5,
+    'субботы'      => 6,
+    'воскресенья'  => 0,
+  }.freeze
 
   NUMERIC_DATE = %r{(?<![\d.,])(?<!в[ \t]|к[ \t])(?<day>\d{1,2})\.(?<month>\d{2})(?:\.(?<year>\d{4}|\d{2}))?(?!\d|[.,]\d)}
   WORD_DATE = %r{(?<!\d)(?<day>\d{1,2})[ \t]+(?<month>январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)\p{L}*}i
@@ -236,12 +252,17 @@ class DomServis::Intake::TextParser
   AFTER_TIME = %r{(?<!\p{L})после[ \t]+(?<h1>\d{1,2})(?:[:.](?<m1>\d{2}))?(?:[ \t]*#{HOUR_PART})?(?!\d|[.,]\d)}i
   BEFORE_TIME = %r{(?<!\p{L})до[ \t]+(?<h2>\d{1,2})(?:[:.](?<m2>\d{2}))?(?:[ \t]*#{HOUR_PART})?(?!\d|[.,]\d|[ \t]*(?i:этаж|лет|год|руб|кв|числ|мин))}i
 
+  # Also the nouns of a message like "завтра вечер, Юнкерс ошибка 90".
   DAY_PARTS = [
     [%r{(?<!\p{L})после[ \t]+обеда(?!\p{L})}i, '13:00-17:00'],
-    [%r{(?<!\p{L})(?:утром|с[ \t]+утра)(?!\p{L})}i, '08:00-12:00'],
+    [%r{(?<!\p{L})(?:утром|с[ \t]+утра|утро|к[ \t]+утру|утречк\p{L}*|утренн\p{L}*)(?!\p{L})}i, '08:00-12:00'],
     [%r{(?<!\p{L})(?:дн[её]м|в[ \t]+обед)(?!\p{L})}i, '12:00-16:00'],
-    [%r{(?<!\p{L})вечером(?!\p{L})}i, '16:00-20:00'],
+    [%r{(?<!\p{L})(?:вечером|вечер|к[ \t]+вечеру|вечерк\p{L}*|вечерн\p{L}*)(?!\p{L})}i, '16:00-20:00'],
   ].freeze
+
+  # "Добрый вечер", "доброе утро" anywhere in the text greet and do not name
+  # the part of the day for the visit.
+  DAY_PART_GREETING = %r{(?<!\p{L})(?:добр\p{L}*[ \t]+(?:утр|вечер)\p{L}*|(?:утро|вечер)[ \t]+добр\p{L}*)(?!\p{L})}i
 
   # The dispatcher calendar day (decision 2026-09-28: 08-20).
   DAY_START_HOUR = 8
@@ -516,7 +537,7 @@ class DomServis::Intake::TextParser
     match = body.match(WEEKDAY_PATTERN)
     return [] if !match
 
-    [[match.begin(0), next_weekday(WEEKDAY_NUMBERS[match[:day].downcase])]]
+    [[match.begin(0), next_weekday(WEEKDAY_NUMBERS[(match[:day] || match[:day_of]).downcase])]]
   end
 
   def numeric_dates
@@ -558,7 +579,13 @@ class DomServis::Intake::TextParser
       end
     end
 
-    exact_time || after_time || before_time || DAY_PARTS.find { |pattern, _window| body.match?(pattern) }&.last
+    exact_time || after_time || before_time || day_part
+  end
+
+  def day_part
+    without_greetings = body.gsub(DAY_PART_GREETING, ' ')
+
+    DAY_PARTS.find { |pattern, _window| without_greetings.match?(pattern) }&.last
   end
 
   def exact_time
