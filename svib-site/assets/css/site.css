@@ -144,6 +144,16 @@ a {
   transform: none;
 }
 
+/* Текст только для экранного диктора, например название услуги в «Оставить заявку» */
+.visually-hidden {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* ---------- Кнопки ---------- */
 
 .btn {
@@ -308,6 +318,45 @@ a {
   width: 100%;
 }
 
+/* «Сейчас открыто / закрыто» — заполняет assets/js/open-status.js; без скрипта строка скрыта */
+.open-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 46ch;
+  margin-top: 16px;
+  color: var(--svib-slate);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.open-status[hidden] {
+  display: none;
+}
+
+.open-status::before {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-top: 0.4em;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  content: '';
+}
+
+.open-status--open {
+  color: var(--svib-blue);
+}
+
+.open-status--open::before {
+  background: currentColor;
+}
+
+.contact .open-status {
+  margin-top: 8px;
+  font-size: 0.875rem;
+}
+
 .hero__note {
   max-width: 46ch;
   margin-top: 16px;
@@ -451,66 +500,109 @@ a {
   font-size: 1.0625rem;
 }
 
-/* Услуги: сетка с тонкими разделителями, как ряд иконок в брендбуке */
-.services {
+/*
+ * Услуги — плитки иконок, как в разделе 13 брендбука «Иконки услуг»: светло-серая плашка с иконкой и
+ * подпись под ней. Вся плитка — ссылка на форму заявки с этой услугой. При наведении плашка становится
+ * фирменно-синей, синие линии иконки — белыми, а красная «рабочая деталь» остаётся красной: так же
+ * логотип переходит на синий фон. Иконки встроены в разметку, чтобы CSS мог перекрасить их линии.
+ */
+.tiles {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 12px;
   margin-top: 40px;
-  border: 1px solid var(--svib-tech-grey);
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: var(--svib-tech-grey);
 }
 
-.service {
-  display: grid;
-  grid-template-columns: 48px 1fr;
-  column-gap: 16px;
-  row-gap: 4px;
-  align-content: start;
-  padding: 20px;
-  background: var(--svib-white);
-}
-
-.service img {
-  grid-row: span 2;
-}
-
-.service__title {
-  font-size: 1.0625rem;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.service p {
-  color: var(--svib-slate);
-  font-size: 0.9375rem;
-}
-
-.service--ask {
+.tile {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+  border-radius: 12px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.tile__plate {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: var(--svib-light-grey);
+  transition: background-color 0.15s ease;
+}
+
+.tile__icon {
+  width: min(44%, 88px);
+  height: auto;
+}
+
+.tile__icon [id$='-base'] {
+  stroke: var(--svib-blue);
+  transition: stroke 0.15s ease;
+}
+
+.tile__icon [id$='-base-fill'] {
+  fill: var(--svib-blue);
+  transition: fill 0.15s ease;
+}
+
+.tile__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  transition: color 0.15s ease;
+}
+
+.tile:hover .tile__plate,
+.tile:focus-visible .tile__plate,
+.tile:active .tile__plate {
   background: var(--svib-blue);
-  color: var(--svib-white);
 }
 
-.service--ask p {
-  color: var(--svib-white);
+.tile:hover .tile__icon [id$='-base'],
+.tile:focus-visible .tile__icon [id$='-base'],
+.tile:active .tile__icon [id$='-base'] {
+  stroke: var(--svib-white);
 }
 
-.service__link {
-  align-self: flex-start;
-  margin-top: auto;
-  padding-top: 8px;
-  font-weight: 700;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
+.tile:hover .tile__icon [id$='-base-fill'],
+.tile:focus-visible .tile__icon [id$='-base-fill'],
+.tile:active .tile__icon [id$='-base-fill'] {
+  fill: var(--svib-white);
 }
 
-.service--ask .service__link:focus-visible {
-  outline-color: var(--svib-white);
+.tile:hover .tile__title,
+.tile:focus-visible .tile__title {
+  color: var(--svib-blue);
+}
+
+.tile:focus-visible {
+  outline-offset: 4px;
+}
+
+/* «Не нашли свою задачу?» — строка под плитками */
+.services-ask {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-top: 40px;
+  padding: 24px;
+  border: 1px solid var(--svib-tech-grey);
+  border-radius: var(--radius);
+}
+
+.services-ask p {
+  max-width: 62ch;
+  color: var(--svib-slate);
+}
+
+.services-ask strong {
+  color: var(--svib-graphite);
 }
 
 /* Как мы работаем: настоящая последовательность, поэтому с номерами */
@@ -728,6 +820,57 @@ a.contact__value:hover {
   outline-color: var(--svib-white);
 }
 
+/* Страница политики конфиденциальности: текст для чтения, без нижней панели */
+.page-legal {
+  padding-bottom: 0;
+}
+
+.legal {
+  max-width: calc(72ch + 2 * var(--gutter));
+}
+
+.legal__title {
+  font-size: clamp(1.75rem, 1.3rem + 1.8vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.legal__lead {
+  margin-top: 16px;
+  color: var(--svib-slate);
+  font-size: 1.0625rem;
+}
+
+.legal h2 {
+  margin-top: 40px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.legal p,
+.legal ul {
+  margin-top: 12px;
+}
+
+.legal ul {
+  padding-left: 1.25em;
+}
+
+.legal li + li {
+  margin-top: 6px;
+}
+
+.legal a {
+  color: var(--svib-blue);
+}
+
+.legal__back {
+  margin-top: 48px;
+  font-weight: 700;
+}
+
 /* Нижняя панель на телефоне: позвонить или оставить заявку одним касанием */
 .mobile-bar {
   position: fixed;
@@ -755,19 +898,9 @@ body {
     width: auto;
   }
 
-  .services {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .service {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 28px;
-  }
-
-  .service img {
-    margin-bottom: 8px;
+  .tiles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 32px 20px;
   }
 
   .values {
@@ -819,8 +952,12 @@ body {
     aspect-ratio: 6 / 5;
   }
 
-  .services {
-    grid-template-columns: repeat(4, 1fr);
+  .tiles {
+    gap: 40px 24px;
+  }
+
+  .tile__plate {
+    aspect-ratio: 5 / 4;
   }
 
   .steps {
@@ -899,7 +1036,11 @@ body {
     animation: none;
   }
 
-  .btn {
+  .btn,
+  .tile__plate,
+  .tile__title,
+  .tile__icon [id$='-base'],
+  .tile__icon [id$='-base-fill'] {
     transition: none;
   }
 }
