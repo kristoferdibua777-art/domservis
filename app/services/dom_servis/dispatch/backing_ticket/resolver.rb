@@ -17,16 +17,20 @@ class DomServis::Dispatch::BackingTicket::Resolver
 
   attr_reader :dispatch_job, :operator
 
+  # A group of the operator comes first, so they see the backing ticket in
+  # Zammad. The Dom-Servis roles grant no ticket groups, and an admin or
+  # dispatcher may have none: the ticket then goes to the assignee's group or
+  # the first active group, as it does for the resync job without an operator.
   def group
-    @group ||= begin
-      candidate_groups = [
-        operator_group,
-        assignee_group,
-        *accessible_active_groups,
-      ].compact.uniq
+    @group ||= operator_group || assignee_group || active_groups.first || raise(__('No accessible ticket group available for Dom-Servis backing tickets.'))
+  end
 
-      candidate_groups.find { |group| accessible_group?(group) } || raise(__('No accessible ticket group available for Dom-Servis backing tickets.'))
-    end
+  # CoreWorkflow checks a new ticket against the create form of the current
+  # user, and an agent's form offers only the groups they may create tickets
+  # in. For an actor without that access the board files the ticket in their
+  # place, so the form check applies only to those who could use the form.
+  def validate_with_create_form?
+    actor_user.group_access?(group.id, 'create')
   end
 
   def customer
@@ -95,7 +99,7 @@ class DomServis::Dispatch::BackingTicket::Resolver
   def operator_group
     return if operator.blank?
 
-    accessible_active_groups.detect do |group|
+    active_groups.detect do |group|
       operator.group_access?(group.id, 'create') || operator.group_access?(group.id, 'change') || operator.group_access?(group.id, 'full')
     end
   end
@@ -103,7 +107,7 @@ class DomServis::Dispatch::BackingTicket::Resolver
   def assignee_group
     return if dispatch_job.assignee.blank?
 
-    accessible_active_groups.detect { |group| dispatch_job.assignee.group_access?(group.id, 'full') }
+    active_groups.detect { |group| dispatch_job.assignee.group_access?(group.id, 'full') }
   end
 
   def state_for_type(type_name)
@@ -116,18 +120,5 @@ class DomServis::Dispatch::BackingTicket::Resolver
 
   def active_groups
     @active_groups ||= Group.where(active: true).sorted.to_a
-  end
-
-  def accessible_active_groups
-    return active_groups if operator.blank?
-
-    @accessible_active_groups ||= active_groups.select { |group| accessible_group?(group) }
-  end
-
-  def accessible_group?(group)
-    return false if group.blank?
-    return true if operator.blank?
-
-    operator.group_access?(group.id, 'create') || operator.group_access?(group.id, 'change') || operator.group_access?(group.id, 'full')
   end
 end

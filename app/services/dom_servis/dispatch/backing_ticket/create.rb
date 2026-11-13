@@ -18,7 +18,7 @@ class DomServis::Dispatch::BackingTicket::Create
     UserInfo.with_user_id(resolver.actor_user.id) do
       Transaction.execute do
         ticket = Ticket.new(mapper.create_attributes)
-        ticket.screen = 'create_middle' if ticket.respond_to?(:screen=)
+        ticket.screen = 'create_middle' if ticket.respond_to?(:screen=) && resolver.validate_with_create_form?
         ticket.save!
         sync_ticket_tags!(ticket, resolver)
 
